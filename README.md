@@ -9,9 +9,7 @@
 
 ## Render Deployment
 
-This repository includes a Render Blueprint in `render.yaml` that provisions the Laravel web service.
-
-- a persistent disk for Laravel uploads under `storage/`
+This repository includes a Render Blueprint in `render.yaml` that provisions the Laravel web service on Render's free instance type.
 
 For a Render web app using Railway MySQL, see [`docs/render-with-railway-mysql.md`](docs/render-with-railway-mysql.md).
 

@@ -30,3 +30,4 @@ Use the value from Railway's `MYSQL_PUBLIC_URL` for `DB_URL`.
 - `DB_CONNECTION` is already set to `mysql` in `render.yaml`.
 - The startup script runs `php artisan migrate --force` during deployment.
 - Keep the Railway MySQL service active, because Render depends on it.
+- Render free web services do not support persistent disks. Database records stay in Railway MySQL, but uploaded local files can be lost on redeploy or restart.

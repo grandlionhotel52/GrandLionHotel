@@ -2,15 +2,11 @@ services:
   - type: web
     name: hotel-reservation-app
     runtime: docker
-    plan: starter
+    plan: free
     region: singapore
     autoDeployTrigger: commit
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    disk:
-      name: app-storage
-      mountPath: /var/www/html/storage
-      sizeGB: 5
     envVars:
       - key: APP_NAME
         value: The Grand Lion Hotel
