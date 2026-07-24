@@ -78,4 +78,4 @@ done
 echo "[startup] Refreshing Laravel caches..."
 php artisan view:cache
 
-exec /start.sh
+exec apache2-foreground
