@@ -32,28 +32,8 @@ services:
         value: stderr
       - key: DB_CONNECTION
         value: mysql
-      - key: DB_HOST
-        fromService:
-          type: pserv
-          name: hotel-reservation-mysql
-          property: host
-      - key: DB_PORT
-        value: "3306"
-      - key: DB_DATABASE
-        fromService:
-          type: pserv
-          name: hotel-reservation-mysql
-          envVarKey: MYSQL_DATABASE
-      - key: DB_USERNAME
-        fromService:
-          type: pserv
-          name: hotel-reservation-mysql
-          envVarKey: MYSQL_USER
-      - key: DB_PASSWORD
-        fromService:
-          type: pserv
-          name: hotel-reservation-mysql
-          envVarKey: MYSQL_PASSWORD
+      - key: DB_URL
+        sync: false
       - key: SESSION_DRIVER
         value: database
       - key: CACHE_STORE
@@ -66,24 +46,3 @@ services:
         value: log
       - key: QR_MERCHANT_NAME
         value: The Grand Lion Hotel
-
-  - type: pserv
-    name: hotel-reservation-mysql
-    runtime: image
-    plan: starter
-    region: singapore
-    image:
-      url: docker.io/mysql/mysql-server:8.0
-    disk:
-      name: mysql
-      mountPath: /var/lib/mysql
-      sizeGB: 10
-    envVars:
-      - key: MYSQL_DATABASE
-        value: hotel_reservation
-      - key: MYSQL_USER
-        value: hotel_user
-      - key: MYSQL_PASSWORD
-        generateValue: true
-      - key: MYSQL_ROOT_PASSWORD
-        generateValue: true
