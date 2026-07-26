@@ -3,63 +3,68 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
+use App\Models\Customer;
 use App\Models\Room;
-use App\Models\User;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class QrPaymentMethodsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_customer_can_pay_with_qr_wallet_methods(): void
+    public function test_customer_can_submit_supported_online_payment_methods(): void
     {
-        $user = User::factory()->create();
+        $user = Customer::factory()->create();
+        Storage::fake('public');
 
-        foreach (['gcash', 'paymaya'] as $method) {
+        foreach (['instapay', 'credit_debit_card'] as $method) {
             $room = Room::factory()->create(['is_available' => true]);
             $booking = Booking::factory()->create([
-                'user_id' => $user->id,
+                'customer_id' => $user->id,
                 'room_id' => $room->id,
                 'status' => 'confirmed',
-                'payment_status' => 'unpaid',
             ]);
+            $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
-            $qrReference = 'TEST-'.strtoupper($method).'-123456';
+            $customerReference = 'TEST-'.strtoupper($method).'-123456';
 
             $response = $this->actingAs($user)->post(route('payments.process', $booking), [
                 'method' => $method,
-                'qr_reference' => $qrReference,
+                'customer_reference' => $customerReference,
+                'payment_proof' => UploadedFile::fake()->create('proof.jpg', 10, 'image/jpeg'),
             ]);
 
-            $response->assertRedirect(route('bookings.success', $booking));
+            $response->assertRedirect(route('bookings.show', $booking));
 
             $booking->refresh()->load('payment');
-            $this->assertSame('paid', $booking->payment_status);
+            $this->assertSame('pending_verification', $booking->payment_status);
             $this->assertNotNull($booking->payment);
             $this->assertSame($method, $booking->payment->method);
-            $this->assertSame('online_qr', data_get($booking->payment->meta, 'source'));
-            $this->assertSame($qrReference, data_get($booking->payment->meta, 'qr_reference'));
+            $this->assertSame('online_submitted', $booking->payment->source);
+            $this->assertSame($customerReference, $booking->payment->customer_reference);
+            Storage::disk('public')->assertExists($booking->payment->payment_proof_path);
         }
     }
 
-    public function test_qr_wallet_payment_requires_qr_reference(): void
+    public function test_online_payment_requires_reference_and_proof(): void
     {
-        $user = User::factory()->create();
+        $user = Customer::factory()->create();
         $room = Room::factory()->create(['is_available' => true]);
         $booking = Booking::factory()->create([
-            'user_id' => $user->id,
+            'customer_id' => $user->id,
             'room_id' => $room->id,
             'status' => 'confirmed',
-            'payment_status' => 'unpaid',
         ]);
+        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
         $response = $this->actingAs($user)->post(route('payments.process', $booking), [
-            'method' => 'gcash',
+            'method' => 'instapay',
         ]);
 
-        $response->assertSessionHasErrors('qr_reference');
+        $response->assertSessionHasErrors(['customer_reference', 'payment_proof']);
 
         $booking->refresh();
         $this->assertSame('unpaid', $booking->payment_status);
@@ -69,8 +74,8 @@ class QrPaymentMethodsTest extends TestCase
     {
         $booking = Booking::factory()->create([
             'status' => 'completed',
-            'payment_status' => 'unpaid',
         ]);
+        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
         app(PaymentService::class)->charge($booking, 'cash');
 
@@ -83,8 +88,8 @@ class QrPaymentMethodsTest extends TestCase
     {
         $booking = Booking::factory()->create([
             'status' => 'confirmed',
-            'payment_status' => 'unpaid',
         ]);
+        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
         $service = app(PaymentService::class);
 
@@ -99,5 +104,4 @@ class QrPaymentMethodsTest extends TestCase
         $this->assertSame('paid', $booking->payment_status);
         $this->assertDatabaseCount('payments', 1);
     }
-
 }

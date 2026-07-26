@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -13,7 +13,7 @@ class ProfileSecurityTest extends TestCase
 
     public function test_authenticated_user_can_view_security_page(): void
     {
-        $user = User::factory()->create();
+        $user = Customer::factory()->create();
 
         $response = $this->actingAs($user)->get(route('profile.security'));
 
@@ -24,7 +24,7 @@ class ProfileSecurityTest extends TestCase
 
     public function test_user_can_update_password_from_security_page(): void
     {
-        $user = User::factory()->create([
+        $user = Customer::factory()->create([
             'password' => Hash::make('OldPassword123!'),
         ]);
 
@@ -45,7 +45,7 @@ class ProfileSecurityTest extends TestCase
 
     public function test_password_update_rejects_weak_password(): void
     {
-        $user = User::factory()->create([
+        $user = Customer::factory()->create([
             'password' => Hash::make('OldPassword123!'),
         ]);
 

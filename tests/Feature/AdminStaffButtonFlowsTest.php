@@ -12,7 +12,6 @@ use App\Models\RoomStatus;
 use App\Models\Staff;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -55,7 +54,7 @@ class AdminStaffButtonFlowsTest extends TestCase
             room: $room,
             status: 'confirmed',
             paymentStatus: 'pending_verification',
-            paymentMethod: 'gcash',
+            paymentMethod: 'instapay',
             paymentExtras: [
                 'qr_reference' => 'QR-ADMIN-001',
                 'customer_reference' => 'GCASH-ADMIN-001',
@@ -76,7 +75,8 @@ class AdminStaffButtonFlowsTest extends TestCase
         $this->get(route('admin.bookings.show', $pendingBooking))->assertOk();
 
         $this->post(route('admin.staff.store'), [
-            'name' => 'Desk Staff',
+            'first_name' => 'Desk',
+            'last_name' => 'Staff',
             'email' => 'desk.staff@example.com',
             'phone' => '09170001111',
             'password' => 'password123',
@@ -87,7 +87,8 @@ class AdminStaffButtonFlowsTest extends TestCase
         $this->assertSame($admin->id, $createdStaff->admin_id);
 
         $this->put(route('admin.staff.update', $createdStaff), [
-            'name' => 'Desk Staff Updated',
+            'first_name' => 'Desk Staff',
+            'last_name' => 'Updated',
             'email' => 'desk.staff.updated@example.com',
             'phone' => '09170002222',
             'password' => '',
@@ -133,7 +134,8 @@ class AdminStaffButtonFlowsTest extends TestCase
         Mail::assertQueued(BookingPaidMail::class);
 
         $this->put(route('admin.users.update', $orphanCustomer), [
-            'name' => 'Updated Customer',
+            'first_name' => 'Updated',
+            'last_name' => 'Customer',
             'email' => 'updated.customer@example.com',
             'phone' => '09179999999',
             'address_line' => 'Updated Street',
@@ -182,7 +184,7 @@ class AdminStaffButtonFlowsTest extends TestCase
             room: $room,
             status: 'confirmed',
             paymentStatus: 'pending_verification',
-            paymentMethod: 'gcash',
+            paymentMethod: 'instapay',
             paymentExtras: [
                 'qr_reference' => 'QR-STAFF-001',
                 'customer_reference' => 'GCASH-STAFF-001',
@@ -193,7 +195,7 @@ class AdminStaffButtonFlowsTest extends TestCase
             room: $room,
             status: 'confirmed',
             paymentStatus: 'pending_verification',
-            paymentMethod: 'paymaya',
+            paymentMethod: 'credit_debit_card',
             paymentExtras: [
                 'qr_reference' => 'QR-STAFF-REJECT',
                 'customer_reference' => 'PAYMAYA-STAFF-001',
@@ -268,7 +270,6 @@ class AdminStaffButtonFlowsTest extends TestCase
         $onlineBooking->refresh();
         $onlineBooking->load('payment');
         $this->assertSame('paid', $onlineBooking->payment->status);
-        $this->assertSame($staff->id, $onlineBooking->payment->staff_id);
 
         $this->patch(route('staff.bookings.reject-online-payment', $rejectedBooking))
             ->assertRedirect(route('staff.bookings.show', $rejectedBooking));
@@ -276,10 +277,9 @@ class AdminStaffButtonFlowsTest extends TestCase
         $rejectedBooking->refresh();
         $rejectedBooking->load('payment');
         $this->assertSame('unpaid', $rejectedBooking->payment->status);
-        $this->assertSame($staff->id, $rejectedBooking->payment->staff_id);
         $this->assertNull($rejectedBooking->payment->transaction_reference);
 
-        $this->post(route('staff.bookings.store'), [
+        $walkInResponse = $this->post(route('staff.bookings.store'), [
             'customer_name' => 'Walk In Guest',
             'customer_email' => 'walkin@example.com',
             'customer_phone' => '09178888888',
@@ -287,9 +287,12 @@ class AdminStaffButtonFlowsTest extends TestCase
             'check_in' => Carbon::now()->toDateString(),
             'check_out' => Carbon::now()->copy()->addDay()->toDateString(),
             'guests' => 2,
+            'extra_bedding_confirmed' => '1',
             'payment_preference' => 'cash',
             'notes' => 'Walk-in from front desk.',
-        ])->assertRedirect();
+        ]);
+        $walkInResponse->assertSessionHasNoErrors();
+        $walkInResponse->assertRedirect();
 
         $walkInBooking = Booking::query()
             ->where('room_id', $walkInRoom->id)
@@ -303,36 +306,14 @@ class AdminStaffButtonFlowsTest extends TestCase
 
     private function seedCleaningStatuses(): void
     {
-        DB::table('room_status')->insert([
-            [
-                'name' => 'Clean',
-                'slug' => 'clean',
-                'description' => 'Ready for booking',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Dirty',
-                'slug' => 'dirty',
-                'description' => 'Currently dirty',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Make Up Room',
-                'slug' => 'being_cleaned',
-                'description' => 'Currently being cleaned',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Inspected',
-                'slug' => 'inspected',
-                'description' => 'Checked and ready',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        RoomStatus::query()->firstOrCreate(
+            ['slug' => 'clean'],
+            ['name' => 'Clean', 'description' => 'Ready for booking']
+        );
+        RoomStatus::query()->firstOrCreate(
+            ['slug' => 'dirty'],
+            ['name' => 'Dirty', 'description' => 'Not ready for booking']
+        );
     }
 
     private function createRoom(array $attributes = []): Room

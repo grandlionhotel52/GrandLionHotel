@@ -23,7 +23,7 @@ trait HasEncryptedRouteKey
         $key = self::decryptRouteKey((string) $value);
 
         if ($key === null) {
-            throw (new ModelNotFoundException())->setModel(static::class, [$value]);
+            throw (new ModelNotFoundException)->setModel(static::class, [$value]);
         }
 
         return $this->where($this->getRouteKeyName(), $key)->firstOrFail();
@@ -31,7 +31,10 @@ trait HasEncryptedRouteKey
 
     public static function encryptRouteKey(string|int $key): string
     {
-        return rtrim(strtr(base64_encode(Crypt::encryptString((string) $key)), '+/', '-_'), '=');
+        $key = (string) $key;
+        $signature = hash_hmac('sha256', $key, self::routeSigningKey());
+
+        return rtrim(strtr(base64_encode($key.'.'.$signature), '+/', '-_'), '=');
     }
 
     public static function decryptRouteKey(string $value): ?string
@@ -42,16 +45,36 @@ trait HasEncryptedRouteKey
         }
 
         $payload = base64_decode(strtr($value, '-_', '+/'), true);
-        if ($payload === false || !Str::startsWith($payload, 'eyJpdiI6')) {
+        if ($payload === false) {
             return null;
         }
 
-        try {
-            $key = Crypt::decryptString($payload);
-        } catch (DecryptException) {
-            return null;
+        if (preg_match('/^(\d+)\.([a-f0-9]{64})$/', $payload, $matches) === 1) {
+            $key = $matches[1];
+            $expectedSignature = hash_hmac('sha256', $key, self::routeSigningKey());
+
+            return hash_equals($expectedSignature, $matches[2]) ? $key : null;
         }
 
-        return ctype_digit($key) ? $key : null;
+        if (Str::startsWith($payload, 'eyJpdiI6')) {
+            try {
+                $legacyKey = Crypt::decryptString($payload);
+            } catch (DecryptException) {
+                return null;
+            }
+
+            return ctype_digit($legacyKey) ? $legacyKey : null;
+        }
+
+        return null;
+    }
+
+    private static function routeSigningKey(): string
+    {
+        $appKey = (string) config('app.key');
+
+        return Str::startsWith($appKey, 'base64:')
+            ? (base64_decode(Str::after($appKey, 'base64:'), true) ?: $appKey)
+            : $appKey;
     }
 }

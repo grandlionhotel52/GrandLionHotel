@@ -51,7 +51,7 @@
                     @endforeach
                 </div>
             </div>
-            <a href="{{ route('rooms.search') }}" class="btn btn-ta">Find rooms</a>
+            <a href="{{ route('rooms.index') }}" class="btn btn-ta">Find rooms</a>
         </div>
     </section>
 
@@ -83,6 +83,6 @@
             <h2 class="mb-1">Apply these tips on your next booking.</h2>
             <p class="text-secondary mb-0">Compare available rooms and confirm your reservation in minutes.</p>
         </div>
-        <a href="{{ route('rooms.search') }}" class="btn btn-ta">Start booking</a>
+        <a href="{{ route('rooms.index') }}" class="btn btn-ta">Start booking</a>
     </section>
 @endsection

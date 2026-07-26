@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\HasLegacyIdAttribute;
 use App\Models\Concerns\HasEncryptedRouteKey;
+use App\Models\Concerns\HasLegacyIdAttribute;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Room extends Model
 {
@@ -17,6 +19,7 @@ class Room extends Model
     use HasLegacyIdAttribute;
 
     public const STANDARD_GUEST_CAPACITY = 2;
+
     public const BOOKABLE_ROOM_STATUS_SLUGS = ['clean'];
 
     private const FALLBACK_IMAGES = [
@@ -89,8 +92,10 @@ class Room extends Model
 
     public function getImageUrlAttribute(): string
     {
-        if (!empty($this->image)) {
-            return $this->image;
+        if (! empty($this->image)) {
+            return Str::startsWith($this->image, ['http://', 'https://'])
+                ? $this->image
+                : Storage::disk('public')->url($this->image);
         }
 
         $seed = $this->id ?? crc32((string) $this->name);
@@ -110,11 +115,21 @@ class Room extends Model
 
         if ($this->relationLoaded('roomStatus')) {
             $roomStatusSlug = $this->roomStatus?->slug;
-        } elseif (!is_null($this->room_status_id)) {
+        } elseif (! is_null($this->room_status_id)) {
             $roomStatusSlug = $this->roomStatus()->value('slug');
         }
 
         return self::isBookableForCustomerByRoomStatus($roomStatusSlug);
+    }
+
+    public function setIsAvailableAttribute(mixed $value): void
+    {
+        $slug = filter_var($value, FILTER_VALIDATE_BOOL) ? 'clean' : 'dirty';
+        $statusId = RoomStatus::query()->where('slug', $slug)->value('room_status_id');
+
+        if (! is_null($statusId)) {
+            $this->attributes['room_status_id'] = $statusId;
+        }
     }
 
     public function scopeAvailableForBooking(Builder $query): Builder

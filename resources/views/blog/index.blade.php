@@ -10,7 +10,7 @@
             <p class="text-secondary mb-0">Practical guides, travel strategy, and modern hospitality insights from The Grand Lion team.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('rooms.search') }}" class="btn btn-ta-outline">Find rooms</a>
+            <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline">Find rooms</a>
             <a href="{{ route('about') }}" class="btn btn-ta">Our story</a>
         </div>
     </section>
@@ -29,7 +29,7 @@
                     <p class="text-secondary mb-4">{{ $featured['excerpt'] }}</p>
                     <div class="d-flex flex-wrap gap-2">
                         <a href="{{ route('blog.show', $featured['slug']) }}" class="btn btn-ta">Read featured article</a>
-                        <a href="{{ route('rooms.search') }}" class="btn btn-ta-outline">Book a stay</a>
+                        <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline">Book a stay</a>
                     </div>
                 </div>
                 <div class="col-lg-5">
@@ -90,6 +90,6 @@
             <h2 class="mb-1">Turn reading into your next stay.</h2>
             <p class="text-secondary mb-0">Use these guides, then compare room options that match your travel style.</p>
         </div>
-        <a href="{{ route('rooms.search') }}" class="btn btn-ta">Start booking</a>
+        <a href="{{ route('rooms.index') }}" class="btn btn-ta">Start booking</a>
     </section>
 @endsection

@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
-Route::get('/rooms/search', [RoomController::class, 'search'])->name('rooms.search');
+Route::get('/rooms/search', [RoomController::class, 'redirectLegacySearch'])->name('rooms.search');
 Route::get('/rooms/{room}/pricing-preview', [RoomController::class, 'pricingPreview'])->name('rooms.pricing-preview');
 Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
 Route::get('/about', [PageController::class, 'about'])->name('about');
@@ -50,7 +50,7 @@ Route::middleware('guest:admin,staff,customer')->group(function () {
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 });
 
-Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->middleware('auth:admin,staff,customer')->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:admin,staff,customer')->name('logout');
 
 Route::middleware('auth:admin,staff,customer')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -60,6 +60,7 @@ Route::middleware('auth:admin,staff,customer')->group(function () {
 });
 
 Route::middleware('auth:customer')->group(function () {
+    Route::post('/notifications/read', [ProfileController::class, 'markNotificationsRead'])->name('notifications.read');
     Route::get('/rooms/{room}/book', [BookingController::class, 'create'])->name('bookings.create');
     Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings/my', [BookingController::class, 'myBookings'])->name('bookings.my');
@@ -77,6 +78,7 @@ Route::middleware('auth:customer')->group(function () {
 Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/sales-report', [DashboardController::class, 'salesReport'])->name('sales-report');
+    Route::get('/occupancy-report', [DashboardController::class, 'occupancyReport'])->name('occupancy-report');
 
     Route::resource('rooms', AdminRoomController::class)->except(['show']);
     Route::patch('/rooms/{room}/room-status', [AdminRoomController::class, 'updateRoomStatus'])->name('rooms.update-room-status');

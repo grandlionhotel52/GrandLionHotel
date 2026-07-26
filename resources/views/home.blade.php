@@ -258,7 +258,7 @@
                     <label class="form-check-label text-secondary small" for="availableOnlyHome">Available only</label>
                 </div>
             </div>
-            <form id="homeQuickSearch" method="GET" action="{{ route('rooms.search') }}" class="row g-2">
+            <form id="homeQuickSearch" method="GET" action="{{ route('rooms.index') }}" class="row g-2">
                 <div class="col-md-4 col-xl-4">
                     <label class="visually-hidden" for="homeSearchType">Room type or view</label>
                     <input id="homeSearchType" type="text" name="type" class="form-control" placeholder="Room type or view">
@@ -283,7 +283,7 @@
                     <p class="ta-eyebrow mb-1">Categories</p>
                     <h2 class="mb-0">Browse by Room Type</h2>
                 </div>
-                <a href="{{ route('rooms.search') }}" class="btn btn-ta-outline home-filter-link">
+                <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline home-filter-link">
                     <i class="bi bi-sliders me-1" aria-hidden="true"></i>More filters
                 </a>
             </div>
@@ -291,7 +291,7 @@
                 @forelse($roomCategories as $category)
                     <div class="col-6 col-md-4 col-xl-2">
                         <a
-                            href="{{ route('rooms.search', ['type' => $category->type, 'available_only' => 1]) }}"
+                            href="{{ route('rooms.index', ['type' => $category->type, 'available_only' => 1]) }}"
                             class="soft-card result-card category-link"
                         >
                             <div>
@@ -385,7 +385,7 @@
                 <p class="ta-eyebrow mb-1">How It Works</p>
                 <h2 class="mb-0">Fast Booking in 3 Steps</h2>
             </div>
-            <a href="{{ route('rooms.search') }}" class="btn btn-sm btn-ta">Start Booking</a>
+            <a href="{{ route('rooms.index') }}" class="btn btn-sm btn-ta">Start Booking</a>
         </div>
         <div class="row g-3">
             <div class="col-md-4">

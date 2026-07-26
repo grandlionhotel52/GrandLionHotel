@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Mail\PasswordResetCodeMail;
+use App\Models\Customer;
 use App\Models\PasswordResetToken;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -18,7 +18,7 @@ class PasswordResetTokenFlowTest extends TestCase
     {
         Mail::fake();
 
-        $user = User::factory()->create([
+        $user = Customer::factory()->create([
             'email' => 'reset@example.com',
         ]);
 
@@ -37,14 +37,14 @@ class PasswordResetTokenFlowTest extends TestCase
         $this->assertNotNull($token->last_sent_at);
         $this->assertSame(PasswordResetToken::OTP_CHANNEL_EMAIL, $token->otp_channel);
 
-        Mail::assertQueued(PasswordResetCodeMail::class, function (PasswordResetCodeMail $mail) use ($user): bool {
+        Mail::assertSent(PasswordResetCodeMail::class, function (PasswordResetCodeMail $mail) use ($user): bool {
             return $mail->hasTo($user->email);
         });
     }
 
     public function test_valid_otp_redirects_to_separate_new_password_page(): void
     {
-        $user = User::factory()->create([
+        $user = Customer::factory()->create([
             'email' => 'otpstep@example.com',
         ]);
 
@@ -73,7 +73,7 @@ class PasswordResetTokenFlowTest extends TestCase
 
     public function test_password_update_requires_verified_otp_step(): void
     {
-        $user = User::factory()->create([
+        $user = Customer::factory()->create([
             'email' => 'mustverify@example.com',
             'password' => Hash::make('OldPass123'),
         ]);
@@ -103,7 +103,7 @@ class PasswordResetTokenFlowTest extends TestCase
 
     public function test_user_can_reset_password_after_verifying_otp(): void
     {
-        $user = User::factory()->create([
+        $user = Customer::factory()->create([
             'email' => 'fullflow@example.com',
             'password' => Hash::make('OldPass123'),
         ]);

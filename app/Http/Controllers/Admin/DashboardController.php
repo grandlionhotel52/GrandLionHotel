@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\Room;
 use App\Models\Staff;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -79,7 +80,7 @@ class DashboardController extends Controller
         }
 
         $method = trim(strtolower($request->string('method')->toString()));
-        if (!in_array($method, array_merge(['all'], Payment::allowedMethods()), true)) {
+        if (! in_array($method, array_merge(['all'], Payment::allowedMethods()), true)) {
             $method = 'all';
         }
 
@@ -182,6 +183,58 @@ class DashboardController extends Controller
             'method',
             'selectedRangeLabel'
         ));
+    }
+
+    public function occupancyReport(Request $request)
+    {
+        $from = $this->normalizeDateInput($request->string('from')->toString()) ?? now()->startOfMonth()->toDateString();
+        $to = $this->normalizeDateInput($request->string('to')->toString()) ?? now()->endOfMonth()->toDateString();
+        if ($to < $from) {
+            [$from, $to] = [$to, $from];
+        }
+
+        $rangeStart = Carbon::parse($from);
+        $rangeEnd = Carbon::parse($to);
+        if ($rangeStart->diffInDays($rangeEnd) > 366) {
+            $rangeEnd = $rangeStart->copy()->addDays(366);
+            $to = $rangeEnd->toDateString();
+        }
+
+        $rooms = Room::query()->count();
+        $bookings = Booking::query()
+            ->with('room:room_id,name,type')
+            ->whereIn('status', ['confirmed', 'completed'])
+            ->whereDate('check_in', '<=', $to)
+            ->whereDate('check_out', '>', $from)
+            ->get();
+
+        $dailyOccupancy = collect(CarbonPeriod::create($rangeStart, $rangeEnd))
+            ->map(function (Carbon $date) use ($bookings, $rooms): object {
+                $occupiedRooms = $bookings
+                    ->filter(fn (Booking $booking): bool => $booking->check_in->lte($date) && $booking->check_out->gt($date))
+                    ->pluck('room_id')
+                    ->unique()
+                    ->count();
+
+                return (object) [
+                    'date' => $date->toDateString(),
+                    'occupied_rooms' => $occupiedRooms,
+                    'available_rooms' => max(0, $rooms - $occupiedRooms),
+                    'occupancy_rate' => $rooms > 0 ? round(($occupiedRooms / $rooms) * 100, 1) : 0,
+                ];
+            });
+
+        $roomNightsAvailable = $rooms * $dailyOccupancy->count();
+        $roomNightsSold = (int) $dailyOccupancy->sum('occupied_rooms');
+        $summary = [
+            'rooms' => $rooms,
+            'room_nights_available' => $roomNightsAvailable,
+            'room_nights_sold' => $roomNightsSold,
+            'occupancy_rate' => $roomNightsAvailable > 0 ? round(($roomNightsSold / $roomNightsAvailable) * 100, 1) : 0,
+            'peak_day' => $dailyOccupancy->sortByDesc('occupied_rooms')->first(),
+        ];
+
+        return view('admin.occupancy-report', compact('summary', 'dailyOccupancy', 'from', 'to'));
     }
 
     private function normalizeDateInput(string $value): ?string

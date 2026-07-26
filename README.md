@@ -1,65 +1,118 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Grand Lion Hotel Reservation System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 12 application for customer reservations, staff operations, hotel administration, online-payment verification, refunds, room pricing, and occupancy reporting.
 
-## Render Deployment
+## Requirements
 
-This repository includes a Render Blueprint in `render.yaml` that provisions the Laravel web service on Render's free instance type.
+- PHP 8.2 or newer with PDO, Mbstring, OpenSSL, Fileinfo, and ZIP
+- Composer 2
+- MySQL 8+ for production; SQLite is supported for tests
+- Node.js 20+ and npm
+- A queue worker in production
+- A scheduler process that runs `php artisan schedule:run` every minute
 
-For a Render web app using Railway MySQL, see [`docs/render-with-railway-mysql.md`](docs/render-with-railway-mysql.md).
+## Local setup
 
-## About Laravel
+```bash
+composer install
+copy .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+npm install
+npm run build
+php artisan storage:link
+php artisan serve
+```
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+On macOS/Linux, use `cp .env.example .env`.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Configure the database, mail transport, application URL, Google OAuth (when used), and payment settings in `.env`. Never commit `.env`.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+For active development:
 
-## Learning Laravel
+```bash
+composer run dev
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Account roles
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Customer** — browses rooms, maintains a profile, creates bookings, submits online-payment proof, requests rescheduling/transfers, downloads receipts, and requests cancellation/refunds.
+- **Staff** — manages arrivals, walk-ins, confirmation, check-in/out, occupancy changes, room transfers, rescheduling, payment verification, and operational notes.
+- **Admin** — manages rooms, room status, date discounts, customers, staff, bookings, sales, occupancy, and payment verification.
 
-## Laravel Sponsors
+Accounts are stored in separate `customers`, `staff`, and `admins` tables and use separate Laravel guards. The legacy `users` model is intentionally not part of the final application schema.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Booking and payment flow
 
-### Premium Partners
+1. A customer or staff member creates a pending booking.
+2. Staff confirms it after checking availability.
+3. Cash remains unpaid until staff records payment.
+4. InstaPay and card submissions require a customer reference and image proof.
+5. Staff/admin approval marks the payment paid and generates a transaction reference.
+6. Cancelling a paid booking creates a pending refund request.
+7. Booking, payment, and refund changes are recorded in `activity_logs`; relevant customer updates are also stored in `notifications`.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Supported payment methods are `cash`, `instapay`, and `credit_debit_card`.
 
-## Contributing
+## Room images
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Admins may use a remote image URL or upload JPG, PNG, or WebP files up to 5 MB. Uploaded files are stored on the `public` disk under `room-images/`.
 
-## Code of Conduct
+Run this once on each deployment:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan storage:link
+```
 
-## Security Vulnerabilities
+## Reports and backups
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Sales report: `/admin/sales-report`
+- Occupancy report: `/admin/occupancy-report`
+- Manual database backup:
 
-## License
+```bash
+php artisan hotel:backup
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Backups are compressed JSON Lines files in `storage/app/private/backups`. The scheduler creates one daily at 02:30 and retains the latest 14. Copy backups to durable off-site storage in production; an ephemeral web-service filesystem is not sufficient.
+
+## Testing
+
+The test suite uses an in-memory SQLite database and rebuilds the complete schema:
+
+```bash
+php artisan test
+```
+
+Useful validation commands:
+
+```bash
+php artisan migrate:fresh --env=testing
+php artisan route:list
+php artisan view:cache
+vendor/bin/pint --test
+```
+
+## Deployment
+
+Repository deployment definitions are provided for Render (`render.yaml`) and Railway (`railway.json`). See [Render with Railway MySQL](docs/render-with-railway-mysql.md) for the split-host setup.
+
+Production checklist:
+
+1. Set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, and a persistent `APP_KEY`.
+2. Configure MySQL, mail, queue, and public filesystem settings.
+3. Run `composer install --no-dev --optimize-autoloader`.
+4. Run `npm ci && npm run build`.
+5. Run `php artisan migrate --force` and `php artisan storage:link`.
+6. Run `php artisan optimize`.
+7. Keep `php artisan queue:work` running.
+8. Run `php artisan schedule:run` every minute.
+9. Persist uploaded images and copy database backups off-site.
+
+## Security notes
+
+- Logout is POST-only and CSRF protected.
+- Public route identifiers use signed opaque tokens; older encrypted tokens remain readable.
+- Payment proof paths and credentials are redacted from operational audit changes.
+- Uploaded files are validated as images and size-limited.
+- Keep application keys, database credentials, OAuth secrets, and mail credentials only in environment variables.

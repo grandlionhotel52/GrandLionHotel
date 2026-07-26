@@ -17,8 +17,7 @@ class RoomController extends Controller
     public function __construct(
         private readonly PricingService $pricingService,
         private readonly AvailabilityService $availabilityService
-    ) {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -63,26 +62,9 @@ class RoomController extends Controller
         return view('rooms.show', compact('room', 'stay', 'pricingPreview', 'stayAvailability'));
     }
 
-    public function search(Request $request)
+    public function redirectLegacySearch(Request $request)
     {
-        if ($normalizedStay = $this->normalizeStayDates($request)) {
-            return redirect()->route('rooms.search', array_merge(
-                $request->except(['check_in', 'check_out']),
-                $normalizedStay
-            ));
-        }
-
-        $stay = $this->resolveStayFilters($request);
-        $roomsQuery = Room::query();
-
-        $this->applyFilters($roomsQuery, $request, $stay);
-
-        $this->applySort($roomsQuery, $request->string('sort', 'recommended')->toString());
-
-        $rooms = $roomsQuery->paginate(9)->withQueryString();
-        $this->attachStayPricing($rooms->getCollection(), $stay);
-
-        return view('rooms.search', compact('rooms', 'stay'));
+        return redirect()->route('rooms.index', $request->query(), 301);
     }
 
     public function pricingPreview(Request $request, Room $room): JsonResponse
@@ -95,7 +77,7 @@ class RoomController extends Controller
 
         $requestedGuests = max(1, $request->integer('guests', Room::standardGuestCapacity()));
 
-        if (!$stay['is_valid']) {
+        if (! $stay['is_valid']) {
             return response()->json([
                 'message' => 'Select a valid check-in and check-out date range.',
                 'errors' => [
@@ -112,7 +94,7 @@ class RoomController extends Controller
             'availability' => [
                 'room_status_available' => $room->is_available,
                 'stay_available' => $stayAvailable,
-                'message' => !$room->is_available
+                'message' => ! $room->is_available
                     ? 'This room is currently unavailable.'
                     : ($stayAvailable
                         ? 'Available for your selected dates.'
@@ -205,7 +187,7 @@ class RoomController extends Controller
         $isValid = $checkIn->greaterThanOrEqualTo(Carbon::today())
             && $checkOut->greaterThan($checkIn);
 
-        if (!$isValid) {
+        if (! $isValid) {
             return [
                 'check_in' => $checkIn->toDateString(),
                 'check_out' => $checkOut->toDateString(),
@@ -265,7 +247,7 @@ class RoomController extends Controller
 
     private function attachStayPricing(Collection $rooms, array $stay): void
     {
-        if (!$stay['is_valid']) {
+        if (! $stay['is_valid']) {
             return;
         }
 

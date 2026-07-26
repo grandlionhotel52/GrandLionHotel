@@ -42,19 +42,13 @@ class AdminRoomDateDiscountsTest extends TestCase
         ]);
 
         $startDate = Carbon::parse('2026-12-19');
-        $dates = collect(range(0, 6))->map(
-            static fn (int $offset): string => $startDate->copy()->addDays($offset)->toDateString()
-        );
-
         foreach ([$roomA, $roomB] as $room) {
-            foreach ($dates as $discountDate) {
-                RoomDateDiscount::query()->create([
-                    'room_id' => $room->id,
-                    'discount_date' => $discountDate,
-                    'discount_percent' => 10,
-                    'admin_id' => $admin->id,
-                ]);
-            }
+            RoomDateDiscount::query()->create([
+                'room_id' => $room->id,
+                'discount_date_start' => $startDate->toDateString(),
+                'discount_date_end' => $startDate->copy()->addDays(6)->toDateString(),
+                'discount_percent' => 10,
+            ]);
         }
 
         $response = $this->actingAs($admin, 'admin')
@@ -63,8 +57,8 @@ class AdminRoomDateDiscountsTest extends TestCase
         $response->assertOk();
         $response->assertViewHas('from', '2026-12-19');
         $response->assertViewHas('to', '2027-03-19');
-        $response->assertViewHas('summary', fn (array $summary): bool => $summary['entry_count'] === 14
-            && $summary['date_count'] === 7
+        $response->assertViewHas('summary', fn (array $summary): bool => $summary['entry_count'] === 2
+            && $summary['date_count'] === 1
             && $summary['room_count'] === 2);
         $response->assertSee('Dec 19, 2026 - Dec 25, 2026');
     }
@@ -75,19 +69,13 @@ class AdminRoomDateDiscountsTest extends TestCase
         $roomA = Room::factory()->create(['name' => 'Room 401']);
         $roomB = Room::factory()->create(['name' => 'Room 402']);
 
-        $originalDates = collect(range(0, 6))->map(
-            static fn (int $offset): string => Carbon::parse('2026-12-19')->addDays($offset)->toDateString()
-        );
-
         foreach ([$roomA, $roomB] as $room) {
-            foreach ($originalDates as $discountDate) {
-                RoomDateDiscount::query()->create([
-                    'room_id' => $room->id,
-                    'discount_date' => $discountDate,
-                    'discount_percent' => 10,
-                    'admin_id' => $admin->id,
-                ]);
-            }
+            RoomDateDiscount::query()->create([
+                'room_id' => $room->id,
+                'discount_date_start' => '2026-12-19',
+                'discount_date_end' => '2026-12-25',
+                'discount_percent' => 10,
+            ]);
         }
 
         $response = $this->actingAs($admin, 'admin')->patch(
@@ -111,16 +99,18 @@ class AdminRoomDateDiscountsTest extends TestCase
 
         $this->assertDatabaseMissing('room_date_discounts', [
             'room_id' => $roomA->id,
-            'discount_date' => '2026-12-19',
+            'discount_date_start' => '2026-12-19',
         ]);
         $this->assertDatabaseHas('room_date_discounts', [
             'room_id' => $roomA->id,
-            'discount_date' => '2026-12-27',
+            'discount_date_start' => '2026-12-20',
+            'discount_date_end' => '2026-12-27',
             'discount_percent' => 15,
         ]);
         $this->assertDatabaseHas('room_date_discounts', [
             'room_id' => $roomB->id,
-            'discount_date' => '2026-12-27',
+            'discount_date_start' => '2026-12-20',
+            'discount_date_end' => '2026-12-27',
             'discount_percent' => 15,
         ]);
     }
@@ -132,14 +122,12 @@ class AdminRoomDateDiscountsTest extends TestCase
         $roomB = Room::factory()->create(['name' => 'Room 502']);
 
         foreach ([$roomA, $roomB] as $room) {
-            foreach (range(0, 2) as $offset) {
-                RoomDateDiscount::query()->create([
-                    'room_id' => $room->id,
-                    'discount_date' => Carbon::parse('2026-12-19')->addDays($offset)->toDateString(),
-                    'discount_percent' => 12,
-                    'admin_id' => $admin->id,
-                ]);
-            }
+            RoomDateDiscount::query()->create([
+                'room_id' => $room->id,
+                'discount_date_start' => '2026-12-19',
+                'discount_date_end' => '2026-12-21',
+                'discount_percent' => 12,
+            ]);
         }
 
         $response = $this->actingAs($admin, 'admin')->delete(
@@ -160,11 +148,11 @@ class AdminRoomDateDiscountsTest extends TestCase
 
         $this->assertDatabaseMissing('room_date_discounts', [
             'room_id' => $roomA->id,
-            'discount_date' => '2026-12-19',
+            'discount_date_start' => '2026-12-19',
         ]);
         $this->assertDatabaseMissing('room_date_discounts', [
             'room_id' => $roomB->id,
-            'discount_date' => '2026-12-21',
+            'discount_date_end' => '2026-12-21',
         ]);
     }
 
@@ -175,9 +163,9 @@ class AdminRoomDateDiscountsTest extends TestCase
 
         RoomDateDiscount::query()->create([
             'room_id' => $room->id,
-            'discount_date' => '2026-12-20',
+            'discount_date_start' => '2026-12-20',
+            'discount_date_end' => '2026-12-20',
             'discount_percent' => 10,
-            'admin_id' => $admin->id,
         ]);
 
         $response = $this->actingAs($admin, 'admin')->post(
@@ -196,12 +184,8 @@ class AdminRoomDateDiscountsTest extends TestCase
 
         $this->assertDatabaseHas('room_date_discounts', [
             'room_id' => $room->id,
-            'discount_date' => '2026-12-20',
-            'discount_percent' => 10,
-        ]);
-        $this->assertDatabaseHas('room_date_discounts', [
-            'room_id' => $room->id,
-            'discount_date' => '2026-12-21',
+            'discount_date_start' => '2026-12-20',
+            'discount_date_end' => '2026-12-21',
             'discount_percent' => 15,
         ]);
     }

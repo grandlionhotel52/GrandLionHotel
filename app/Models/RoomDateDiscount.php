@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HasLegacyIdAttribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RoomDateDiscount extends Model
 {
@@ -13,6 +14,7 @@ class RoomDateDiscount extends Model
 
     protected $fillable = [
         'room_id',
+        'discount_date',
         'discount_date_start',
         'discount_date_end',
         'discount_percent',
@@ -32,4 +34,14 @@ class RoomDateDiscount extends Model
         return $this->belongsTo(Room::class, 'room_id', 'room_id');
     }
 
+    public function setDiscountDateAttribute(mixed $value): void
+    {
+        $this->attributes['discount_date_start'] = $value;
+        $this->attributes['discount_date_end'] = $value;
+    }
+
+    public function getDiscountDateAttribute(): mixed
+    {
+        return $this->discount_date_start;
+    }
 }

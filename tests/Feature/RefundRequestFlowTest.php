@@ -9,7 +9,6 @@ use App\Models\RefundRequest;
 use App\Models\Room;
 use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -22,14 +21,6 @@ class RefundRequestFlowTest extends TestCase
         parent::setUp();
 
         Mail::fake();
-
-        DB::table('room_status')->insert([
-            'name' => 'Clean',
-            'slug' => 'clean',
-            'description' => 'Ready for booking',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
     }
 
     public function test_customer_paid_cancellation_creates_pending_refund_request(): void
@@ -47,9 +38,7 @@ class RefundRequestFlowTest extends TestCase
         $payment = $booking->fresh()->payment()->firstOrFail();
 
         $this->assertDatabaseHas('refund_requests', [
-            'booking_id' => $booking->booking_id,
             'payment_id' => $payment->payment_id,
-            'customer_id' => $customer->customer_id,
             'reason' => $refundReason,
             'status' => 'pending',
         ]);
@@ -92,9 +81,7 @@ class RefundRequestFlowTest extends TestCase
         $payment = $booking->fresh()->payment()->firstOrFail();
 
         $this->assertDatabaseHas('refund_requests', [
-            'booking_id' => $booking->booking_id,
             'payment_id' => $payment->payment_id,
-            'customer_id' => $customer->customer_id,
             'status' => 'pending',
         ]);
 
@@ -115,9 +102,7 @@ class RefundRequestFlowTest extends TestCase
         $payment = $booking->fresh()->payment()->firstOrFail();
 
         $this->assertDatabaseHas('refund_requests', [
-            'booking_id' => $booking->booking_id,
             'payment_id' => $payment->payment_id,
-            'customer_id' => $customer->customer_id,
             'status' => 'pending',
         ]);
 

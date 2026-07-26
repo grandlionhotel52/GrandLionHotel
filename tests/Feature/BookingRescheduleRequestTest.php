@@ -8,27 +8,11 @@ use App\Models\Room;
 use App\Models\RoomStatus;
 use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class BookingRescheduleRequestTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        DB::table('room_status')->insert([
-            [
-                'name' => 'Clean',
-                'slug' => 'clean',
-                'description' => 'Ready for booking',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
-    }
 
     public function test_customer_can_request_schedule_change_for_confirmed_unpaid_booking(): void
     {

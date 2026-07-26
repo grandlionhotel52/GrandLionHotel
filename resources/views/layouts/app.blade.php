@@ -527,6 +527,39 @@
                         @auth
                             @if(!auth()->user()->canManageBookings())
                                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('bookings.my') ? 'active' : '' }}" href="{{ route('bookings.my') }}">My Bookings</a></li>
+                                <li class="nav-item dropdown">
+                                    @php
+                                        $unreadNotifications = auth()->user()->unreadNotifications()->latest()->take(5)->get();
+                                    @endphp
+                                    <button class="nav-link position-relative border-0 bg-transparent" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Booking notifications">
+                                        <i class="bi bi-bell"></i>
+                                        @if($unreadNotifications->isNotEmpty())
+                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ min(9, $unreadNotifications->count()) }}</span>
+                                        @endif
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end p-2 shadow" style="width: min(340px, 92vw)">
+                                        <p class="small text-uppercase fw-bold text-secondary px-2 pt-1 mb-2">Booking updates</p>
+                                        @forelse($unreadNotifications as $notification)
+                                            @php
+                                                $notificationBooking = \App\Models\Booking::query()->find(data_get($notification->data, 'booking_id'));
+                                            @endphp
+                                            @if($notificationBooking)
+                                                <a class="dropdown-item rounded text-wrap py-2" href="{{ route('bookings.show', $notificationBooking) }}">
+                                                    <span class="d-block small fw-bold">{{ data_get($notification->data, 'message', 'Booking updated.') }}</span>
+                                                    <span class="d-block text-secondary" style="font-size: .72rem">{{ $notification->created_at->diffForHumans() }}</span>
+                                                </a>
+                                            @endif
+                                        @empty
+                                            <p class="small text-secondary px-2 py-2 mb-0">No new notifications.</p>
+                                        @endforelse
+                                        @if($unreadNotifications->isNotEmpty())
+                                            <form method="POST" action="{{ route('notifications.read') }}" class="px-2 pt-2">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-ta-outline w-100">Mark all as read</button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </li>
                             @endif
                             <li class="nav-item auth-cta-wrap">
                                 <div class="auth-cta-group">

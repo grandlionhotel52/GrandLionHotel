@@ -11,6 +11,7 @@ use App\Models\RoomStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -19,7 +20,7 @@ class RoomController extends Controller
     public function index(Request $request)
     {
         $availability = $request->string('availability')->toString();
-        if (!in_array($availability, ['all', 'available', 'unavailable'], true)) {
+        if (! in_array($availability, ['all', 'available', 'unavailable'], true)) {
             $availability = 'all';
         }
 
@@ -28,7 +29,7 @@ class RoomController extends Controller
             ->get(['room_status_id', 'name', 'slug']);
 
         $roomStatus = trim($request->string('room_status')->toString());
-        if ($roomStatus !== '' && !$roomStatuses->contains(static fn (RoomStatus $status): bool => $status->slug === $roomStatus)) {
+        if ($roomStatus !== '' && ! $roomStatuses->contains(static fn (RoomStatus $status): bool => $status->slug === $roomStatus)) {
             $roomStatus = '';
         }
 
@@ -359,10 +360,14 @@ class RoomController extends Controller
     public function store(StoreRoomRequest $request)
     {
         $data = $request->validated();
+        unset($data['image_upload']);
+        if ($request->hasFile('image_upload')) {
+            $data['image'] = $request->file('image_upload')->store('room-images', 'public');
+        }
         $data['capacity'] = Room::standardGuestCapacity();
 
         // Default new rooms to the ready-for-use room status.
-        if (!isset($data['room_status_id'])) {
+        if (! isset($data['room_status_id'])) {
             $cleanStatus = RoomStatus::where('slug', 'clean')->first();
             if ($cleanStatus) {
                 $data['room_status_id'] = $cleanStatus->id;
@@ -391,6 +396,12 @@ class RoomController extends Controller
     public function update(UpdateRoomRequest $request, Room $room)
     {
         $data = $request->validated();
+        unset($data['image_upload']);
+        if ($request->hasFile('image_upload')) {
+            $oldImage = $room->image;
+            $data['image'] = $request->file('image_upload')->store('room-images', 'public');
+            $this->deleteManagedRoomImage($oldImage);
+        }
         $data['capacity'] = Room::standardGuestCapacity();
 
         if (array_key_exists('room_status_id', $data) && (int) $data['room_status_id'] !== (int) $room->room_status_id) {
@@ -405,11 +416,20 @@ class RoomController extends Controller
 
     public function destroy(Room $room)
     {
+        $this->deleteManagedRoomImage($room->image);
         $room->delete();
 
         return redirect()->route('admin.rooms.index')->with('status', 'Room deleted successfully.');
     }
-    
+
+    private function deleteManagedRoomImage(?string $path): void
+    {
+        $path = trim((string) $path);
+        if ($path !== '' && Str::startsWith($path, 'room-images/')) {
+            Storage::disk('public')->delete($path);
+        }
+    }
+
     public function updateRoomStatus(Request $request, Room $room)
     {
         $validated = $request->validate([
@@ -417,13 +437,13 @@ class RoomController extends Controller
         ]);
 
         $status = $this->roomStatusOptionsQuery()->findOrFail((int) $validated['room_status_id']);
-        
+
         $room->update([
             'room_status_id' => $status->id,
             'admin_id' => $request->user()->id,
             'status_updated_at' => now(),
         ]);
-        
+
         return back()->with('status', 'Room status updated successfully. Booking availability synced automatically.');
     }
 

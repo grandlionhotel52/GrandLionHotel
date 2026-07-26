@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\Admin;
+use App\Models\Customer;
+use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -18,7 +20,7 @@ class AuthLoginHardeningTest extends TestCase
         $throttleKey = $this->throttleKey($email);
         RateLimiter::clear($throttleKey);
 
-        User::factory()->create([
+        Customer::factory()->create([
             'email' => $email,
             'password' => Hash::make('SecurePass123'),
         ]);
@@ -52,7 +54,7 @@ class AuthLoginHardeningTest extends TestCase
         $throttleKey = $this->throttleKey($email);
         RateLimiter::clear($throttleKey);
 
-        User::factory()->create([
+        Customer::factory()->create([
             'email' => $email,
             'password' => Hash::make('RightPass123'),
         ]);
@@ -91,7 +93,7 @@ class AuthLoginHardeningTest extends TestCase
     {
         $email = 'staff.login@example.com';
 
-        User::factory()->staff()->create([
+        Staff::factory()->create([
             'email' => $email,
             'password' => Hash::make('StaffPass123'),
         ]);
@@ -108,7 +110,7 @@ class AuthLoginHardeningTest extends TestCase
     {
         $email = 'admin.login@example.com';
 
-        User::factory()->admin()->create([
+        Admin::factory()->create([
             'email' => $email,
             'password' => Hash::make('AdminPass123'),
         ]);

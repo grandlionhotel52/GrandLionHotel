@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
+    public function markNotificationsRead()
+    {
+        request()->user()->unreadNotifications->markAsRead();
+
+        return back()->with('status', 'Notifications marked as read.');
+    }
+
     public function edit(Request $request)
     {
         return view('profile.edit', [

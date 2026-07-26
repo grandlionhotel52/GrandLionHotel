@@ -552,6 +552,7 @@
                 <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active fw-semibold' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.sales-report') ? 'active fw-semibold' : '' }}" href="{{ route('admin.sales-report') }}">Sales Report</a></li>
+                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.occupancy-report') ? 'active fw-semibold' : '' }}" href="{{ route('admin.occupancy-report') }}">Occupancy</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.rooms.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.rooms.index') }}">Rooms</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.bookings.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.bookings.index') }}">Bookings</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.users.index') }}">Customers</a></li>

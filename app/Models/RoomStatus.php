@@ -12,4 +12,10 @@ class RoomStatus extends Model
     protected $table = 'room_status';
 
     protected $primaryKey = 'room_status_id';
+
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+    ];
 }

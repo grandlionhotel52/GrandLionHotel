@@ -12,7 +12,7 @@
     </div>
 
     <section class="soft-card p-4">
-        <form method="POST" action="{{ route('admin.rooms.update', $room) }}" class="row g-3">
+        <form method="POST" action="{{ route('admin.rooms.update', $room) }}" enctype="multipart/form-data" class="row g-3">
             @csrf
             @method('PUT')
             <div class="col-md-4">
@@ -53,7 +53,15 @@
             <div class="col-md-6">
                 <label class="form-label">Image URL (optional)</label>
                 <input type="url" class="form-control" name="image" value="{{ old('image', $room->image) }}" placeholder="https://example.com/room.jpg">
-                <small class="text-secondary">A hotel placeholder is used when empty.</small>
+                <small class="text-secondary">Keep this value to retain the current image.</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Replace with uploaded image</label>
+                <input type="file" class="form-control" name="image_upload" accept="image/jpeg,image/png,image/webp">
+                <small class="text-secondary">JPG, PNG, or WebP up to 5 MB.</small>
+            </div>
+            <div class="col-12">
+                <img src="{{ $room->image_url }}" alt="Current image for {{ $room->name }}" class="rounded border" style="width: 180px; height: 110px; object-fit: cover;">
             </div>
             <div class="col-12 d-flex justify-content-end gap-2">
                 <a href="{{ route('admin.rooms.index') }}" class="btn btn-ta-outline">Cancel</a>

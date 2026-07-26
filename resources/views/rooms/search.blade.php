@@ -207,7 +207,7 @@
     </section>
 
     <section class="search-filter-shell p-3 p-lg-4 mb-4">
-            <form method="GET" action="{{ route('rooms.search') }}" class="search-filter-grid" id="roomSearchForm">
+            <form method="GET" action="{{ route('rooms.index') }}" class="search-filter-grid" id="roomSearchForm">
                 <div class="field-type">
                     <label class="form-label">Narrow by type or view</label>
                     <input type="text" name="type" class="form-control" value="{{ request('type') }}" placeholder="Suite, Deluxe, Nature View">
@@ -242,7 +242,7 @@
                         <div class="search-filter-actions">
                             <button type="submit" class="btn btn-ta">Apply filters</button>
                             @if(request()->query())
-                                <a href="{{ route('rooms.search') }}" class="btn btn-ta-outline">Reset</a>
+                                <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline">Reset</a>
                             @endif
                         </div>
                     </div>

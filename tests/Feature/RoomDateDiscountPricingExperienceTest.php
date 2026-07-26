@@ -7,25 +7,11 @@ use App\Models\Room;
 use App\Models\RoomDateDiscount;
 use App\Models\RoomStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class RoomDateDiscountPricingExperienceTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        DB::table('room_status')->insert([
-            'name' => 'Clean',
-            'slug' => 'clean',
-            'description' => 'Ready for booking',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
 
     public function test_room_pricing_preview_returns_date_discount_breakdown(): void
     {
@@ -46,9 +32,9 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertJsonPath('pricing.average_nightly_rate', 1750.0);
-        $response->assertJsonPath('pricing.total', 3500.0);
-        $response->assertJsonPath('pricing.discount_amount', 500.0);
+        $response->assertJsonPath('pricing.average_nightly_rate', 1750);
+        $response->assertJsonPath('pricing.total', 3500);
+        $response->assertJsonPath('pricing.discount_amount', 500);
         $response->assertJsonPath('pricing.discounted_nights', 1);
         $response->assertJsonPath('availability.stay_available', true);
     }
@@ -66,7 +52,7 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
             'discount_percent' => 25,
         ]);
 
-        $response = $this->get(route('rooms.search', [
+        $response = $this->get(route('rooms.index', [
             'check_in' => now()->addDay()->toDateString(),
             'check_out' => now()->addDays(3)->toDateString(),
             'guests' => 2,

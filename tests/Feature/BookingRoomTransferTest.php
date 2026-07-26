@@ -8,27 +8,11 @@ use App\Models\Room;
 use App\Models\RoomStatus;
 use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class BookingRoomTransferTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        DB::table('room_status')->insert([
-            [
-                'name' => 'Clean',
-                'slug' => 'clean',
-                'description' => 'Ready for booking',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
-    }
 
     public function test_staff_can_transfer_unpaid_booking_and_recalculate_amount(): void
     {

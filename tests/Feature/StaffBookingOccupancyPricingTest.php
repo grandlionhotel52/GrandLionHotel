@@ -9,7 +9,6 @@ use App\Models\Room;
 use App\Models\RoomStatus;
 use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class StaffBookingOccupancyPricingTest extends TestCase
@@ -21,14 +20,6 @@ class StaffBookingOccupancyPricingTest extends TestCase
         parent::setUp();
 
         config(['pricing.extra_bedding_fee_per_night' => 500]);
-
-        DB::table('room_status')->insert([
-            'name' => 'Clean',
-            'slug' => 'clean',
-            'description' => 'Ready for booking',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
     }
 
     public function test_staff_recalculates_unpaid_booking_amount_when_occupancy_changes(): void
