@@ -50,7 +50,6 @@
             gap: 0.8rem;
             grid-template-columns: repeat(15, minmax(0, 1fr));
         }
-        .search-filter-grid .field-quick-search { grid-column: 1 / -1; }
         .search-filter-grid .field-type { grid-column: span 3; }
         .search-filter-grid .field-check-in { grid-column: span 3; }
         .search-filter-grid .field-check-out { grid-column: span 3; }
@@ -72,78 +71,6 @@
         .search-filter-actions .btn {
             min-width: 8.5rem;
             white-space: nowrap;
-        }
-        .quick-search-wrap {
-            position: relative;
-        }
-        .quick-search-wrap .form-control {
-            min-height: 3.5rem;
-            border: 1px solid rgba(184, 146, 84, 0.45);
-            border-radius: 16px;
-            background: #fffdf9;
-            padding-left: 3rem;
-            padding-right: 3rem;
-            font-size: 1rem;
-            box-shadow: 0 8px 20px rgba(34, 44, 58, 0.06);
-        }
-        .quick-search-wrap .form-control:focus {
-            border-color: var(--brand);
-            background: #fff;
-            box-shadow: 0 0 0 0.22rem rgba(184, 146, 84, 0.14);
-        }
-        .quick-search-icon {
-            position: absolute;
-            top: 50%;
-            left: 1.1rem;
-            z-index: 2;
-            color: var(--brand-deep);
-            font-size: 1.12rem;
-            transform: translateY(-50%);
-            pointer-events: none;
-        }
-        .quick-search-clear {
-            position: absolute;
-            top: 50%;
-            right: 0.8rem;
-            z-index: 2;
-            display: inline-grid;
-            width: 1.7rem;
-            height: 1.7rem;
-            place-items: center;
-            border: 0;
-            border-radius: 999px;
-            background: transparent;
-            color: #687386;
-            transform: translateY(-50%);
-        }
-        .quick-search-clear:hover,
-        .quick-search-clear:focus-visible {
-            background: #f1f4f8;
-            color: #1f2937;
-        }
-        .quick-search-help {
-            min-height: 1rem;
-            margin: 0.35rem 0.2rem 0;
-            color: #6b7280;
-            font-size: 0.72rem;
-        }
-        .quick-search-label-row {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.35rem 0.75rem;
-            margin-bottom: 0.45rem;
-        }
-        .quick-search-label-row .form-label {
-            margin-bottom: 0;
-            font-size: 0.9rem;
-            font-weight: 800;
-        }
-        .quick-search-label-row .search-scope {
-            color: #7a8493;
-            font-size: 0.72rem;
-            font-weight: 600;
         }
         .search-selected-stay {
             border-radius: 14px;
@@ -205,9 +132,6 @@
             .search-filter-grid {
                 grid-template-columns: repeat(12, minmax(0, 1fr));
             }
-            .search-filter-grid .field-quick-search {
-                grid-column: 1 / -1;
-            }
             .search-filter-grid .field-type {
                 grid-column: span 4;
             }
@@ -219,9 +143,6 @@
             }
         }
         @media (max-width: 991.98px) {
-            .search-filter-grid .field-quick-search {
-                grid-column: 1 / -1;
-            }
             .search-filter-grid .field-type,
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
@@ -231,7 +152,6 @@
             }
         }
         @media (max-width: 575.98px) {
-            .search-filter-grid .field-quick-search,
             .search-filter-grid .field-type,
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
@@ -262,9 +182,6 @@
         ];
         $standardGuests = \App\Models\Room::standardGuestCapacity();
         $activeFilters = [];
-        if (filled(request('q'))) {
-            $activeFilters[] = ['label' => 'Search', 'value' => request('q')];
-        }
         if (filled(request('type'))) {
             $activeFilters[] = ['label' => 'Type', 'value' => request('type')];
         }
@@ -291,29 +208,6 @@
 
     <section class="search-filter-shell p-3 p-lg-4 mb-4">
             <form method="GET" action="{{ route('rooms.search') }}" class="search-filter-grid" id="roomSearchForm">
-                <div class="field-quick-search">
-                    <div class="quick-search-label-row">
-                        <label class="form-label" for="roomQuickSearch">Find a room</label>
-                        <span class="search-scope">Search by room name, type, or view</span>
-                    </div>
-                    <div class="quick-search-wrap">
-                        <i class="bi bi-search quick-search-icon" aria-hidden="true"></i>
-                        <input
-                            type="search"
-                            name="q"
-                            id="roomQuickSearch"
-                            class="form-control"
-                            value="{{ request('q') }}"
-                            placeholder="Try “Deluxe”, “Suite”, or “Nature View”"
-                            autocomplete="off"
-                            aria-describedby="roomQuickSearchHelp"
-                        >
-                        <button type="button" class="quick-search-clear {{ filled(request('q')) ? '' : 'd-none' }}" id="roomQuickSearchClear" aria-label="Clear quick search">
-                            <i class="bi bi-x-lg" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                    <div class="quick-search-help" id="roomQuickSearchHelp" aria-live="polite">Results update as you type.</div>
-                </div>
                 <div class="field-type">
                     <label class="form-label">Narrow by type or view</label>
                     <input type="text" name="type" class="form-control" value="{{ request('type') }}" placeholder="Suite, Deluxe, Nature View">
@@ -470,47 +364,3 @@
         {{ $rooms->links() }}
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.getElementById('roomSearchForm');
-            const field = document.getElementById('roomQuickSearch');
-            const clearButton = document.getElementById('roomQuickSearchClear');
-            const help = document.getElementById('roomQuickSearchHelp');
-
-            if (!form || !field) {
-                return;
-            }
-
-            let timer;
-            const submittedValue = field.value.trim();
-
-            const submitSearch = function () {
-                help.textContent = 'Searching rooms...';
-                form.requestSubmit();
-            };
-
-            field.addEventListener('input', function () {
-                window.clearTimeout(timer);
-                const value = field.value.trim();
-                clearButton?.classList.toggle('d-none', value === '');
-                help.textContent = value === '' ? 'Showing all rooms...' : 'Waiting for you to finish typing...';
-
-                if (value === submittedValue) {
-                    help.textContent = 'Results update as you type.';
-                    return;
-                }
-
-                timer = window.setTimeout(submitSearch, 450);
-            });
-
-            clearButton?.addEventListener('click', function () {
-                window.clearTimeout(timer);
-                field.value = '';
-                clearButton.classList.add('d-none');
-                submitSearch();
-            });
-        });
-    </script>
-@endpush
