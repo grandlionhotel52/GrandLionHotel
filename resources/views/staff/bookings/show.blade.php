@@ -119,6 +119,21 @@
             display: inline-flex;
             align-items: center;
         }
+        .booking-top-chip.success {
+            border-color: rgba(6, 118, 71, 0.3);
+            background: rgba(6, 118, 71, 0.1);
+            color: #067647;
+        }
+        .booking-top-chip.warning {
+            border-color: rgba(154, 103, 0, 0.32);
+            background: rgba(245, 158, 11, 0.12);
+            color: #805500;
+        }
+        .booking-top-chip.danger {
+            border-color: rgba(180, 35, 24, 0.3);
+            background: rgba(180, 35, 24, 0.09);
+            color: #b42318;
+        }
         .booking-log-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -188,6 +203,16 @@
         $currentKids = max(0, (int) old('kids', $booking->guestDetail?->kids ?? 0));
         $currentOccupancyTotal = $currentAdults + $currentKids;
         $currentExtraBedding = max(0, $currentOccupancyTotal - $standardGuests);
+        $bookingChipClass = match ($booking->status) {
+            'confirmed', 'completed' => 'success',
+            'cancelled' => 'danger',
+            default => 'warning',
+        };
+        $paymentChipClass = match ($booking->payment_status) {
+            'paid' => 'success',
+            'refund_pending' => 'warning',
+            default => $booking->status === 'cancelled' ? 'danger' : 'warning',
+        };
     @endphp
 
     <section class="mb-4">
@@ -199,8 +224,8 @@
         </div>
         <h1 class="h4 mb-1">Booking #{{ $booking->id }}</h1>
         <div class="d-flex flex-wrap gap-2">
-            <span class="booking-top-chip">Booking status: {{ $bookingStatusLabel }}</span>
-            <span class="booking-top-chip">Payment status: {{ $paymentStatusLabel }}</span>
+            <span class="booking-top-chip {{ $bookingChipClass }}">Booking: {{ $bookingStatusLabel }}</span>
+            <span class="booking-top-chip {{ $paymentChipClass }}">Payment: {{ $paymentStatusLabel }}</span>
             <span class="booking-top-chip">Guest: {{ $displayName }}</span>
         </div>
     </section>
@@ -249,8 +274,8 @@
     <section class="booking-shell p-3 p-lg-4 mb-4" id="arrival-departure-log">
         <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-3">
             <div>
-                <h2 class="h5 mb-1">Arrival & Departure Log</h2>
-                <p class="booking-note mb-0">Staff records the actual guest arrival and departure here. Customers can only view these timestamps in their booking details.</p>
+                <h2 class="h5 mb-1">Arrival and departure</h2>
+                <p class="booking-note mb-0">Record the guest’s actual check-in and check-out times.</p>
             </div>
         </div>
         <div class="booking-log-grid">

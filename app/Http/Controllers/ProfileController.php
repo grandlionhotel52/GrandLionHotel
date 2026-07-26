@@ -35,6 +35,12 @@ class ProfileController extends Controller
 
         $user->update($data);
 
+        if ($user->hasCompleteProfile() && $returnTo = $request->session()->pull('profile.return_to')) {
+            return redirect()
+                ->to($returnTo)
+                ->with('status', 'Profile details updated successfully.');
+        }
+
         return redirect()
             ->route('profile.edit')
             ->with('status', 'Profile details updated successfully.');

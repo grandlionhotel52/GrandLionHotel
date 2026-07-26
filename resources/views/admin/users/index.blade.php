@@ -163,6 +163,7 @@
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
+                <caption class="visually-hidden">Customer accounts, profile status, booking history, and account actions</caption>
                 <thead>
                     <tr>
                         <th>Customer</th>
@@ -233,7 +234,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4">No customer accounts found.</td>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="bi bi-people fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
+                                <strong class="d-block">No matching customers</strong>
+                                <span class="text-secondary">Change or reset the filters.</span>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

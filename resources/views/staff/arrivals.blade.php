@@ -110,7 +110,7 @@
             text-align: center;
         }
         .gcash-open-btn {
-            border-radius: 999px;
+            border-radius: 10px;
             border: 0;
             background: linear-gradient(90deg, #0d69ec 0%, #0b58d1 100%);
             color: #fff;
@@ -223,6 +223,7 @@
         @else
             <div class="table-responsive">
                 <table class="table arrivals-table align-middle mb-0">
+                    <caption class="visually-hidden">Today’s arrivals and available staff actions</caption>
                     <thead>
                         <tr>
                             <th>ID</th>

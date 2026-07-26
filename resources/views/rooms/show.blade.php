@@ -84,6 +84,9 @@
             $checkOut = now()->addDay()->toDateString();
         }
         $minimumCheckOut = now()->addDay()->toDateString();
+        $viewer = request()->user();
+        $canStartCustomerBooking = !$viewer || $viewer->isCustomer();
+        $bookingButtonLabel = $viewer ? 'Continue' : 'Sign in and continue';
     @endphp
 
     <div class="row g-4">
@@ -109,14 +112,14 @@
                     </div>
 
                     <p class="text-secondary mb-4">
-                        {{ $room->description ?: 'This room is designed for comfort and practical travel needs, with clear pricing and a smooth reservation process.' }}
+                        {{ $room->description ?: 'A comfortable room for a relaxing stay.' }}
                     </p>
 
                     <div class="room-feature-grid">
-                        <div class="room-feature"><i class="bi bi-person-check me-1"></i> Standard occupancy: {{ $standardGuests }} guests</div>
-                        <div class="room-feature"><i class="bi bi-grid-1x2 me-1"></i> Type: {{ $room->type }}</div>
-                        <div class="room-feature"><i class="bi bi-tree me-1"></i> View: {{ $room->view_type ?: 'Not specified' }}</div>
-                        <div class="room-feature"><i class="bi bi-shield-check me-1"></i> Extra bedding available upon request</div>
+                        <div class="room-feature"><i class="bi bi-person-check me-1"></i> {{ $standardGuests }} guests</div>
+                        <div class="room-feature"><i class="bi bi-grid-1x2 me-1"></i> {{ $room->type }}</div>
+                        <div class="room-feature"><i class="bi bi-tree me-1"></i> {{ $room->view_type ?: 'View not specified' }}</div>
+                        <div class="room-feature"><i class="bi bi-shield-check me-1"></i> Extra bed on request</div>
                     </div>
                 </div>
             </article>
@@ -129,7 +132,7 @@
                     &#8369;{{ number_format($pricingPreview['average_nightly_rate'] ?? $room->price_per_night, 2) }}
                 </div>
                 <small class="text-secondary d-block" id="room_price_caption">
-                    {{ $pricingPreview ? 'selected-stay average / night' : 'per night' }}
+                    {{ $pricingPreview ? 'average per night' : 'per night' }}
                 </small>
                 <p class="small mb-3 {{ $pricingPreview && $pricingPreview['has_date_discount'] ? '' : 'd-none' }}" id="room_base_rate_wrap">
                     <span class="text-secondary text-decoration-line-through" id="room_base_rate">
@@ -144,12 +147,8 @@
                 </p>
 
                 <ul class="list-unstyled small text-secondary mb-4">
-                    <li class="mb-2">Room type: <strong class="text-dark">{{ $room->type }}</strong></li>
-                    <li class="mb-2">View: <strong class="text-dark">{{ $room->view_type ?: 'Not specified' }}</strong></li>
-                    <li class="mb-2">Occupancy: <strong class="text-dark">{{ $standardGuests }} guests standard</strong></li>
-                    <li class="mb-2">Extra bedding: <strong class="text-dark">Available by request</strong></li>
                     <li class="mb-2">
-                        Selected stay:
+                        Stay:
                         <strong class="text-dark" id="room_stay_value">
                             @if($pricingPreview)
                                 {{ \Carbon\Carbon::parse($pricingPreview['check_in'])->format('M d, Y') }}
@@ -162,7 +161,7 @@
                         </strong>
                     </li>
                     <li class="mb-2">
-                        Selected stay total:
+                        Total:
                         <strong class="text-dark" id="room_total_value">
                             @if($pricingPreview)
                                 &#8369;{{ number_format($pricingPreview['total'], 2) }}
@@ -184,7 +183,7 @@
                 </ul>
 
                 @if($room->is_available)
-                    @auth
+                    @if($canStartCustomerBooking)
                         <form
                             method="GET"
                             action="{{ route('bookings.create', $room) }}"
@@ -193,23 +192,39 @@
                             data-preview-url="{{ route('rooms.pricing-preview', $room) }}"
                         >
                             <div>
-                                <label class="form-label small mb-1">Check-in</label>
+                                <label class="form-label small mb-1" for="room_check_in_input">Check-in</label>
                                 <input type="date" class="form-control" name="check_in" id="room_check_in_input" min="{{ now()->toDateString() }}" value="{{ $checkIn }}" required>
                             </div>
                             <div>
-                                <label class="form-label small mb-1">Check-out</label>
+                                <label class="form-label small mb-1" for="room_check_out_input">Check-out</label>
                                 <input type="date" class="form-control" name="check_out" id="room_check_out_input" min="{{ $minimumCheckOut }}" value="{{ $checkOut }}" required>
                             </div>
                             <p class="small text-secondary mb-1">
-                                Standard room setup is for {{ $standardGuests }} guests. Extra bedding can be requested during booking.
+                                {{ $standardGuests }} guests included. Extra bed available.
                             </p>
-                            <br>
-                            <button type="submit" class="btn btn-ta w-100" id="room_booking_submit">Continue to booking form</button>
+                            @if(!$viewer)
+                                <p class="small text-secondary mb-1">
+                                    <i class="bi bi-shield-lock me-1"></i>
+                                    Sign in is required to book.
+                                </p>
+                            @endif
+                            <button
+                                type="submit"
+                                class="btn btn-ta w-100"
+                                id="room_booking_submit"
+                                data-ready-label="{{ $bookingButtonLabel }}"
+                            >{{ $bookingButtonLabel }}</button>
                         </form>
                         <div class="small mt-2 text-secondary" id="room_booking_feedback" aria-live="polite"></div>
                     @else
-                        <a href="{{ route('login') }}" class="btn btn-ta w-100">Sign in to continue</a>
-                    @endauth
+                        <div class="alert alert-light border small mb-2">
+                            Customer bookings require a customer account.
+                        </div>
+                        <a
+                            href="{{ $viewer->isAdmin() ? route('admin.dashboard') : route('staff.dashboard') }}"
+                            class="btn btn-ta w-100"
+                        >Return to dashboard</a>
+                    @endif
                 @else
                     <button class="btn btn-secondary w-100" disabled>Unavailable for booking</button>
                 @endif
@@ -298,7 +313,7 @@
                     const canContinue = availability?.stay_available ?? false;
                     bookingSubmit.disabled = !canContinue;
                     bookingSubmit.textContent = canContinue
-                        ? 'Continue to booking form'
+                        ? bookingSubmit.dataset.readyLabel
                         : 'Unavailable for selected dates';
                 }
             };
@@ -333,7 +348,7 @@
                 }
 
                 if (priceCaption) {
-                    priceCaption.textContent = 'selected-stay average / night';
+                    priceCaption.textContent = 'average per night';
                 }
 
                 if (baseRate) {
@@ -372,6 +387,15 @@
                 if (!checkIn || !checkOut || checkOut <= checkIn) {
                     setFallbackPricing('Select a valid check-in and check-out date range.');
                     return;
+                }
+
+                if (bookingSubmit) {
+                    bookingSubmit.disabled = true;
+                    bookingSubmit.textContent = 'Checking availability...';
+                }
+
+                if (bookingFeedback) {
+                    bookingFeedback.textContent = 'Checking live price and availability...';
                 }
 
                 try {

@@ -2,6 +2,62 @@
 
 @section('title', 'Checkout')
 
+@push('head')
+    <style>
+        .checkout-summary {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.7rem;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fffdf9;
+            padding: 1rem;
+        }
+        .checkout-summary-item {
+            border-radius: 12px;
+            background: #fff;
+            padding: 0.7rem 0.8rem;
+        }
+        .checkout-summary-item.total {
+            grid-column: 1 / -1;
+            border: 1px solid rgba(184, 146, 84, 0.38);
+            background: rgba(184, 146, 84, 0.09);
+        }
+        .checkout-summary-label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.15rem;
+        }
+        .checkout-summary-value {
+            font-weight: 800;
+            color: var(--ink);
+        }
+        .instapay-panel {
+            border: 1px solid rgba(23, 92, 211, 0.25);
+            border-radius: 16px;
+            background: rgba(23, 92, 211, 0.05);
+            padding: 1rem;
+        }
+        .instapay-qr {
+            width: min(220px, 100%);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+            padding: 0.45rem;
+        }
+        @media (max-width: 575.98px) {
+            .checkout-summary {
+                grid-template-columns: 1fr;
+            }
+            .checkout-summary-item.total {
+                grid-column: auto;
+            }
+        }
+    </style>
+@endpush
+
 @section('content')
     @php
         $preferredMethod = data_get($booking->reservation_meta, 'payment_preference');
@@ -21,27 +77,56 @@
         $extraBeddingCount = (int) ($pricingQuote['extra_bedding_count'] ?? 0);
         $extraBeddingFeePerNight = (float) ($pricingQuote['extra_bedding_fee_per_night'] ?? 0);
         $extraBeddingTotal = (float) ($pricingQuote['extra_bedding_total'] ?? 0);
+        $merchantName = (string) config('services.qr_wallets.merchant_name', config('app.name'));
+        $configuredQrUrl = trim((string) data_get(config('services.qr_wallets'), 'instapay.qr_image_url', ''));
+        $instapayQrUrl = $configuredQrUrl;
+
+        if ($configuredQrUrl !== '' && preg_match('/^https?:\/\//i', $configuredQrUrl) !== 1 && !str_starts_with($configuredQrUrl, '/')) {
+            $normalizedQrUrl = str_replace('\\', '/', $configuredQrUrl);
+            $publicPrefix = rtrim(str_replace('\\', '/', public_path()), '/').'/';
+            $instapayQrUrl = str_starts_with(strtolower($normalizedQrUrl), strtolower($publicPrefix))
+                ? '/'.ltrim(substr($normalizedQrUrl, strlen($publicPrefix)), '/')
+                : '/'.ltrim($normalizedQrUrl, '/');
+        }
+
+        $instapayHolder = (string) data_get(config('services.qr_wallets'), 'instapay.holder_name', $merchantName);
+        $instapayNumber = (string) data_get(config('services.qr_wallets'), 'instapay.number', '');
     @endphp
 
     <div class="row justify-content-center">
         <div class="col-lg-7">
             <section class="soft-card p-4 p-lg-5">
                 <p class="ta-eyebrow mb-1">Secure Payment</p>
-                <h1 class="h3 mb-3">Checkout for Booking #{{ $booking->id }}</h1>
+                <h1 class="h3 mb-1">Complete payment</h1>
+                <p class="text-secondary mb-4">Booking #{{ $booking->id }} · Review the amount before submitting.</p>
 
-                <div class="bg-light rounded-3 p-3 mb-4">
-                    <p class="mb-1"><strong>Room:</strong> {{ $booking->room->name ?? 'N/A' }}</p>
-                    <p class="mb-1"><strong>Stay:</strong> {{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</p>
-                    <p class="mb-1"><strong>Stay Type:</strong> Nightly</p>
-                    <hr class="my-2">
-                    <p class="mb-1"><strong>Room nightly rate:</strong> &#8369;{{ number_format($roomNightlyRate, 2) }}</p>
-                    <p class="mb-1"><strong>Nights:</strong> {{ $billedUnits }}</p>
-                    <p class="mb-1"><strong>Room subtotal:</strong> &#8369;{{ number_format($roomSubtotal, 2) }}</p>
+                <div class="checkout-summary mb-4">
+                    <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">Room</span>
+                        <span class="checkout-summary-value">{{ $booking->room->name ?? 'N/A' }}</span>
+                    </div>
+                    <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">Stay</span>
+                        <span class="checkout-summary-value">{{ $booking->check_in->format('M d') }} – {{ $booking->check_out->format('M d, Y') }}</span>
+                    </div>
+                    <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">Nightly rate</span>
+                        <span class="checkout-summary-value">&#8369;{{ number_format($roomNightlyRate, 2) }} × {{ $billedUnits }}</span>
+                    </div>
+                    <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">Room subtotal</span>
+                        <span class="checkout-summary-value">&#8369;{{ number_format($roomSubtotal, 2) }}</span>
+                    </div>
                     @if($extraBeddingCount > 0)
-                        <p class="mb-1"><strong>Extra bedding:</strong> {{ $extraBeddingCount }} x &#8369;{{ number_format($extraBeddingFeePerNight, 2) }} x {{ $billedUnits }} night{{ $billedUnits === 1 ? '' : 's' }}</p>
-                        <p class="mb-1"><strong>Extra bedding total:</strong> &#8369;{{ number_format($extraBeddingTotal, 2) }}</p>
+                        <div class="checkout-summary-item">
+                            <span class="checkout-summary-label">Extra bedding</span>
+                            <span class="checkout-summary-value">{{ $extraBeddingCount }} × &#8369;{{ number_format($extraBeddingFeePerNight, 2) }} × {{ $billedUnits }}</span>
+                        </div>
                     @endif
-                    <p class="mb-0"><strong>Amount due:</strong> &#8369;{{ number_format($subtotalAmount, 2) }}</p>
+                    <div class="checkout-summary-item total">
+                        <span class="checkout-summary-label">Amount due</span>
+                        <span class="checkout-summary-value fs-4">&#8369;{{ number_format($subtotalAmount, 2) }}</span>
+                    </div>
                 </div>
 
                 <form method="POST" action="{{ route('payments.process', $booking) }}" class="row g-3" id="payment_checkout_form" enctype="multipart/form-data">
@@ -54,13 +139,34 @@
                             <option value="credit_debit_card" @selected($selectedMethod === 'credit_debit_card')>Credit/Debit Card</option>
                         </select>
                         <small class="text-secondary">
-                            If you select Cash, booking stays unpaid until staff confirms payment at the front desk.
-                            For InstaPay or Credit/Debit Card, upload payment proof for manual verification.
+                            Cash is confirmed at the front desk. Online payments require proof.
                         </small>
                     </div>
 
                     <div class="col-12 {{ in_array($selectedMethod, $onlineMethods, true) ? '' : 'd-none' }}" id="online_verification_fields">
                         <div class="row g-3">
+                            <div class="col-12 {{ $selectedMethod === 'instapay' ? '' : 'd-none' }}" id="instapay_qr_panel">
+                                <div class="instapay-panel">
+                                    <div class="row g-3 align-items-center">
+                                        <div class="col-md-auto text-center">
+                                            @if($instapayQrUrl !== '')
+                                                <img src="{{ $instapayQrUrl }}" alt="InstaPay QR code for {{ $instapayHolder }}" class="instapay-qr">
+                                            @else
+                                                <div class="alert alert-warning mb-0">InstaPay QR is not configured.</div>
+                                            @endif
+                                        </div>
+                                        <div class="col">
+                                            <p class="ta-eyebrow mb-1">InstaPay QR</p>
+                                            <h2 class="h5 mb-2">Scan to pay</h2>
+                                            <p class="small text-secondary mb-1">Account name: <strong class="text-dark">{{ $instapayHolder }}</strong></p>
+                                            @if($instapayNumber !== '')
+                                                <p class="small text-secondary mb-1">Account number: <strong class="text-dark">{{ $instapayNumber }}</strong></p>
+                                            @endif
+                                            <p class="small text-secondary mb-0">Amount: <strong class="text-dark">&#8369;{{ number_format($subtotalAmount, 2) }}</strong></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">Transaction reference number</label>
                                 <input
@@ -77,7 +183,7 @@
                                 @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Optional provider reference</label>
+                                <label class="form-label">Provider reference (optional)</label>
                                 <input
                                     type="text"
                                     class="form-control @error('qr_reference') is-invalid @enderror"
@@ -91,7 +197,7 @@
                                 @enderror
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Payment screenshot / proof</label>
+                                <label class="form-label">Payment proof</label>
                                 <input
                                     type="file"
                                     class="form-control @error('payment_proof') is-invalid @enderror"
@@ -99,16 +205,14 @@
                                     id="payment_proof_input"
                                     accept="image/*"
                                 >
-                                <small class="text-secondary">Upload a clear screenshot/photo of your successful payment.</small>
+                                <small class="text-secondary">Upload a clear image of the successful payment.</small>
                                 @error('payment_proof')
                                     <small class="text-danger d-block">{{ $message }}</small>
                                 @enderror
                             </div>
                             <div class="col-12">
                                 <small class="text-secondary">
-                                    Submitted online payments are not auto-confirmed.
-                                    Staff will review your reference and proof before marking payment as paid.
-                                    By submitting, you agree to our
+                                    Staff will verify online payments. By submitting, you agree to our
                                     <a href="{{ route('terms') }}" target="_blank" rel="noopener">Terms and Conditions</a>.
                                 </small>
                             </div>
@@ -132,6 +236,7 @@
         (() => {
             const methodSelect = document.getElementById('payment_method_select');
             const onlineFields = document.getElementById('online_verification_fields');
+            const instapayPanel = document.getElementById('instapay_qr_panel');
             const submitButton = document.getElementById('payment_submit_button');
             const onlineMethods = ['instapay', 'credit_debit_card'];
 
@@ -142,6 +247,7 @@
             const updateUi = () => {
                 const requiresOnlineProof = onlineMethods.includes(methodSelect.value);
                 onlineFields.classList.toggle('d-none', !requiresOnlineProof);
+                instapayPanel?.classList.toggle('d-none', methodSelect.value !== 'instapay');
                 submitButton.textContent = requiresOnlineProof ? 'Submit for verification' : 'Confirm payment';
             };
 

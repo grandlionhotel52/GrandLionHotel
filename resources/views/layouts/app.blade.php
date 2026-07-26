@@ -42,6 +42,41 @@
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
         }
+        .skip-link {
+            position: fixed;
+            top: 0.75rem;
+            left: 0.75rem;
+            z-index: 2000;
+            transform: translateY(-160%);
+            border-radius: 10px;
+            background: #101828;
+            color: #fff;
+            padding: 0.65rem 0.9rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .skip-link:focus {
+            transform: translateY(0);
+            color: #fff;
+        }
+        :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+            outline: 3px solid rgba(184, 146, 84, 0.55);
+            outline-offset: 3px;
+        }
+        .form-label.is-required::after {
+            content: " *";
+            color: var(--danger);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
         h1, h2, h3, h4, h5, .brand-serif {
             font-family: var(--font-main);
             font-weight: 800;
@@ -153,12 +188,12 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 999px;
+            border-radius: 10px;
             font-size: 0.84rem;
             line-height: 1;
             font-weight: 800;
             text-decoration: none;
-            padding: 0.62rem 1.1rem;
+            padding: 0.58rem 0.9rem;
             transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
             white-space: nowrap;
         }
@@ -244,13 +279,14 @@
             border-color: #d2c2a8;
         }
         .btn-ta {
-            border-radius: 999px;
+            border-radius: 10px;
             border: 1px solid var(--brand);
             background: linear-gradient(135deg, #c8a364 0%, #b18a4d 100%);
             color: #fff;
             font-weight: 700;
-            padding: 0.6rem 1.25rem;
-            box-shadow: 0 12px 24px rgba(160, 119, 51, 0.22);
+            min-height: 42px;
+            padding: 0.52rem 1rem;
+            box-shadow: 0 7px 16px rgba(160, 119, 51, 0.2);
             transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
         }
         .btn-ta:hover {
@@ -258,19 +294,40 @@
             background: linear-gradient(135deg, #bb9658 0%, #9a753f 100%);
             color: #fff;
             transform: translateY(-1px);
-            box-shadow: 0 14px 28px rgba(134, 98, 43, 0.28);
+            box-shadow: 0 9px 20px rgba(134, 98, 43, 0.25);
         }
         .btn-ta-outline {
-            border-radius: 999px;
-            border: 1px solid #1f2937;
+            border-radius: 10px;
+            border: 1px solid #b9aa92;
             background: #fff;
             color: #1f2937;
             font-weight: 700;
-            padding: 0.6rem 1.25rem;
+            min-height: 42px;
+            padding: 0.52rem 1rem;
         }
         .btn-ta-outline:hover {
             background: #1f2937;
             color: #fff;
+            border-color: #1f2937;
+        }
+        :where(.btn-ta, .btn-ta-outline, .btn-outline-danger, .btn-secondary) {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            line-height: 1.15;
+        }
+        :where(.btn-ta, .btn-ta-outline, .btn-outline-danger, .btn-secondary).btn-sm {
+            min-height: 34px;
+            padding: 0.36rem 0.68rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+        :where(.btn-ta, .btn-ta-outline, .btn-outline-danger, .btn-secondary):disabled,
+        :where(.btn-ta, .btn-ta-outline, .btn-outline-danger, .btn-secondary).disabled {
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
         }
         .price-tag {
             font-size: 1.35rem;
@@ -446,6 +503,7 @@
     @stack('head')
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to content</a>
     @php
         $isHomePage = request()->routeIs('home');
     @endphp
@@ -500,7 +558,7 @@
             </div>
         </nav>
 
-        <main class="main-content container-xl {{ $isHomePage ? 'pt-0 pb-4 pb-lg-5' : 'py-4 py-lg-5' }}">
+        <main id="main-content" tabindex="-1" class="main-content container-xl {{ $isHomePage ? 'pt-0 pb-4 pb-lg-5' : 'py-4 py-lg-5' }}">
             @php
                 $showGlobalErrors = $errors->any() && !request()->routeIs('register');
                 $showGlobalStatus = session('status')
@@ -567,6 +625,34 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         (() => {
+            document.querySelectorAll('.nav-link.active').forEach((link) => {
+                link.setAttribute('aria-current', 'page');
+            });
+
+            document.querySelectorAll('.table-responsive').forEach((tableRegion) => {
+                tableRegion.setAttribute('tabindex', '0');
+                tableRegion.setAttribute('role', 'region');
+                tableRegion.setAttribute('aria-label', 'Scrollable data table');
+            });
+
+            document.querySelectorAll('label.form-label').forEach((label, index) => {
+                let control = label.htmlFor ? document.getElementById(label.htmlFor) : null;
+                control ??= label.parentElement?.querySelector('input, select, textarea');
+
+                if (!control) {
+                    return;
+                }
+
+                if (!control.id) {
+                    control.id = `form-field-${index + 1}`;
+                }
+
+                label.htmlFor = control.id;
+                if (control.required && !label.textContent.includes('*')) {
+                    label.classList.add('is-required');
+                }
+            });
+
             document.addEventListener('submit', (event) => {
                 const form = event.target;
                 if (!(form instanceof HTMLFormElement)) {

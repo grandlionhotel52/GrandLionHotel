@@ -31,7 +31,7 @@ class BookingController extends Controller
 
     public function create(Request $request, Room $room)
     {
-        $profileRedirect = $this->redirectIfProfileIncomplete();
+        $profileRedirect = $this->redirectIfProfileIncomplete($request);
         if ($profileRedirect) {
             return $profileRedirect;
         }
@@ -441,6 +441,10 @@ class BookingController extends Controller
                     ],
                     'redirect' => route('profile.edit'),
                 ], 422);
+            }
+
+            if ($request) {
+                $request->session()->put('profile.return_to', $request->getRequestUri());
             }
 
             return redirect()

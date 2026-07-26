@@ -48,6 +48,63 @@
             border-color: rgba(180, 35, 24, 0.35);
             background: linear-gradient(180deg, rgba(254, 244, 244, 0.96) 0%, rgba(255, 249, 249, 0.98) 100%);
         }
+        .booking-hero {
+            display: grid;
+            grid-template-columns: minmax(180px, 260px) 1fr;
+            overflow: hidden;
+            border-radius: 20px;
+            border: 1px solid var(--line);
+            background: #fff;
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.09);
+        }
+        .booking-hero-image {
+            width: 100%;
+            height: 100%;
+            min-height: 190px;
+            object-fit: cover;
+        }
+        .booking-hero-content {
+            padding: clamp(1.25rem, 3vw, 2rem);
+        }
+        .booking-status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .booking-status-chip.success {
+            background: #eaf7ef;
+            color: #067647;
+        }
+        .booking-status-chip.warning {
+            background: #fff4dd;
+            color: #8a5a00;
+        }
+        .booking-status-chip.danger {
+            background: #fdecec;
+            color: #b42318;
+        }
+        .booking-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin: 0;
+        }
+        .booking-detail-grid > div {
+            width: auto;
+            border: 1px solid #eee4d5;
+            border-radius: 12px;
+            background: #fffdf9;
+            padding: 0.75rem 0.85rem;
+        }
+        .booking-side-panel {
+            position: sticky;
+            top: 88px;
+        }
         .booking-next-card {
             border-radius: 16px;
             border: 1px dashed rgba(184, 146, 84, 0.52);
@@ -58,9 +115,22 @@
             .booking-flow-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+            .booking-side-panel {
+                position: static;
+            }
         }
         @media (max-width: 575.98px) {
             .booking-flow-grid {
+                grid-template-columns: 1fr;
+            }
+            .booking-hero {
+                grid-template-columns: 1fr;
+            }
+            .booking-hero-image {
+                height: 210px;
+                min-height: 0;
+            }
+            .booking-detail-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -106,7 +176,16 @@
         $isCompleted = $booking->status === 'completed';
         $billedUnits = $booking->nights();
         $pricingQuote = $booking->pricingQuote();
-        $standardGuests = \App\Models\Room::standardGuestCapacity();
+        $bookingStatusClass = match ($booking->status) {
+            'confirmed', 'completed' => 'success',
+            'cancelled' => 'danger',
+            default => 'warning',
+        };
+        $paymentStatusClass = match ($booking->payment_status) {
+            'paid' => 'success',
+            'refund_pending' => 'warning',
+            default => $isCancelled ? 'danger' : 'warning',
+        };
 
         $nextAction = match (true) {
             $isRefundPending => 'Your refund is under review and will be returned through your original payment method'
@@ -122,14 +201,34 @@
         };
     @endphp
 
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-        <div>
-            <p class="ta-eyebrow mb-1">Booking Details</p>
-            <h1 class="mb-1">Reservation #{{ $booking->id }}</h1>
-            <p class="text-secondary mb-0">Track your reservation status and next steps.</p>
+    <section class="booking-hero mb-4">
+        <img
+            src="{{ $booking->room?->image_url }}"
+            alt="{{ $booking->room?->name ?? 'Reserved room' }}"
+            class="booking-hero-image"
+        >
+        <div class="booking-hero-content">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <p class="ta-eyebrow mb-1">Reservation #{{ $booking->id }}</p>
+                    <h1 class="h2 mb-1">{{ $booking->room?->name ?? 'Room reservation' }}</h1>
+                    <p class="text-secondary mb-3">
+                        {{ $booking->check_in->format('M d, Y') }} – {{ $booking->check_out->format('M d, Y') }}
+                        · {{ $billedUnits }} night{{ $billedUnits === 1 ? '' : 's' }}
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="booking-status-chip {{ $bookingStatusClass }}">
+                            <i class="bi bi-calendar-check"></i>{{ ucfirst($booking->status) }}
+                        </span>
+                        <span class="booking-status-chip {{ $paymentStatusClass }}">
+                            <i class="bi bi-credit-card"></i>{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}
+                        </span>
+                    </div>
+                </div>
+                <a href="{{ route('bookings.my') }}" class="btn btn-ta-outline">All bookings</a>
+            </div>
         </div>
-        <a href="{{ route('bookings.my') }}" class="btn btn-ta-outline">Back to my bookings</a>
-    </div>
+    </section>
 
     <section class="booking-flow mb-4">
         <div class="booking-flow-grid">
@@ -141,11 +240,11 @@
                 <p class="label mb-0">Step 2</p>
                 <p class="status mb-0">{{ $isCancelled ? 'Cancelled' : ($isConfirmed ? 'Confirmed' : 'Awaiting staff review') }}</p>
             </article>
-            <article class="booking-flow-step {{ $isCancelled ? 'is-cancelled' : ($isPaid ? 'is-complete' : 'is-current') }}">
+            <article class="booking-flow-step {{ $isCancelled ? 'is-cancelled' : ($isPaid ? 'is-complete' : ($isConfirmed ? 'is-current' : '')) }}">
                 <p class="label mb-0">Step 3</p>
                 <p class="status mb-0">{{ $isCancelled ? 'Payment closed' : ($isPaid ? 'Payment received' : ($isCashAwaitingVerification ? 'Cash verification' : ($isOnlineAwaitingVerification ? 'Online verification' : 'Pending payment'))) }}</p>
             </article>
-            <article class="booking-flow-step {{ $isCancelled ? 'is-cancelled' : ($isCompleted ? 'is-complete' : 'is-current') }}">
+            <article class="booking-flow-step {{ $isCancelled ? 'is-cancelled' : ($isCompleted ? 'is-complete' : ($isPaid ? 'is-current' : '')) }}">
                 <p class="label mb-0">Step 4</p>
                 <p class="status mb-0">{{ $isCancelled ? 'Booking closed' : ($isCompleted ? 'Stay completed' : 'Upcoming stay') }}</p>
             </article>
@@ -156,7 +255,7 @@
         <div class="col-lg-8">
             <section class="soft-card p-4 p-lg-5">
                 <h2 class="h5 mb-3">Stay Information</h2>
-                <div class="row g-3">
+                <div class="row g-3 booking-detail-grid">
                     <div class="col-md-6">
                         <small class="text-secondary d-block">Room</small>
                         <strong>{{ $booking->room->name ?? 'N/A' }}</strong>
@@ -177,21 +276,21 @@
                         <small class="text-secondary d-block">Check-out</small>
                         <strong>{{ $booking->check_out->format('M d, Y') }}</strong>
                     </div>
-                    <div class="col-md-6">
-                        <small class="text-secondary d-block">Actual arrival</small>
-                        <strong>{{ optional($booking->actual_check_in_at)->format('M d, Y h:i A') ?? 'Waiting for staff log' }}</strong>
-                    </div>
-                    <div class="col-md-6">
-                        <small class="text-secondary d-block">Actual departure</small>
-                        <strong>{{ optional($booking->actual_check_out_at)->format('M d, Y h:i A') ?? 'Not checked out yet' }}</strong>
-                    </div>
+                    @if($booking->actual_check_in_at)
+                        <div class="col-md-6">
+                            <small class="text-secondary d-block">Actual arrival</small>
+                            <strong>{{ $booking->actual_check_in_at->format('M d, Y h:i A') }}</strong>
+                        </div>
+                    @endif
+                    @if($booking->actual_check_out_at)
+                        <div class="col-md-6">
+                            <small class="text-secondary d-block">Actual departure</small>
+                            <strong>{{ $booking->actual_check_out_at->format('M d, Y h:i A') }}</strong>
+                        </div>
+                    @endif
                     <div class="col-md-6">
                         <small class="text-secondary d-block">Guests</small>
                         <strong>{{ $booking->guests }}</strong>
-                    </div>
-                    <div class="col-md-6">
-                        <small class="text-secondary d-block">Standard occupancy</small>
-                        <strong>{{ $standardGuests }}</strong>
                     </div>
                     <div class="col-md-6">
                         <small class="text-secondary d-block">Extra bedding</small>
@@ -453,10 +552,8 @@
         </div>
 
         <div class="col-lg-4">
-            <section class="soft-card p-4">
-                <h2 class="h5 mb-3">Payment & Status</h2>
-                <p class="mb-1"><small class="text-secondary">Booking status</small><br><strong>{{ ucfirst($booking->status) }}</strong></p>
-                <p class="mb-1"><small class="text-secondary">Payment status</small><br><strong>{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</strong></p>
+            <section class="soft-card p-4 booking-side-panel">
+                <h2 class="h5 mb-3">Payment</h2>
                 @if($isOnlineAwaitingVerification)
                     <p class="small text-secondary mb-1">Method selected: {{ \App\Models\Payment::methodLabel((string) ($booking->payment?->method ?? 'online')) }} (awaiting staff verification)</p>
                 @endif
@@ -483,33 +580,8 @@
                     <strong class="small d-block">{{ $nextAction }}</strong>
                 </div>
 
-                <p class="small text-secondary mb-3">
-                    Actual arrival and departure times are logged by staff during check-in and check-out.
-                </p>
-
                 @if($booking->payment?->transaction_reference)
                     <p class="small text-secondary mb-3">Transaction Reference: <strong>{{ $booking->payment->transaction_reference }}</strong></p>
-                @endif
-
-                @if($booking->status === 'pending')
-                    <div class="alert alert-warning py-2 small">
-                        Awaiting staff confirmation. Payment will be enabled once approved.
-                    </div>
-                @endif
-                @if($isCashAwaitingVerification)
-                    <div class="alert alert-info py-2 small">
-                        Cash payment is not marked as paid automatically. Staff will update payment status after receiving your cash.
-                    </div>
-                @endif
-                @if($isOnlineAwaitingVerification)
-                    <div class="alert alert-info py-2 small">
-                        Your online payment is waiting for staff verification. We will confirm once the transfer is validated.
-                    </div>
-                @endif
-                @if($isRefundPending && $refundMethodLabel)
-                    <div class="alert alert-info py-2 small">
-                        Refunds are returned through the original payment method. This booking will be refunded via <strong>{{ $refundMethodLabel }}</strong>.
-                    </div>
                 @endif
 
                 <div class="d-grid gap-2">

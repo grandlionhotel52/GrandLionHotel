@@ -160,6 +160,7 @@
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
+                <caption class="visually-hidden">Staff accounts, assignments, earnings, and management actions</caption>
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -219,7 +220,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4">No staff accounts yet.</td>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="bi bi-person-plus fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
+                                <strong class="d-block">No staff accounts</strong>
+                                <span class="text-secondary">Create an account to assign booking work.</span>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

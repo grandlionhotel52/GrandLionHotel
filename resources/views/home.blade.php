@@ -107,18 +107,41 @@
         .category-link {
             text-decoration: none;
             color: inherit;
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
             height: 100%;
+            min-height: 88px;
+            padding: 0.85rem 1rem;
         }
-        .category-link .chip {
+        .category-link .category-count {
+            min-width: 2rem;
+            height: 2rem;
+            border-radius: 999px;
             display: inline-flex;
             align-items: center;
-            border-radius: 999px;
-            padding: 0.2rem 0.6rem;
+            justify-content: center;
             background: rgba(184, 146, 84, 0.14);
-            font-size: 0.74rem;
-            font-weight: 700;
             color: #7a5f33;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+        .home-stat-strip {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.78);
+            padding: 0.85rem 1rem;
+        }
+        .home-stat-strip .stat-value {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--ink);
+        }
+        .home-filter-link {
+            padding: 0.42rem 0.72rem;
+            font-size: 0.78rem;
+            border-radius: 10px;
         }
         .feature-item {
             border: 1px solid var(--line);
@@ -227,50 +250,55 @@
             || auth('staff')->check();
     @endphp
 
-    @if($hasSignedInAccess)
-        <section class="soft-card p-3 p-lg-4 mb-5">
-            <p class="ta-eyebrow mb-2">Quick Search</p>
-            <form method="GET" action="{{ route('rooms.search') }}" class="row g-2">
+        <section class="soft-card p-3 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <p class="ta-eyebrow mb-0">Quick Search</p>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="available_only" value="1" id="availableOnlyHome" form="homeQuickSearch" checked>
+                    <label class="form-check-label text-secondary small" for="availableOnlyHome">Available only</label>
+                </div>
+            </div>
+            <form id="homeQuickSearch" method="GET" action="{{ route('rooms.search') }}" class="row g-2">
                 <div class="col-md-4 col-xl-4">
-                    <input type="text" name="type" class="form-control" placeholder="Room type or view (e.g. Nature View)">
+                    <label class="visually-hidden" for="homeSearchType">Room type or view</label>
+                    <input id="homeSearchType" type="text" name="type" class="form-control" placeholder="Room type or view">
                 </div>
                 <div class="col-6 col-md-2 col-xl-2">
-                    <input type="date" name="check_in" class="form-control" min="{{ now()->toDateString() }}" value="{{ now()->toDateString() }}">
+                    <label class="visually-hidden" for="homeSearchCheckIn">Check-in</label>
+                    <input id="homeSearchCheckIn" type="date" name="check_in" class="form-control" min="{{ now()->toDateString() }}" value="{{ now()->toDateString() }}">
                 </div>
                 <div class="col-6 col-md-2 col-xl-2">
-                    <input type="date" name="check_out" class="form-control" min="{{ now()->addDay()->toDateString() }}" value="{{ now()->addDay()->toDateString() }}">
+                    <label class="visually-hidden" for="homeSearchCheckOut">Check-out</label>
+                    <input id="homeSearchCheckOut" type="date" name="check_out" class="form-control" min="{{ now()->addDay()->toDateString() }}" value="{{ now()->addDay()->toDateString() }}">
                 </div>
                 <div class="col-12 col-md-4 col-xl-4 d-grid">
-                    <button class="btn btn-ta" type="submit">Search Rooms</button>
-                </div>
-                <div class="col-12">
-                    <small class="text-secondary d-block mb-2">All rooms follow a standard 2-guest setup. Extra bedding requests are subject to availability.</small>
-                    <div class="form-check mt-1">
-                        <input class="form-check-input" type="checkbox" name="available_only" value="1" id="availableOnlyHome" checked>
-                        <label class="form-check-label text-secondary small" for="availableOnlyHome">Show available rooms only</label>
-                    </div>
+                    <button class="btn btn-ta" type="submit">Search rooms</button>
                 </div>
             </form>
         </section>
 
-        <section class="mb-5">
+        <section class="mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <p class="ta-eyebrow mb-1">Categories</p>
                     <h2 class="mb-0">Browse by Room Type</h2>
                 </div>
-                <a href="{{ route('rooms.search') }}" class="btn btn-sm btn-ta-outline">Open filters</a>
+                <a href="{{ route('rooms.search') }}" class="btn btn-ta-outline home-filter-link">
+                    <i class="bi bi-sliders me-1" aria-hidden="true"></i>More filters
+                </a>
             </div>
-            <div class="row g-3">
+            <div class="row g-2">
                 @forelse($roomCategories as $category)
-                    <div class="col-6 col-lg-3">
+                    <div class="col-6 col-md-4 col-xl-2">
                         <a
                             href="{{ route('rooms.search', ['type' => $category->type, 'available_only' => 1]) }}"
-                            class="soft-card result-card p-3 p-lg-4 category-link"
+                            class="soft-card result-card category-link"
                         >
-                            <span class="chip mb-2">Category</span>
-                            <h3 class="h5 mb-1">{{ $category->type }}</h3>
-                            <p class="text-secondary small mb-0">{{ $category->total }} room{{ $category->total === 1 ? '' : 's' }} available to explore</p>
+                            <div>
+                                <h3 class="h6 mb-1">{{ $category->type }}</h3>
+                                <p class="text-secondary small mb-0">{{ $category->total }} available</p>
+                            </div>
+                            <span class="category-count" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
                         </a>
                     </div>
                 @empty
@@ -281,43 +309,14 @@
             </div>
         </section>
 
-        <section class="row g-3 mb-5">
-            <div class="col-sm-4">
-                <div class="soft-card p-3 p-lg-4 h-100">
-                    <p class="ta-eyebrow mb-1">Inventory</p>
-                    <h3 class="mb-0">{{ $platformStats['total_rooms'] }}</h3>
-                    <p class="mb-0 text-secondary small">Total listed rooms</p>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="soft-card p-3 p-lg-4 h-100">
-                    <p class="ta-eyebrow mb-1">Bookable Now</p>
-                    <h3 class="mb-0">{{ $platformStats['available_rooms'] }}</h3>
-                    <p class="mb-0 text-secondary small">Rooms currently available</p>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="soft-card p-3 p-lg-4 h-100">
-                    <p class="ta-eyebrow mb-1">Starting Rate</p>
-                    <h3 class="mb-0">
-                        @if(!is_null($platformStats['starting_price']))
-                            &#8369;{{ number_format((float) $platformStats['starting_price'], 2) }}
-                        @else
-                            --
-                        @endif
-                    </h3>
-                    <p class="mb-0 text-secondary small">Lowest nightly rate</p>
-                </div>
-            </div>
-        </section>
-    @endif
-
     <section class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <p class="ta-eyebrow mb-1">Featured</p>
             <h2 class="mb-0">Top Room Picks</h2>
         </div>
-        <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline">Browse all rooms</a>
+        <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline home-filter-link">
+            View all rooms<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+        </a>
     </section>
 
     <section class="row g-4">
@@ -358,6 +357,27 @@
             </div>
         @endforelse
     </section>
+
+    @if($hasSignedInAccess)
+        <section class="home-stat-strip mt-4">
+            <div class="row g-3 text-center">
+                <div class="col-4">
+                    <span class="stat-value d-block">{{ $platformStats['total_rooms'] }}</span>
+                    <span class="small text-secondary">Rooms</span>
+                </div>
+                <div class="col-4 border-start border-end">
+                    <span class="stat-value d-block">{{ $platformStats['available_rooms'] }}</span>
+                    <span class="small text-secondary">Available</span>
+                </div>
+                <div class="col-4">
+                    <span class="stat-value d-block">
+                        {{ !is_null($platformStats['starting_price']) ? '₱'.number_format((float) $platformStats['starting_price'], 0) : '--' }}
+                    </span>
+                    <span class="small text-secondary">Starting rate</span>
+                </div>
+            </div>
+        </section>
+    @endif
 
     <section class="soft-card p-3 p-lg-4 mt-5">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">

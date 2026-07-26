@@ -179,7 +179,7 @@
                         &#8369;{{ number_format($pricingPreview['average_nightly_rate'] ?? $room->price_per_night, 2) }}
                     </div>
                     <small class="text-secondary d-block" id="summary_price_caption">
-                        {{ $pricingPreview ? 'selected-stay average / night' : 'per night' }}
+                        {{ $pricingPreview ? 'average per night' : 'per night' }}
                     </small>
                     <p class="small mt-1 mb-0 {{ $pricingPreview && $pricingPreview['has_date_discount'] ? '' : 'd-none' }}" id="summary_base_rate_wrap">
                         <span class="text-secondary text-decoration-line-through" id="summary_base_rate">
@@ -220,9 +220,9 @@
                     <div class="booking-step">3. Staff confirmation</div>
                 </div>
 
-                <p class="ta-eyebrow mb-1">Reservation Form</p>
-                <h1 class="h3 mb-2">Hotel Reservation Form</h1>
-                <p class="text-secondary mb-4">Complete the form below. Your booking request will be reviewed by staff before payment.</p>
+                <p class="ta-eyebrow mb-1">Reservation</p>
+                <h1 class="h3 mb-2">Book your stay</h1>
+                <p class="text-secondary mb-4">Review your details and submit your request.</p>
 
                 @if(!empty($prefill['availability_message']))
                     <div id="booking_prefill_feedback" class="alert booking-page-alert {{ $prefill['unavailable_for_selected_dates'] ? 'alert-warning' : 'alert-info' }}" role="alert" tabindex="-1">
@@ -249,7 +249,7 @@
 
                     <div class="col-12 pt-1">
                         <h2 class="h5 mb-1">Guest Information</h2>
-                        <p class="small text-secondary mb-0">Add the details for this reservation assignment.</p>
+                        <p class="small text-secondary mb-0">Who is staying?</p>
                     </div>
 
                     <div class="col-md-6">
@@ -320,17 +320,11 @@
                     </div>
                     <div class="col-12 pt-2">
                         <h2 class="h5 mb-1">Payment and Requests</h2>
-                        <p class="small text-secondary mb-0">All rooms follow a standard {{ $standardGuests }}-guest setup. Extra bedding requests can be reviewed by staff.</p>
-                    </div>
-
-                    <div class="col-12">
-                        <div class="alert alert-light border mb-0 small">
-                            Standard room setup is for <strong>{{ $standardGuests }} guests</strong>. If you need extra bedding, include it below and staff will confirm availability.
-                        </div>
+                        <p class="small text-secondary mb-0">{{ $standardGuests }} guests included. Extra beds need approval.</p>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Preferred payment method</label>
+                        <label class="form-label">Payment method (optional)</label>
                         <select class="form-select" name="payment_preference">
                             <option value="">Select one (optional)</option>
                             <option value="cash" @selected(old('payment_preference') === 'cash')>Cash</option>
@@ -340,7 +334,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Discount Type</label>
+                        <label class="form-label">Discount type</label>
                         <select class="form-select" name="discount_type" id="discount_type_select">
                             <option value="none" @selected(old('discount_type', 'none') === 'none')>None</option>
                             <option value="pwd" @selected(old('discount_type') === 'pwd')>PWD (20%)</option>
@@ -354,25 +348,25 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Upload Discount ID Photo</label>
+                        <label class="form-label">Discount ID photo</label>
                         <input type="file" class="form-control" name="discount_id_photo" id="discount_id_photo_input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
                         <small class="text-secondary">Required for PWD/Senior discount.</small>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label">Special request (optional)</label>
-                        <textarea class="form-control" name="notes" rows="3" maxlength="500" placeholder="Add any special request for your stay, including extra bedding if needed">{{ old('notes') }}</textarea>
+                        <textarea class="form-control" name="notes" rows="3" maxlength="500" placeholder="Example: extra bed or accessibility needs">{{ old('notes') }}</textarea>
                     </div>
 
                     <div class="col-12">
                         <div class="alert alert-light border mb-0 small">
-                            Booking status starts as <strong>pending</strong>. Staff will confirm your request before payment checkout is enabled.
+                            Staff confirmation is required before payment.
                         </div>
                     </div>
 
                     <div class="col-12 d-flex justify-content-end gap-2">
                         <a href="{{ route('rooms.show', $room) }}" class="btn btn-ta-outline">Back to room</a>
-                        <button type="submit" class="btn btn-ta">Submit booking request</button>
+                        <button type="submit" class="btn btn-ta">Request booking</button>
                     </div>
                 </form>
             </section>
@@ -397,7 +391,7 @@
             const standardGuests = {{ $standardGuests }};
             const baseNightlyRate = Number.parseFloat(form?.dataset.baseNightlyRate || '0') || 0;
             const submitButton = form?.querySelector('button[type="submit"]');
-            const defaultSubmitText = submitButton?.textContent?.trim() || 'Submit booking request';
+            const defaultSubmitText = submitButton?.textContent?.trim() || 'Request booking';
             let currentPricing = @json($pricingPreview);
             let currentAvailability = null;
 
@@ -572,7 +566,7 @@
                 }
 
                 if (summaryPriceCaption) {
-                    summaryPriceCaption.textContent = pricing ? 'selected-stay average / night' : 'per night';
+                    summaryPriceCaption.textContent = pricing ? 'average per night' : 'per night';
                 }
 
                 if (summaryBaseRate) {
@@ -841,7 +835,7 @@
                 } finally {
                     if (submitButton) {
                         submitButton.disabled = false;
-                        submitButton.textContent = originalButtonText || 'Submit booking request';
+                        submitButton.textContent = originalButtonText || 'Request booking';
                     }
                 }
             });

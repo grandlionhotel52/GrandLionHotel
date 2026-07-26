@@ -117,6 +117,7 @@
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle">
+                <caption class="visually-hidden">Room date discount ranges and management actions</caption>
                 <thead>
                     <tr>
                         <th>Date Range</th>
@@ -214,7 +215,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-secondary">No date discounts found for the selected filters.</td>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="bi bi-calendar2-x fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
+                                <strong class="d-block">No matching discounts</strong>
+                                <span class="text-secondary">Change the dates or search filters.</span>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

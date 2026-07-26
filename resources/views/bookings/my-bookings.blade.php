@@ -51,6 +51,17 @@
         };
     @endphp
 
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <p class="ta-eyebrow mb-1">Your stays</p>
+            <h1 class="h2 mb-1">My bookings</h1>
+            <p class="text-secondary mb-0">View status, payment, and stay details.</p>
+        </div>
+        <a href="{{ route('rooms.index') }}" class="btn btn-ta">
+            <i class="bi bi-search me-1"></i>Find a room
+        </a>
+    </div>
+
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="my-bookings-stat">
@@ -75,6 +86,7 @@
     <div class="soft-card p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
+                <caption class="visually-hidden">Your hotel bookings and their current status</caption>
                 <thead class="table-light">
                     <tr>
                         <th>ID</th>
@@ -134,7 +146,12 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4">No bookings found yet.</td>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="bi bi-calendar2-plus fs-2 text-secondary d-block mb-2" aria-hidden="true"></i>
+                                <strong class="d-block mb-1">No bookings yet</strong>
+                                <span class="text-secondary d-block mb-3">Choose a room to plan your first stay.</span>
+                                <a href="{{ route('rooms.index') }}" class="btn btn-sm btn-ta">Browse rooms</a>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

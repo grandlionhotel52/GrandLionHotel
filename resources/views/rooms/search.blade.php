@@ -54,9 +54,9 @@
         .search-filter-grid .field-check-in { grid-column: span 2; }
         .search-filter-grid .field-check-out { grid-column: span 2; }
         .search-filter-grid .field-max-price { grid-column: span 2; }
-        .search-filter-grid .field-sort { grid-column: span 4; }
-        .search-filter-grid .field-availability { grid-column: span 8; align-self: end; }
-        .search-filter-grid .field-actions { grid-column: span 7; align-self: end; }
+        .search-filter-grid .field-sort { grid-column: span 3; }
+        .search-filter-grid .field-availability { grid-column: span 12; align-self: center; }
+        .search-filter-grid .field-actions { grid-column: span 3; align-self: end; }
         .search-filter-actions {
             display: flex;
             gap: 0.5rem;
@@ -124,16 +124,18 @@
             .search-filter-grid {
                 grid-template-columns: repeat(12, minmax(0, 1fr));
             }
-            .search-filter-grid .field-type,
-            .search-filter-grid .field-sort {
+            .search-filter-grid .field-type {
                 grid-column: span 4;
             }
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
-            .search-filter-grid .field-max-price {
+            .search-filter-grid .field-max-price,
+            .search-filter-grid .field-sort {
                 grid-column: span 2;
             }
-            .search-filter-grid .field-availability,
+            .search-filter-grid .field-availability {
+                grid-column: span 8;
+            }
             .search-filter-grid .field-actions {
                 grid-column: span 4;
             }
@@ -239,7 +241,7 @@
                 </div>
                 <div class="field-actions">
                     <div class="search-filter-actions">
-                        <button type="submit" class="btn btn-ta">Apply Filters</button>
+                        <button type="submit" class="btn btn-ta">Apply filters</button>
                         @if(request()->query())
                             <a href="{{ route('rooms.search') }}" class="btn btn-ta-outline">Reset</a>
                         @endif
@@ -274,7 +276,7 @@
     @endif
 
     <div class="search-results-head">
-        <h2 class="h5 mb-0">Search Results</h2>
+        <h2 class="h5 mb-0">Search results</h2>
         <span class="search-count">{{ $rooms->total() }} room{{ $rooms->total() === 1 ? '' : 's' }} found</span>
     </div>
 

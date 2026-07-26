@@ -20,13 +20,15 @@ class PricingServiceExtraBeddingTest extends TestCase
 
         config(['pricing.extra_bedding_fee_per_night' => 500]);
 
-        DB::table('room_status')->insert([
-            'name' => 'Clean',
-            'slug' => 'clean',
-            'description' => 'Ready for booking',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        DB::table('room_status')->updateOrInsert(
+            ['slug' => 'clean'],
+            [
+                'name' => 'Clean',
+                'description' => 'Ready for booking',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
     }
 
     public function test_quote_stay_adds_extra_bedding_fee_per_night(): void
@@ -56,7 +58,8 @@ class PricingServiceExtraBeddingTest extends TestCase
 
         RoomDateDiscount::query()->create([
             'room_id' => $room->id,
-            'discount_date' => now()->addDay()->toDateString(),
+            'discount_date_start' => now()->addDay()->toDateString(),
+            'discount_date_end' => now()->addDay()->toDateString(),
             'discount_percent' => 25,
         ]);
 

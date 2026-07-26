@@ -219,6 +219,7 @@
 
                 <div class="table-responsive">
                     <table class="table ops-table align-middle">
+                        <caption class="visually-hidden">Guests scheduled to arrive today</caption>
                         <thead>
                             <tr>
                                 <th>Guest</th>
@@ -267,6 +268,7 @@
 
                 <div class="table-responsive">
                     <table class="table ops-table align-middle">
+                        <caption class="visually-hidden">Guests currently checked in</caption>
                         <thead>
                             <tr>
                                 <th>Guest</th>

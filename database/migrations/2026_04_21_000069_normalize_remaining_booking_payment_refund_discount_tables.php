@@ -177,6 +177,25 @@ return new class extends Migration
 
     private function dropForeignIfExists(Blueprint $table, string $constraintName): void
     {
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'sqlite') {
+            $column = match ($constraintName) {
+                'room_date_discounts_admin_id_foreign' => 'admin_id',
+                'refund_requests_booking_id_foreign' => 'booking_id',
+                'refund_requests_admin_id_foreign' => 'admin_id',
+                'refund_requests_customer_id_foreign' => 'customer_id',
+                'refund_requests_staff_id_foreign' => 'staff_id',
+                'payments_staff_id_foreign' => 'staff_id',
+                'booking_guest_details_staff_id_foreign' => 'staff_id',
+                default => null,
+            };
+
+            if ($column !== null) {
+                $table->dropForeign([$column]);
+            }
+
+            return;
+        }
+
         try {
             $table->dropForeign($constraintName);
         } catch (Throwable) {

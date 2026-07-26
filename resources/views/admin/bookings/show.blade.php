@@ -37,6 +37,13 @@
             padding: 0.7rem 0.75rem;
             margin-top: 0.75rem;
         }
+        .booking-admin-head {
+            border-radius: 16px;
+            border: 1px solid var(--admin-line);
+            background: #fff;
+            box-shadow: var(--admin-shadow);
+            padding: 1rem 1.1rem;
+        }
     </style>
 @endpush
 
@@ -63,10 +70,27 @@
             : null;
         $isOnlineAwaitingVerification = $booking->payment_status === 'pending_verification'
             && \App\Models\Payment::isOnlineMethod((string) ($booking->payment?->method ?? ''));
+        $statusBadgeClass = match ($booking->status) {
+            'confirmed', 'completed' => 'text-bg-success',
+            'cancelled' => 'text-bg-danger',
+            default => 'text-bg-warning',
+        };
+        $paymentBadgeClass = match ($booking->payment_status) {
+            'paid' => 'text-bg-success',
+            'pending_verification', 'refund_pending' => 'text-bg-info',
+            default => 'text-bg-warning',
+        };
     @endphp
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h4 mb-0">Booking #{{ $booking->id }}</h1>
+    <div class="booking-admin-head d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <p class="small text-secondary mb-1">Booking #{{ $booking->id }}</p>
+            <h1 class="h4 mb-2">{{ $displayName }} · {{ $booking->room->name ?? 'Room unavailable' }}</h1>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge {{ $statusBadgeClass }}">{{ ucfirst($booking->status) }}</span>
+                <span class="badge {{ $paymentBadgeClass }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span>
+            </div>
+        </div>
         <a href="{{ route('admin.bookings.index') }}" class="btn btn-ta-outline">Back to bookings</a>
     </div>
 
@@ -131,12 +155,12 @@
     </section>
 
     <section class="soft-card p-4 mb-3">
-        <h2 class="h5 mb-3">Assign Responsible Staff</h2>
+        <h2 class="h5 mb-3">Staff assignment</h2>
         <form method="POST" action="{{ route('admin.bookings.assign-staff', $booking) }}" class="row g-3 align-items-end" data-confirm="Save this staff assignment?">
             @csrf
             @method('PATCH')
             <div class="col-md-5">
-                <label class="form-label">Assigned staff owner</label>
+                <label class="form-label">Responsible staff</label>
                 <select class="form-select" name="staff_id">
                     <option value="">Unassigned</option>
                     @foreach($staffMembers as $staffMember)
@@ -147,16 +171,16 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <button type="submit" class="btn btn-ta w-100">Save Assignment</button>
+                <button type="submit" class="btn btn-ta w-100">Save assignment</button>
             </div>
             <div class="col-12">
-                <p class="small text-secondary mb-0">Assigned staff is the accountable owner for this booking.</p>
+                <p class="small text-secondary mb-0">This staff member owns the booking workflow.</p>
             </div>
         </form>
     </section>
 
     <section class="soft-card p-4 mb-3">
-        <h2 class="h5 mb-3">Update Booking Status</h2>
+        <h2 class="h5 mb-3">Booking status</h2>
         <form method="POST" action="{{ route('admin.bookings.update-status', $booking) }}" class="row g-3 align-items-end" data-confirm="Update this booking status?">
             @csrf
             @method('PATCH')
@@ -181,7 +205,7 @@
             <h2 class="h5 mb-3">Payment Details</h2>
             @if($isOnlineAwaitingVerification)
                 <div class="alert alert-info small">
-                    Customer submitted online payment proof. Verify the transfer details, then approve or reject this submission.
+                    Verify the submitted reference and proof before approving.
                 </div>
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <form method="POST" action="{{ route('admin.bookings.approve-online-payment', $booking) }}" data-confirm="Approve this online payment submission?">

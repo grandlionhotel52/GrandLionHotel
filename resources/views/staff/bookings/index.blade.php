@@ -259,6 +259,7 @@
         <div class="ops-page-head">
             <div>
                 <h1 class="h4 mb-1">Bookings Board</h1>
+                <p class="text-secondary mb-0">Prioritized work queue for guest stays.</p>
             </div>
             <a href="{{ route('staff.bookings.create') }}" class="btn btn-staff">
                 <i class="bi bi-plus-circle"></i>
@@ -311,12 +312,12 @@
             <input type="hidden" name="queue" value="{{ $activeQueue }}">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-4">
-                    <label class="form-label fw-semibold">Search guest or room</label>
-                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Guest name, booking ID, room type...">
+                    <label class="form-label fw-semibold" for="staff_booking_search">Search guest or room</label>
+                    <input id="staff_booking_search" type="search" class="form-control" name="q" value="{{ request('q') }}" placeholder="ID, guest, or room">
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <label class="form-label fw-semibold">Booking status</label>
-                    <select class="form-select" name="status">
+                    <label class="form-label fw-semibold" for="staff_booking_status">Booking status</label>
+                    <select id="staff_booking_status" class="form-select" name="status">
                         <option value="">All</option>
                         @foreach(['pending', 'confirmed', 'cancelled', 'completed'] as $status)
                             <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
@@ -324,8 +325,8 @@
                     </select>
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <label class="form-label fw-semibold">Payment status</label>
-                    <select class="form-select" name="payment_status">
+                    <label class="form-label fw-semibold" for="staff_payment_status">Payment status</label>
+                    <select id="staff_payment_status" class="form-select" name="payment_status">
                         <option value="">All</option>
                         @foreach(['unpaid', 'pending_verification', 'paid', 'refund_pending'] as $paymentStatus)
                             <option value="{{ $paymentStatus }}" @selected(request('payment_status') === $paymentStatus)>{{ ucfirst(str_replace('_', ' ', $paymentStatus)) }}</option>
@@ -351,6 +352,7 @@
     <section class="ops-booking-table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table ops-booking-table align-middle">
+                <caption class="visually-hidden">Staff booking work queue and available actions</caption>
                 <thead>
                     <tr>
                         <th>Priority</th>
@@ -474,7 +476,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="ops-empty">No bookings found for the selected queue and filters.</td>
+                            <td colspan="5" class="ops-empty py-5">
+                                <i class="bi bi-check2-circle fs-3 d-block mb-2" aria-hidden="true"></i>
+                                <strong class="d-block">Queue is clear</strong>
+                                <span>No bookings match these filters.</span>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

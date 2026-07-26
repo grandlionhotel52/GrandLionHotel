@@ -88,7 +88,8 @@
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
-            <h1 class="h4 mb-0">Booking Management</h1>
+            <h1 class="h4 mb-1">Booking Management</h1>
+            <p class="text-secondary mb-0">{{ number_format($bookings->total()) }} matching booking{{ $bookings->total() === 1 ? '' : 's' }}</p>
         </div>
     </div>
 
@@ -135,12 +136,12 @@
         <form method="GET" action="{{ route('admin.bookings.index') }}">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-4">
-                    <label class="form-label">Search user or room</label>
-                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Booking ID, user name, room name...">
+                    <label class="form-label" for="admin_booking_search">Search guest or room</label>
+                    <input id="admin_booking_search" type="search" class="form-control" name="q" value="{{ request('q') }}" placeholder="ID, guest, or room">
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <label class="form-label">Booking status</label>
-                    <select class="form-select" name="status">
+                    <label class="form-label" for="admin_booking_status">Booking status</label>
+                    <select id="admin_booking_status" class="form-select" name="status">
                         <option value="">All</option>
                         @foreach(['pending', 'confirmed', 'cancelled', 'completed'] as $status)
                             <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
@@ -148,8 +149,8 @@
                     </select>
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <label class="form-label">Payment status</label>
-                    <select class="form-select" name="payment_status">
+                    <label class="form-label" for="admin_payment_status">Payment status</label>
+                    <select id="admin_payment_status" class="form-select" name="payment_status">
                         <option value="">All</option>
                         @foreach(['unpaid', 'pending_verification', 'paid', 'refund_pending'] as $paymentStatus)
                             <option value="{{ $paymentStatus }}" @selected(request('payment_status') === $paymentStatus)>{{ ucfirst(str_replace('_', ' ', $paymentStatus)) }}</option>
@@ -175,6 +176,7 @@
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
+                <caption class="visually-hidden">Bookings matching the selected admin filters</caption>
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -208,7 +210,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4">No bookings found.</td>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="bi bi-search fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
+                                <strong class="d-block">No matching bookings</strong>
+                                <span class="text-secondary">Change or reset the filters.</span>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

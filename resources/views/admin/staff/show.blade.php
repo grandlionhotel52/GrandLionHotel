@@ -132,6 +132,7 @@
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
+                <caption class="visually-hidden">Bookings assigned to {{ $staff->name }}</caption>
                 <thead>
                     <tr>
                         <th>Booking</th>
@@ -170,7 +171,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-4">No assigned customers/bookings found for this staff.</td>
+                            <td colspan="9" class="text-center py-5">
+                                <i class="bi bi-inbox fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
+                                <strong class="d-block">No assigned bookings</strong>
+                                <span class="text-secondary">This staff member has no matching work.</span>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

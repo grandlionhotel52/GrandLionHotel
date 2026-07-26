@@ -53,6 +53,12 @@ return new class extends Migration
 
     private function dropForeignIfExists(string $table, string $constraintName): void
     {
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'sqlite') {
+            $column = preg_replace(['/^'.preg_quote($table, '/').'_/','/_foreign$/'], '', $constraintName);
+            Schema::table($table, fn (Blueprint $table): mixed => $table->dropForeign([$column]));
+            return;
+        }
+
         if (!Schema::hasTable($table)) {
             return;
         }

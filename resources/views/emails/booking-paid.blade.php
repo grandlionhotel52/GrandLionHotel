@@ -30,7 +30,7 @@
                                 You can download your official receipt from your booking details page.
                             </p>
                             <p style="margin:0 0 16px 0;">
-                                <a href="{{ route('bookings.show', $booking) }}" style="display:inline-block;padding:10px 16px;background:#b89254;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:700;">
+                                <a href="{{ route('bookings.show', $booking) }}" style="display:inline-block;padding:10px 16px;background:#b89254;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;">
                                     Open booking details
                                 </a>
                             </p>

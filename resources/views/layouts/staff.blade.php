@@ -58,6 +58,41 @@
             color: var(--staff-ink);
             min-height: 100vh;
         }
+        .skip-link {
+            position: fixed;
+            top: 0.75rem;
+            left: 0.75rem;
+            z-index: 2000;
+            transform: translateY(-160%);
+            border-radius: 10px;
+            background: var(--theme-ink);
+            color: #fff;
+            padding: 0.65rem 0.9rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .skip-link:focus {
+            transform: translateY(0);
+            color: #fff;
+        }
+        :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+            outline: 3px solid rgba(var(--theme-primary-rgb), 0.55);
+            outline-offset: 3px;
+        }
+        .form-label.is-required::after {
+            content: " *";
+            color: #b42318;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
         .navbar {
             background: rgba(255, 255, 255, 0.94) !important;
             backdrop-filter: blur(8px);
@@ -83,8 +118,9 @@
             background: var(--staff-brand);
             color: #fff;
             font-weight: 700;
+            min-height: 42px;
             padding: 0.5rem 0.95rem;
-            box-shadow: 0 6px 14px rgba(var(--theme-primary-rgb), 0.25);
+            box-shadow: 0 5px 12px rgba(var(--theme-primary-rgb), 0.2);
             transition: background 0.2s ease, box-shadow 0.2s ease;
         }
         .btn-staff:hover {
@@ -99,12 +135,32 @@
             background: #fff;
             color: var(--theme-ink);
             font-weight: 700;
+            min-height: 42px;
             padding: 0.5rem 0.95rem;
         }
         .btn-staff-outline:hover {
             background: var(--theme-ink);
             border-color: var(--theme-ink);
             color: #fff;
+        }
+        :where(.btn-staff, .btn-staff-outline, .btn-staff-danger, .btn-outline-danger) {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.32rem;
+            line-height: 1.15;
+        }
+        :where(.btn-staff, .btn-staff-outline, .btn-staff-danger, .btn-outline-danger).btn-sm {
+            min-height: 34px;
+            padding: 0.36rem 0.68rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+        :where(.btn-staff, .btn-staff-outline, .btn-staff-danger, .btn-outline-danger):disabled,
+        :where(.btn-staff, .btn-staff-outline, .btn-staff-danger, .btn-outline-danger).disabled {
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
         }
         .staff-action-col {
             min-width: 220px;
@@ -357,11 +413,17 @@
         .transition-all {
             transition: all 0.2s ease;
         }
-        .text-success,
-        .text-primary,
-        .text-info,
-        .text-warning {
+        .text-primary {
             color: var(--theme-primary) !important;
+        }
+        .text-success {
+            color: #067647 !important;
+        }
+        .text-info {
+            color: #175cd3 !important;
+        }
+        .text-warning {
+            color: #9a6700 !important;
         }
         .text-danger {
             color: var(--theme-secondary) !important;
@@ -389,16 +451,37 @@
             background: rgba(var(--theme-primary-rgb), 0.14);
             color: var(--theme-ink);
         }
+        .alert-success {
+            border-color: rgba(6, 118, 71, 0.35);
+            background: rgba(6, 118, 71, 0.1);
+        }
+        .alert-info {
+            border-color: rgba(23, 92, 211, 0.3);
+            background: rgba(23, 92, 211, 0.09);
+        }
+        .alert-warning {
+            border-color: rgba(154, 103, 0, 0.35);
+            background: rgba(245, 158, 11, 0.12);
+        }
         .alert-danger {
             border-color: rgba(var(--theme-secondary-rgb), 0.42);
             background: rgba(var(--theme-secondary-rgb), 0.14);
             color: var(--theme-ink);
         }
-        .text-bg-success,
-        .text-bg-primary,
-        .text-bg-info,
-        .text-bg-warning {
+        .text-bg-primary {
             background-color: var(--theme-primary) !important;
+            color: #fff !important;
+        }
+        .text-bg-success {
+            background-color: #067647 !important;
+            color: #fff !important;
+        }
+        .text-bg-info {
+            background-color: #175cd3 !important;
+            color: #fff !important;
+        }
+        .text-bg-warning {
+            background-color: #9a6700 !important;
             color: #fff !important;
         }
         .text-bg-danger {
@@ -447,6 +530,7 @@
     @stack('head')
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to content</a>
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
         <div class="container-xl py-2">
             <a class="navbar-brand text-dark" href="{{ route('staff.dashboard') }}">
@@ -476,7 +560,7 @@
         </div>
     </nav>
 
-    <main class="container-xl py-4">
+    <main id="main-content" tabindex="-1" class="container-xl py-4">
         @if(session('status') || $errors->any())
             <div class="flash-stack">
                 @if(session('status'))
@@ -512,6 +596,34 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         (() => {
+            document.querySelectorAll('.nav-link.active').forEach((link) => {
+                link.setAttribute('aria-current', 'page');
+            });
+
+            document.querySelectorAll('.table-responsive').forEach((tableRegion) => {
+                tableRegion.setAttribute('tabindex', '0');
+                tableRegion.setAttribute('role', 'region');
+                tableRegion.setAttribute('aria-label', 'Scrollable data table');
+            });
+
+            document.querySelectorAll('label.form-label').forEach((label, index) => {
+                let control = label.htmlFor ? document.getElementById(label.htmlFor) : null;
+                control ??= label.parentElement?.querySelector('input, select, textarea');
+
+                if (!control) {
+                    return;
+                }
+
+                if (!control.id) {
+                    control.id = `staff-form-field-${index + 1}`;
+                }
+
+                label.htmlFor = control.id;
+                if (control.required && !label.textContent.includes('*')) {
+                    label.classList.add('is-required');
+                }
+            });
+
             document.addEventListener('submit', (event) => {
                 const form = event.target;
                 if (!(form instanceof HTMLFormElement)) {

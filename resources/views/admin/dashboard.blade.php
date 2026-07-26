@@ -249,6 +249,7 @@
 
         <div class="table-responsive">
             <table class="table admin-recent-table align-middle mb-0">
+                <caption class="visually-hidden">Most recent hotel bookings</caption>
                 <thead>
                     <tr>
                         <th>Booking</th>

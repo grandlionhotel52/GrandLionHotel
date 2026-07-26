@@ -149,6 +149,7 @@
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle">
+                <caption class="visually-hidden">Hotel rooms, availability, status, and management actions</caption>
                 <thead>
                     <tr>
                         <th>ID</th>

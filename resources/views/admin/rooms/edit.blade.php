@@ -3,8 +3,11 @@
 @section('title', 'Edit Room')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Edit Room #{{ $room->id }}</h1>
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-1">Edit {{ $room->name }}</h1>
+            <p class="text-secondary mb-0">Update room information shown to customers.</p>
+        </div>
         <a href="{{ route('admin.rooms.index') }}" class="btn btn-ta-outline">Back to rooms</a>
     </div>
 
@@ -21,7 +24,7 @@
                 <input type="text" class="form-control" name="type" value="{{ old('type', $room->type) }}" required>
             </div>
             <div class="col-md-4">
-                <label class="form-label">View Type</label>
+                <label class="form-label">View type</label>
                 <input type="text" class="form-control" name="view_type" value="{{ old('view_type', $room->view_type) }}" placeholder="Nature View, Garden View, etc.">
             </div>
             <div class="col-12">
@@ -35,11 +38,22 @@
             <div class="col-md-3">
                 <label class="form-label">Standard occupancy</label>
                 <input type="text" class="form-control" value="2 guests" disabled>
-                <small class="text-secondary">Extra bedding requests are handled separately.</small>
+                <small class="text-secondary">Extra beds are handled during booking.</small>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Image URL</label>
-                <input type="url" class="form-control" name="image" value="{{ old('image', $room->image) }}" placeholder="https://...">
+                <label class="form-label">Room status</label>
+                <select class="form-select" name="room_status_id">
+                    @foreach($roomStatuses as $roomStatus)
+                        <option value="{{ $roomStatus->room_status_id }}" @selected((string) old('room_status_id', $room->room_status_id) === (string) $roomStatus->room_status_id)>
+                            {{ $roomStatus->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Image URL (optional)</label>
+                <input type="url" class="form-control" name="image" value="{{ old('image', $room->image) }}" placeholder="https://example.com/room.jpg">
+                <small class="text-secondary">A hotel placeholder is used when empty.</small>
             </div>
             <div class="col-12 d-flex justify-content-end gap-2">
                 <a href="{{ route('admin.rooms.index') }}" class="btn btn-ta-outline">Cancel</a>

@@ -6,13 +6,16 @@
     <div class="row justify-content-center">
         <div class="col-lg-7">
             <section class="soft-card p-4 p-lg-5 text-center">
-                <p class="ta-eyebrow mb-1">Reservation Complete</p>
-                <h1 class="h2 mb-3">Booking Confirmed</h1>
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success text-white fs-2 mb-3" style="width: 4rem; height: 4rem;" aria-hidden="true">
+                    <i class="bi bi-check2"></i>
+                </span>
+                <p class="ta-eyebrow mb-1">Payment complete</p>
+                <h1 class="h2 mb-3">You’re all set</h1>
                 <p class="mb-1">Reservation #: <strong>{{ $booking->id }}</strong></p>
                 <p class="mb-1">Room: <strong>{{ $booking->room->name ?? 'N/A' }}</strong></p>
                 <p class="mb-1">Dates: <strong>{{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</strong></p>
-                <p class="mb-1">Total Paid: <strong>&#8369;{{ number_format($booking->total_price, 2) }}</strong></p>
-                <p class="mb-4">Payment Status: <strong>{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</strong></p>
+                <p class="mb-1">Total paid: <strong>&#8369;{{ number_format($booking->total_price, 2) }}</strong></p>
+                <p class="mb-4">Payment: <span class="badge text-bg-success">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span></p>
 
                 @if($booking->payment?->transaction_reference)
                     <p class="small text-secondary mb-4">Transaction Reference: <strong>{{ $booking->payment->transaction_reference }}</strong></p>

@@ -201,8 +201,8 @@
                     <h2 class="h4 profile-panel-title">Personal Details</h2>
                     <p class="text-secondary mb-4">
                         {{ $isCustomerProfile
-                            ? 'Update your details to speed up future reservations and prevent booking issues.'
-                            : 'Update your basic account details here.' }}
+                            ? 'Keep your booking details up to date.'
+                            : 'Update your account details.' }}
                     </p>
 
                     <form method="POST" action="{{ route('profile.update') }}" class="row g-3">
@@ -252,7 +252,7 @@
                                             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                             <input id="profileEmail" type="email" class="form-control" value="{{ $user->email }}" disabled>
                                         </div>
-                                        <small class="text-secondary">Email updates are locked for account protection.</small>
+                                        <small class="text-secondary">Email cannot be changed.</small>
                                     </div>
                                 </div>
                             </div>
@@ -330,7 +330,7 @@
                                 Last account update:
                                 {{ optional($user->updated_at)->format('M d, Y h:i A') ?: now()->format('M d, Y h:i A') }}
                             </p>
-                            <button type="submit" class="btn btn-ta">Save profile details</button>
+                            <button type="submit" class="btn btn-ta">Save profile</button>
                         </div>
                     </form>
                 </section>
@@ -343,11 +343,11 @@
                     <p class="text-secondary small mb-3">
                         {{ $isCustomerProfile
                             ? ($profileCompletion === 100
-                                ? 'Everything looks complete. You can proceed to booking anytime.'
-                                : 'Fill remaining details below to avoid delays during reservation checkout.')
+                                ? 'Your profile is ready for booking.'
+                                : 'Complete the missing details to book.')
                             : ($profileCompletion === 100
-                                ? 'Your basic account details are complete.'
-                                : 'Add the remaining basic account details below.') }}
+                                ? 'Your profile is complete.'
+                                : 'Complete the missing details.') }}
                     </p>
 
                     <ul class="profile-checklist mb-0">
@@ -363,11 +363,11 @@
                 </section>
 
                 <section class="profile-aside-card profile-appear delay-3">
-                    <p class="ta-eyebrow mb-1">Account Security</p>
-                    <h2 class="h5 mb-2">Security Center</h2>
-                    <p class="text-secondary small mb-2">Manage password protection in a dedicated page with stronger checks and clearer controls.</p>
+                    <p class="ta-eyebrow mb-1">Account</p>
+                    <h2 class="h5 mb-2">Security</h2>
+                    <p class="text-secondary small mb-2">Manage your password.</p>
 
-                    <a href="{{ route('profile.security') }}" class="btn btn-ta w-100">Open Security Settings</a>
+                    <a href="{{ route('profile.security') }}" class="btn btn-ta w-100">Security settings</a>
                 </section>
             </div>
         </div>

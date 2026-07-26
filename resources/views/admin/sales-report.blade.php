@@ -138,6 +138,7 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table admin-report-table align-middle mb-0">
+                        <caption class="visually-hidden">Paid sales grouped by day</caption>
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -172,6 +173,7 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table admin-report-table align-middle mb-0">
+                        <caption class="visually-hidden">Paid sales grouped by payment method</caption>
                         <thead>
                             <tr>
                                 <th>Method</th>
@@ -206,6 +208,7 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table admin-report-table align-middle mb-0">
+                        <caption class="visually-hidden">Paid sales attributed to staff</caption>
                         <thead>
                             <tr>
                                 <th>Staff</th>
@@ -238,6 +241,7 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table admin-report-table align-middle mb-0">
+                        <caption class="visually-hidden">Most recent paid transactions</caption>
                         <thead>
                             <tr>
                                 <th>Paid At</th>

@@ -66,8 +66,8 @@
         $extraBeddingFeePerNight = (float) config('pricing.extra_bedding_fee_per_night', 0);
     @endphp
     <section class="mb-4">
-        <h1 class="h4 mb-1">New Walk-in Booking</h1>
-        <p class="text-secondary mb-0">Create a front-desk booking from the bookings board.</p>
+        <h1 class="h4 mb-1">New walk-in booking</h1>
+        <p class="text-secondary mb-0">Create a reservation for a front-desk guest.</p>
     </section>
 
     <form method="POST" action="{{ route('staff.bookings.store') }}">
@@ -77,7 +77,7 @@
             <div class="col-xl-8">
                 <section class="walkin-shell p-3 p-lg-4">
                     <div class="walkin-section">
-                        <p class="walkin-section-title">Customer Details</p>
+                        <p class="walkin-section-title">Guest details</p>
                         <div class="row g-3">
                             <div class="col-md-8">
                                 <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
@@ -104,7 +104,7 @@
                     </div>
 
                     <div class="walkin-section">
-                        <p class="walkin-section-title">Booking Details</p>
+                        <p class="walkin-section-title">Stay details</p>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Room <span class="text-danger">*</span></label>
@@ -136,7 +136,7 @@
                             </div>
                             <div class="col-12">
                                 <small class="text-secondary">
-                                    Nightly schedule: check-in is 2:00 PM and check-out is 12:00 PM.
+                                    Check-in: 2:00 PM · Check-out: 12:00 PM
                                 </small>
                             </div>
                             <div class="col-md-4">
@@ -145,10 +145,10 @@
                                 @error('guests')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-secondary d-block mt-1">Standard setup is for {{ $standardGuests }} guests. Guests beyond {{ $standardGuests }} require extra bedding approval.</small>
+                                <small class="text-secondary d-block mt-1">{{ $standardGuests }} guests included. Extra guests need bedding approval.</small>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Payment Preference</label>
+                                <label class="form-label fw-semibold">Payment preference</label>
                                 <select name="payment_preference" class="form-select">
                                     <option value="">Select preference...</option>
                                     <option value="cash" @selected(old('payment_preference') == 'cash')>Cash</option>
@@ -170,7 +170,7 @@
                         </div>
                     </div>
                     <div class="walkin-section">
-                        <p class="walkin-section-title">Operational Notes</p>
+                        <p class="walkin-section-title">Notes</p>
                         <label class="form-label fw-semibold">Notes</label>
                         <textarea name="notes" rows="4" class="form-control @error('notes') is-invalid @enderror" placeholder="Special requests, allergies, VIP handling, arrival instructions...">{{ old('notes') }}</textarea>
                         @error('notes')
@@ -179,15 +179,15 @@
                     </div>
 
                     <div class="d-flex gap-2 justify-content-end mt-4">
-                        <a href="{{ route('staff.bookings.index') }}" class="btn btn-staff-outline">Back to Bookings</a>
-                        <button type="submit" class="btn btn-staff px-4">Create Booking</button>
+                        <a href="{{ route('staff.bookings.index') }}" class="btn btn-staff-outline">Cancel</a>
+                        <button type="submit" class="btn btn-staff px-4">Create booking</button>
                     </div>
                 </section>
             </div>
 
             <div class="col-xl-4">
                 <aside class="walkin-summary p-3 p-lg-4">
-                    <h2 class="h5 mb-3">Booking Summary</h2>
+                    <h2 class="h5 mb-3">Summary</h2>
                     <div class="walkin-summary-line">
                         <span class="walkin-summary-label">Selected Room</span>
                         <span class="walkin-summary-value" id="summary_room">-</span>
@@ -216,7 +216,7 @@
                         <span class="walkin-summary-label">Estimated Total</span>
                         <span class="walkin-summary-value" id="summary_total">-</span>
                     </div>
-                    <p class="walkin-note mt-3" id="summary_note">Estimate only. Final amount is based on stay dates, room rate, discounts, and approved extra bedding.</p>
+                    <p class="walkin-note mt-3" id="summary_note">Final pricing includes applicable discounts and approved extra beds.</p>
                 </aside>
             </div>
         </div>
