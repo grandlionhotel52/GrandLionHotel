@@ -56,14 +56,22 @@
         .search-filter-grid .field-check-out { grid-column: span 3; }
         .search-filter-grid .field-max-price { grid-column: span 3; }
         .search-filter-grid .field-sort { grid-column: span 3; }
-        .search-filter-grid .field-availability { grid-column: span 12; align-self: center; }
-        .search-filter-grid .field-actions { grid-column: span 3; align-self: end; }
+        .search-filter-grid .field-toolbar { grid-column: 1 / -1; }
+        .search-filter-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            border-top: 1px solid #eee7dc;
+            padding-top: 0.85rem;
+        }
         .search-filter-actions {
             display: flex;
             gap: 0.5rem;
         }
         .search-filter-actions .btn {
-            flex: 1;
+            min-width: 8.5rem;
+            white-space: nowrap;
         }
         .quick-search-wrap {
             position: relative;
@@ -209,12 +217,6 @@
             .search-filter-grid .field-sort {
                 grid-column: span 2;
             }
-            .search-filter-grid .field-availability {
-                grid-column: span 8;
-            }
-            .search-filter-grid .field-actions {
-                grid-column: span 4;
-            }
         }
         @media (max-width: 991.98px) {
             .search-filter-grid .field-quick-search {
@@ -224,9 +226,7 @@
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
             .search-filter-grid .field-max-price,
-            .search-filter-grid .field-sort,
-            .search-filter-grid .field-availability,
-            .search-filter-grid .field-actions {
+            .search-filter-grid .field-sort {
                 grid-column: span 6;
             }
         }
@@ -236,14 +236,18 @@
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
             .search-filter-grid .field-max-price,
-            .search-filter-grid .field-sort,
-            .search-filter-grid .field-availability,
-            .search-filter-grid .field-actions {
+            .search-filter-grid .field-sort {
                 grid-column: span 12;
             }
-            .search-filter-actions {
+            .search-filter-toolbar {
+                align-items: stretch;
                 flex-direction: column;
             }
+            .search-filter-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            .search-filter-actions .btn { min-width: 0; }
         }
     </style>
 @endpush
@@ -335,18 +339,18 @@
                         <option value="newest" @selected(request('sort') === 'newest')>Newest Listings</option>
                     </select>
                 </div>
-                <div class="field-availability">
-                    <div class="form-check mt-3 mt-md-0">
-                        <input class="form-check-input" type="checkbox" name="available_only" value="1" id="availableOnly" {{ request('available_only') ? 'checked' : '' }}>
-                        <label class="form-check-label" for="availableOnly">Available only</label>
-                    </div>
-                </div>
-                <div class="field-actions">
-                    <div class="search-filter-actions">
-                        <button type="submit" class="btn btn-ta">Apply filters</button>
-                        @if(request()->query())
-                            <a href="{{ route('rooms.search') }}" class="btn btn-ta-outline">Reset</a>
-                        @endif
+                <div class="field-toolbar">
+                    <div class="search-filter-toolbar">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" name="available_only" value="1" id="availableOnly" {{ request('available_only') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="availableOnly">Available only</label>
+                        </div>
+                        <div class="search-filter-actions">
+                            <button type="submit" class="btn btn-ta">Apply filters</button>
+                            @if(request()->query())
+                                <a href="{{ route('rooms.search') }}" class="btn btn-ta-outline">Reset</a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </form>
