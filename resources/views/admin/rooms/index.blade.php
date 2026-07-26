@@ -32,6 +32,40 @@
             background: #fff;
             box-shadow: var(--admin-shadow);
         }
+        .admin-room-search-wrap {
+            position: relative;
+        }
+        .admin-room-search-wrap .form-control {
+            padding-left: 2.35rem;
+            padding-right: 2.3rem;
+        }
+        .admin-room-search-icon {
+            position: absolute;
+            top: 50%;
+            left: 0.82rem;
+            color: #7b8492;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        .admin-room-search-clear {
+            position: absolute;
+            top: 50%;
+            right: 0.5rem;
+            display: inline-grid;
+            width: 1.7rem;
+            height: 1.7rem;
+            place-items: center;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #687386;
+            transform: translateY(-50%);
+        }
+        .admin-room-search-clear:hover,
+        .admin-room-search-clear:focus-visible {
+            background: #eef2f7;
+            color: #1f2937;
+        }
         .admin-discount-shell {
             border-radius: 14px;
             border: 1px solid #ddcfba;
@@ -115,11 +149,18 @@
     </div>
 
     <section class="admin-rooms-shell p-3 p-lg-4 mb-4">
-        <form method="GET" action="{{ route('admin.rooms.index') }}">
+        <form method="GET" action="{{ route('admin.rooms.index') }}" id="adminRoomSearchForm">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-4">
-                    <label class="form-label">Search room</label>
-                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Room name, room type, or view">
+                    <label class="form-label" for="adminRoomQuickSearch">Quick search</label>
+                    <div class="admin-room-search-wrap">
+                        <i class="bi bi-search admin-room-search-icon" aria-hidden="true"></i>
+                        <input type="search" class="form-control" id="adminRoomQuickSearch" name="q" value="{{ request('q') }}" placeholder="Room name, type, or view" autocomplete="off" aria-describedby="adminRoomSearchHelp">
+                        <button type="button" class="admin-room-search-clear {{ filled(request('q')) ? '' : 'd-none' }}" id="adminRoomSearchClear" aria-label="Clear room search">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="form-text" id="adminRoomSearchHelp" aria-live="polite">Results update as you type.</div>
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label class="form-label">Availability</label>
@@ -429,6 +470,41 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const roomSearchForm = document.getElementById('adminRoomSearchForm');
+            const roomSearchField = document.getElementById('adminRoomQuickSearch');
+            const roomSearchClear = document.getElementById('adminRoomSearchClear');
+            const roomSearchHelp = document.getElementById('adminRoomSearchHelp');
+
+            if (roomSearchForm && roomSearchField) {
+                let roomSearchTimer;
+                const submittedRoomSearch = roomSearchField.value.trim();
+                const submitRoomSearch = function () {
+                    roomSearchHelp.textContent = 'Searching rooms...';
+                    roomSearchForm.requestSubmit();
+                };
+
+                roomSearchField.addEventListener('input', function () {
+                    window.clearTimeout(roomSearchTimer);
+                    const value = roomSearchField.value.trim();
+                    roomSearchClear?.classList.toggle('d-none', value === '');
+                    roomSearchHelp.textContent = value === '' ? 'Showing all rooms...' : 'Waiting for you to finish typing...';
+
+                    if (value === submittedRoomSearch) {
+                        roomSearchHelp.textContent = 'Results update as you type.';
+                        return;
+                    }
+
+                    roomSearchTimer = window.setTimeout(submitRoomSearch, 450);
+                });
+
+                roomSearchClear?.addEventListener('click', function () {
+                    window.clearTimeout(roomSearchTimer);
+                    roomSearchField.value = '';
+                    roomSearchClear.classList.add('d-none');
+                    submitRoomSearch();
+                });
+            }
+
             const discountScopeSelect = document.getElementById('discount_target_scope');
             const discountRoomTypeWrap = document.getElementById('discount_room_type_wrap');
             const discountRoomTypeField = document.getElementById('discount_room_type');

@@ -50,6 +50,7 @@
             gap: 0.8rem;
             grid-template-columns: repeat(15, minmax(0, 1fr));
         }
+        .search-filter-grid .field-quick-search { grid-column: span 3; }
         .search-filter-grid .field-type { grid-column: span 3; }
         .search-filter-grid .field-check-in { grid-column: span 2; }
         .search-filter-grid .field-check-out { grid-column: span 2; }
@@ -63,6 +64,48 @@
         }
         .search-filter-actions .btn {
             flex: 1;
+        }
+        .quick-search-wrap {
+            position: relative;
+        }
+        .quick-search-wrap .form-control {
+            padding-left: 2.45rem;
+            padding-right: 2.35rem;
+        }
+        .quick-search-icon {
+            position: absolute;
+            top: 50%;
+            left: 0.85rem;
+            z-index: 2;
+            color: #7b8492;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        .quick-search-clear {
+            position: absolute;
+            top: 50%;
+            right: 0.55rem;
+            z-index: 2;
+            display: inline-grid;
+            width: 1.7rem;
+            height: 1.7rem;
+            place-items: center;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #687386;
+            transform: translateY(-50%);
+        }
+        .quick-search-clear:hover,
+        .quick-search-clear:focus-visible {
+            background: #f1f4f8;
+            color: #1f2937;
+        }
+        .quick-search-help {
+            min-height: 1rem;
+            margin-top: 0.28rem;
+            color: #6b7280;
+            font-size: 0.72rem;
         }
         .search-selected-stay {
             border-radius: 14px;
@@ -124,6 +167,7 @@
             .search-filter-grid {
                 grid-template-columns: repeat(12, minmax(0, 1fr));
             }
+            .search-filter-grid .field-quick-search,
             .search-filter-grid .field-type {
                 grid-column: span 4;
             }
@@ -141,6 +185,7 @@
             }
         }
         @media (max-width: 991.98px) {
+            .search-filter-grid .field-quick-search,
             .search-filter-grid .field-type,
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
@@ -152,6 +197,7 @@
             }
         }
         @media (max-width: 575.98px) {
+            .search-filter-grid .field-quick-search,
             .search-filter-grid .field-type,
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
@@ -178,6 +224,9 @@
         ];
         $standardGuests = \App\Models\Room::standardGuestCapacity();
         $activeFilters = [];
+        if (filled(request('q'))) {
+            $activeFilters[] = ['label' => 'Search', 'value' => request('q')];
+        }
         if (filled(request('type'))) {
             $activeFilters[] = ['label' => 'Type', 'value' => request('type')];
         }
@@ -190,9 +239,6 @@
         if (request('available_only')) {
             $activeFilters[] = ['label' => 'Availability', 'value' => 'Available only'];
         }
-        $hasSignedInAccess = auth('customer')->check()
-            || auth('admin')->check()
-            || auth('staff')->check();
     @endphp
 
     <section class="search-hero p-4 p-lg-5 mb-4">
@@ -205,11 +251,30 @@
         </div>
     </section>
 
-    @if($hasSignedInAccess)
-        <section class="search-filter-shell p-3 p-lg-4 mb-4">
-            <form method="GET" action="{{ route('rooms.search') }}" class="search-filter-grid">
+    <section class="search-filter-shell p-3 p-lg-4 mb-4">
+            <form method="GET" action="{{ route('rooms.search') }}" class="search-filter-grid" id="roomSearchForm">
+                <div class="field-quick-search">
+                    <label class="form-label" for="roomQuickSearch">Quick search</label>
+                    <div class="quick-search-wrap">
+                        <i class="bi bi-search quick-search-icon" aria-hidden="true"></i>
+                        <input
+                            type="search"
+                            name="q"
+                            id="roomQuickSearch"
+                            class="form-control"
+                            value="{{ request('q') }}"
+                            placeholder="Room name, type, or view"
+                            autocomplete="off"
+                            aria-describedby="roomQuickSearchHelp"
+                        >
+                        <button type="button" class="quick-search-clear {{ filled(request('q')) ? '' : 'd-none' }}" id="roomQuickSearchClear" aria-label="Clear quick search">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="quick-search-help" id="roomQuickSearchHelp" aria-live="polite">Results update as you type.</div>
+                </div>
                 <div class="field-type">
-                    <label class="form-label">Room type or view</label>
+                    <label class="form-label">Narrow by type or view</label>
                     <input type="text" name="type" class="form-control" value="{{ request('type') }}" placeholder="Suite, Deluxe, Nature View">
                 </div>
                 <div class="field-check-in">
@@ -272,8 +337,7 @@
                     @endforeach
                 </div>
             @endif
-        </section>
-    @endif
+    </section>
 
     <div class="search-results-head">
         <h2 class="h5 mb-0">Search results</h2>
@@ -365,3 +429,47 @@
         {{ $rooms->links() }}
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('roomSearchForm');
+            const field = document.getElementById('roomQuickSearch');
+            const clearButton = document.getElementById('roomQuickSearchClear');
+            const help = document.getElementById('roomQuickSearchHelp');
+
+            if (!form || !field) {
+                return;
+            }
+
+            let timer;
+            const submittedValue = field.value.trim();
+
+            const submitSearch = function () {
+                help.textContent = 'Searching rooms...';
+                form.requestSubmit();
+            };
+
+            field.addEventListener('input', function () {
+                window.clearTimeout(timer);
+                const value = field.value.trim();
+                clearButton?.classList.toggle('d-none', value === '');
+                help.textContent = value === '' ? 'Showing all rooms...' : 'Waiting for you to finish typing...';
+
+                if (value === submittedValue) {
+                    help.textContent = 'Results update as you type.';
+                    return;
+                }
+
+                timer = window.setTimeout(submitSearch, 450);
+            });
+
+            clearButton?.addEventListener('click', function () {
+                window.clearTimeout(timer);
+                field.value = '';
+                clearButton.classList.add('d-none');
+                submitSearch();
+            });
+        });
+    </script>
+@endpush

@@ -135,6 +135,18 @@ class RoomController extends Controller
     {
         $roomsQuery
             ->when(
+                $request->filled('q'),
+                function (Builder $query) use ($request): void {
+                    $keyword = trim((string) $request->input('q'));
+
+                    $query->where(function (Builder $nested) use ($keyword): void {
+                        $nested->where('name', 'like', '%'.$keyword.'%')
+                            ->orWhere('type', 'like', '%'.$keyword.'%')
+                            ->orWhere('view_type', 'like', '%'.$keyword.'%');
+                    });
+                }
+            )
+            ->when(
                 $request->filled('type'),
                 function (Builder $query) use ($request): void {
                     $keyword = trim((string) $request->input('type'));
