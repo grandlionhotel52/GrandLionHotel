@@ -50,11 +50,11 @@
             gap: 0.8rem;
             grid-template-columns: repeat(15, minmax(0, 1fr));
         }
-        .search-filter-grid .field-quick-search { grid-column: span 3; }
+        .search-filter-grid .field-quick-search { grid-column: 1 / -1; }
         .search-filter-grid .field-type { grid-column: span 3; }
-        .search-filter-grid .field-check-in { grid-column: span 2; }
-        .search-filter-grid .field-check-out { grid-column: span 2; }
-        .search-filter-grid .field-max-price { grid-column: span 2; }
+        .search-filter-grid .field-check-in { grid-column: span 3; }
+        .search-filter-grid .field-check-out { grid-column: span 3; }
+        .search-filter-grid .field-max-price { grid-column: span 3; }
         .search-filter-grid .field-sort { grid-column: span 3; }
         .search-filter-grid .field-availability { grid-column: span 12; align-self: center; }
         .search-filter-grid .field-actions { grid-column: span 3; align-self: end; }
@@ -69,22 +69,34 @@
             position: relative;
         }
         .quick-search-wrap .form-control {
-            padding-left: 2.45rem;
-            padding-right: 2.35rem;
+            min-height: 3.5rem;
+            border: 1px solid rgba(184, 146, 84, 0.45);
+            border-radius: 16px;
+            background: #fffdf9;
+            padding-left: 3rem;
+            padding-right: 3rem;
+            font-size: 1rem;
+            box-shadow: 0 8px 20px rgba(34, 44, 58, 0.06);
+        }
+        .quick-search-wrap .form-control:focus {
+            border-color: var(--brand);
+            background: #fff;
+            box-shadow: 0 0 0 0.22rem rgba(184, 146, 84, 0.14);
         }
         .quick-search-icon {
             position: absolute;
             top: 50%;
-            left: 0.85rem;
+            left: 1.1rem;
             z-index: 2;
-            color: #7b8492;
+            color: var(--brand-deep);
+            font-size: 1.12rem;
             transform: translateY(-50%);
             pointer-events: none;
         }
         .quick-search-clear {
             position: absolute;
             top: 50%;
-            right: 0.55rem;
+            right: 0.8rem;
             z-index: 2;
             display: inline-grid;
             width: 1.7rem;
@@ -103,9 +115,27 @@
         }
         .quick-search-help {
             min-height: 1rem;
-            margin-top: 0.28rem;
+            margin: 0.35rem 0.2rem 0;
             color: #6b7280;
             font-size: 0.72rem;
+        }
+        .quick-search-label-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.35rem 0.75rem;
+            margin-bottom: 0.45rem;
+        }
+        .quick-search-label-row .form-label {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+        .quick-search-label-row .search-scope {
+            color: #7a8493;
+            font-size: 0.72rem;
+            font-weight: 600;
         }
         .search-selected-stay {
             border-radius: 14px;
@@ -167,7 +197,9 @@
             .search-filter-grid {
                 grid-template-columns: repeat(12, minmax(0, 1fr));
             }
-            .search-filter-grid .field-quick-search,
+            .search-filter-grid .field-quick-search {
+                grid-column: 1 / -1;
+            }
             .search-filter-grid .field-type {
                 grid-column: span 4;
             }
@@ -185,7 +217,9 @@
             }
         }
         @media (max-width: 991.98px) {
-            .search-filter-grid .field-quick-search,
+            .search-filter-grid .field-quick-search {
+                grid-column: 1 / -1;
+            }
             .search-filter-grid .field-type,
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
@@ -254,7 +288,10 @@
     <section class="search-filter-shell p-3 p-lg-4 mb-4">
             <form method="GET" action="{{ route('rooms.search') }}" class="search-filter-grid" id="roomSearchForm">
                 <div class="field-quick-search">
-                    <label class="form-label" for="roomQuickSearch">Quick search</label>
+                    <div class="quick-search-label-row">
+                        <label class="form-label" for="roomQuickSearch">Find a room</label>
+                        <span class="search-scope">Search by room name, type, or view</span>
+                    </div>
                     <div class="quick-search-wrap">
                         <i class="bi bi-search quick-search-icon" aria-hidden="true"></i>
                         <input
@@ -263,7 +300,7 @@
                             id="roomQuickSearch"
                             class="form-control"
                             value="{{ request('q') }}"
-                            placeholder="Room name, type, or view"
+                            placeholder="Try “Deluxe”, “Suite”, or “Nature View”"
                             autocomplete="off"
                             aria-describedby="roomQuickSearchHelp"
                         >
