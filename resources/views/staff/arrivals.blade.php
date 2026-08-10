@@ -309,7 +309,7 @@
                                                 data-default-discount-proof-url="{{ $resolveDiscountProofUrl(data_get($booking->reservation_meta, 'discount_id_photo_path', '')) }}"
                                             >
                                                 <i class="bi bi-qr-code"></i>
-                                                <span>InstaPay QR</span>
+                                                <span>Legacy InstaPay QR</span>
                                             </button>
                                         @elseif($booking->status === 'confirmed' && $booking->payment_status === 'pending_verification')
                                             <span class="small text-secondary d-inline-block">Awaiting payment verification</span>
@@ -351,7 +351,7 @@
                 </div>
                 <div class="modal-body px-3 pb-3 pt-0">
                     <div class="gcash-pay-card">
-                        <h5 class="fw-bold mb-2" id="gcashQrModalLabel">Securely complete the payment with InstaPay</h5>
+                        <h5 class="fw-bold mb-2" id="gcashQrModalLabel">Legacy manual InstaPay payment</h5>
                         <a
                             href="{{ $gcashWallet['app_link'] }}"
                             target="_blank"
@@ -359,9 +359,9 @@
                             class="gcash-open-btn"
                             id="gcash_open_app_link"
                         >
-                            Open InstaPay details
+                            Open legacy InstaPay details
                         </a>
-                        <p class="fw-semibold mt-3 mb-2">Scan this QR using your banking app with InstaPay support.</p>
+                        <p class="fw-semibold mt-3 mb-2">This is a manual front-desk QR and is not verified automatically by PayMongo.</p>
 
                         <div class="gcash-qr-frame">
                             <img src="" alt="InstaPay QR code" id="gcash_qr_image">
@@ -392,7 +392,7 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="" id="gcash_record_payment_form" class="mt-3" data-confirm="Mark this booking as paid via InstaPay?">
+                    <form method="POST" action="" id="gcash_record_payment_form" class="mt-3" data-confirm="Confirm that this legacy InstaPay payment was manually verified?">
                         @csrf
                         @method('PATCH')
                         <input type="hidden" name="method" value="instapay">

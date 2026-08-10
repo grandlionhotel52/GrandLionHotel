@@ -239,6 +239,9 @@
                 <div class="col-md-6"><strong>Paid At:</strong> {{ optional($booking->payment->paid_at)->format('M d, Y h:i A') ?? '-' }}</div>
                 <div class="col-md-6"><strong>Verified At:</strong> {{ optional($booking->payment->verified_at)->format('M d, Y h:i A') ?? '-' }}</div>
                 <div class="col-12"><strong>Transaction Ref:</strong> {{ $booking->payment->transaction_reference ?? '-' }}</div>
+                @if($booking->payment->provider_payment_id)
+                    <div class="col-12"><strong>PayMongo Payment ID:</strong> {{ $booking->payment->provider_payment_id }}</div>
+                @endif
             </div>
             @if($booking->payment_status === 'refund_pending' && $refundMethodLabel)
                 <div class="booking-admin-note">

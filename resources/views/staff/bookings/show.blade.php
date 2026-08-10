@@ -928,8 +928,9 @@
                             <label class="form-label">Payment Method</label>
                             <select class="form-select" name="method" required>
                                 <option value="cash" @selected(old('method', 'cash') === 'cash')>Cash</option>
-                                <option value="instapay" @selected(old('method') === 'instapay')>InstaPay</option>
-                                <option value="credit_debit_card" @selected(old('method') === 'credit_debit_card')>Credit/Debit Card</option>
+                                <option value="credit_debit_card" @selected(old('method') === 'credit_debit_card')>Credit/Debit Card via PayMongo</option>
+                                <option value="gcash" @selected(old('method') === 'gcash')>GCash via PayMongo</option>
+                                <option value="qrph" @selected(old('method') === 'qrph')>QR Ph via PayMongo</option>
                             </select>
                         </div>
                         <div class="col-12">
@@ -1031,6 +1032,12 @@
                         <span class="booking-meta-label">Transaction Ref</span>
                         <span class="booking-meta-value">{{ $booking->payment->transaction_reference ?? '-' }}</span>
                     </div>
+                    @if($booking->payment->provider_payment_id)
+                        <div class="booking-meta-line">
+                            <span class="booking-meta-label">PayMongo Payment ID</span>
+                            <span class="booking-meta-value">{{ $booking->payment->provider_payment_id }}</span>
+                        </div>
+                    @endif
                     @if($booking->payment_status === 'refund_pending' && $refundMethodLabel)
                         <p class="booking-note mb-0 mt-3">
                             Refund should be processed using the guest's original payment method: <strong>{{ $refundMethodLabel }}</strong>.

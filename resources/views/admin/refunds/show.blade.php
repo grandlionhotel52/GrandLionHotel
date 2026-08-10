@@ -23,6 +23,9 @@
             <dl class="row mb-0">
                 <dt class="col-sm-5">Original payment</dt><dd class="col-sm-7">₱{{ number_format((float) $refund->payment->amount, 2) }}</dd>
                 <dt class="col-sm-5">Original method</dt><dd class="col-sm-7">{{ \App\Models\Payment::methodLabel($refund->payment->method) }}</dd>
+                @if($refund->payment->provider_payment_id)
+                    <dt class="col-sm-5">PayMongo Payment ID</dt><dd class="col-sm-7">{{ $refund->payment->provider_payment_id }}</dd>
+                @endif
                 <dt class="col-sm-5">Approved refund</dt><dd class="col-sm-7">{{ $refund->amount ? '₱'.number_format((float) $refund->amount, 2) : 'Not set' }}</dd>
                 <dt class="col-sm-5">Refund method</dt><dd class="col-sm-7">{{ $refund->refund_method ? \App\Models\Payment::methodLabel($refund->refund_method) : 'Not set' }}</dd>
                 <dt class="col-sm-5">Refund reference</dt><dd class="col-sm-7">{{ $refund->transaction_reference ?: 'Not set' }}</dd>

@@ -207,7 +207,7 @@ class BookingController extends Controller
         }
 
         if (!Payment::isOnlineMethod((string) $payment->method)) {
-            return back()->withErrors(['payment' => 'Only InstaPay or Credit/Debit Card submissions can be approved here.']);
+            return back()->withErrors(['payment' => 'Only supported online payment submissions can be approved here.']);
         }
 
         $payment->update([
@@ -240,7 +240,7 @@ class BookingController extends Controller
         }
 
         if (!Payment::isOnlineMethod((string) $payment->method)) {
-            return back()->withErrors(['payment' => 'Only InstaPay or Credit/Debit Card submissions can be rejected here.']);
+            return back()->withErrors(['payment' => 'Only supported online payment submissions can be rejected here.']);
         }
 
         $payment->update([

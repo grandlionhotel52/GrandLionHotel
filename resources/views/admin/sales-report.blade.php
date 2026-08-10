@@ -78,8 +78,10 @@
                         <select name="method" class="form-select">
                             <option value="all" @selected($method === 'all')>All methods</option>
                             <option value="cash" @selected($method === 'cash')>Cash</option>
-                            <option value="instapay" @selected($method === 'instapay')>InstaPay</option>
-                            <option value="credit_debit_card" @selected($method === 'credit_debit_card')>Credit/Debit Card</option>
+                            <option value="credit_debit_card" @selected($method === 'credit_debit_card')>Credit/Debit Card via PayMongo</option>
+                            <option value="gcash" @selected($method === 'gcash')>GCash via PayMongo</option>
+                            <option value="qrph" @selected($method === 'qrph')>QR Ph via PayMongo</option>
+                            <option value="instapay" @selected($method === 'instapay')>Legacy InstaPay</option>
                         </select>
                     </div>
                     <div class="col-lg-3 d-flex gap-2">
