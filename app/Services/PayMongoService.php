@@ -34,7 +34,7 @@ class PayMongoService
                         'currency' => 'PHP',
                         'quantity' => 1,
                     ]],
-                    'payment_method_types' => ['card'],
+                    'payment_method_types' => ['card', 'gcash', 'qrph'],
                     'success_url' => route('payments.paymongo.return', $booking),
                     'cancel_url' => route('payments.checkout', $booking),
                     'reference_number' => $this->referenceFor($booking),

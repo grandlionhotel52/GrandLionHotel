@@ -328,8 +328,7 @@
                         <select class="form-select" name="payment_preference">
                             <option value="">Select one (optional)</option>
                             <option value="cash" @selected(old('payment_preference') === 'cash')>Cash</option>
-                            <option value="instapay" @selected(old('payment_preference') === 'instapay')>InstaPay</option>
-                            <option value="credit_debit_card" @selected(old('payment_preference') === 'credit_debit_card')>Credit/Debit Card</option>
+                            <option value="credit_debit_card" @selected(old('payment_preference') === 'credit_debit_card')>PayMongo — Card, GCash, or QR Ph</option>
                         </select>
                     </div>
 

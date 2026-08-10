@@ -62,9 +62,10 @@
     @php
         $preferredMethod = data_get($booking->reservation_meta, 'payment_preference');
         $legacyMethodMap = [
-            'bank_transfer' => 'instapay',
-            'gcash' => 'instapay',
-            'paymaya' => 'instapay',
+            'bank_transfer' => 'credit_debit_card',
+            'gcash' => 'credit_debit_card',
+            'paymaya' => 'credit_debit_card',
+            'instapay' => 'credit_debit_card',
         ];
         $selectedMethod = old('method', $preferredMethod);
         $selectedMethod = $legacyMethodMap[$selectedMethod] ?? $selectedMethod;
@@ -135,11 +136,10 @@
                         <label class="form-label">Payment method</label>
                         <select class="form-select" name="method" id="payment_method_select" required>
                             <option value="cash" @selected($selectedMethod === 'cash')>Cash</option>
-                            <option value="instapay" @selected($selectedMethod === 'instapay')>InstaPay</option>
-                            <option value="credit_debit_card" @selected($selectedMethod === 'credit_debit_card')>Credit/Debit Card via PayMongo</option>
+                            <option value="credit_debit_card" @selected($selectedMethod === 'credit_debit_card')>PayMongo — Card, GCash, or QR Ph</option>
                         </select>
                         <small class="text-secondary">
-                            Card payments open PayMongo's secure checkout. Cash is paid at the front desk; InstaPay requires payment proof.
+                            Online payments open PayMongo's secure checkout. Cash is paid at the front desk.
                         </small>
                     </div>
 
@@ -148,8 +148,8 @@
                             <div class="d-flex gap-2 align-items-start">
                                 <i class="bi bi-credit-card fs-5" aria-hidden="true"></i>
                                 <div>
-                                    <strong class="d-block mb-1">Secure checkout powered by PayMongo</strong>
-                                    <span class="small">You will be redirected to PayMongo to enter your card and complete 3D Secure verification. The hotel never receives or stores your card number or CVV.</span>
+                                    <strong class="d-block mb-1">Card, GCash, and QR Ph powered by PayMongo</strong>
+                                    <span class="small">You will be redirected to PayMongo to choose an available payment method. The hotel never receives or stores sensitive account or card details.</span>
                                 </div>
                             </div>
                         </div>

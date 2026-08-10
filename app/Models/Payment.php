@@ -17,10 +17,14 @@ class Payment extends Model
     public const METHOD_CASH = 'cash';
     public const METHOD_INSTAPAY = 'instapay';
     public const METHOD_CREDIT_DEBIT_CARD = 'credit_debit_card';
+    public const METHOD_GCASH = 'gcash';
+    public const METHOD_QRPH = 'qrph';
 
     public const ONLINE_METHODS = [
         self::METHOD_INSTAPAY,
         self::METHOD_CREDIT_DEBIT_CARD,
+        self::METHOD_GCASH,
+        self::METHOD_QRPH,
     ];
 
     protected $primaryKey = 'payment_id';
@@ -72,6 +76,8 @@ class Payment extends Model
             self::METHOD_CASH,
             self::METHOD_INSTAPAY,
             self::METHOD_CREDIT_DEBIT_CARD,
+            self::METHOD_GCASH,
+            self::METHOD_QRPH,
         ];
     }
 
@@ -86,8 +92,11 @@ class Payment extends Model
 
         return match ($normalized) {
             self::METHOD_CASH => 'Cash',
-            self::METHOD_INSTAPAY, 'bank_transfer', 'gcash', 'paymaya' => 'InstaPay',
+            self::METHOD_INSTAPAY, 'bank_transfer' => 'InstaPay',
             self::METHOD_CREDIT_DEBIT_CARD => 'Credit/Debit Card',
+            self::METHOD_GCASH => 'GCash via PayMongo',
+            self::METHOD_QRPH => 'QR Ph via PayMongo',
+            'paymaya' => 'Maya',
             default => ucfirst(str_replace('_', ' ', $normalized !== '' ? $normalized : 'n/a')),
         };
     }

@@ -87,7 +87,7 @@ class QrPaymentMethodsTest extends TestCase
 
         Http::assertSent(fn ($request): bool =>
             $request->url() === 'https://api.paymongo.com/v2/checkout_sessions'
-            && $request['data']['attributes']['payment_method_types'] === ['card']
+            && $request['data']['attributes']['payment_method_types'] === ['card', 'gcash', 'qrph']
             && $request['data']['attributes']['reference_number'] === 'BOOKING-'.$booking->id
         );
     }

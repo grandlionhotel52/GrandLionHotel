@@ -53,7 +53,13 @@ class PayMongoWebhookController extends Controller
         }
 
         $providerPaymentId = trim((string) data_get($paymentData, 'id'));
-        $paidPayment = $payments->charge($booking, Payment::METHOD_CREDIT_DEBIT_CARD, [
+        $providerMethod = strtolower(trim((string) data_get($paymentData, 'attributes.source.type')));
+        $paymentMethod = match ($providerMethod) {
+            Payment::METHOD_GCASH => Payment::METHOD_GCASH,
+            Payment::METHOD_QRPH => Payment::METHOD_QRPH,
+            default => Payment::METHOD_CREDIT_DEBIT_CARD,
+        };
+        $paidPayment = $payments->charge($booking, $paymentMethod, [
             'source' => 'paymongo_checkout',
         ]);
         $paidPayment->forceFill(['provider_payment_id' => $providerPaymentId ?: null])->save();
