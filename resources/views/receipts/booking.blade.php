@@ -85,6 +85,7 @@
         $hasDiscount = $discountType !== '' && $discountAmount > 0;
         $bookedSubtotal = $hasDiscount ? $originalAmount : (float) ($pricingQuote['total'] ?? $booking->total_price);
         $transactionReference = strtoupper(trim((string) ($booking->payment?->transaction_reference ?? '')));
+        $providerPaymentId = trim((string) ($booking->payment?->provider_payment_id ?? ''));
         $qrReference = strtoupper(trim((string) ($booking->payment?->qr_reference ?? '')));
     @endphp
 
@@ -100,6 +101,9 @@
         <div class="reference-label">Transaction Reference</div>
         <div class="reference-value">{{ $transactionReference !== '' ? $transactionReference : 'NOT AVAILABLE' }}</div>
     </div>
+    @if($providerPaymentId !== '')
+        <p><strong>PayMongo Payment ID:</strong> {{ $providerPaymentId }}</p>
+    @endif
     @if($booking->guestEmail() !== '-')
         <p><strong>Email:</strong> {{ $booking->guestEmail() }}</p>
     @endif

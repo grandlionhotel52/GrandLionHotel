@@ -20,6 +20,9 @@
                 @if($booking->payment?->transaction_reference)
                     <p class="small text-secondary mb-4">Transaction Reference: <strong>{{ $booking->payment->transaction_reference }}</strong></p>
                 @endif
+                @if($booking->payment?->provider_payment_id)
+                    <p class="small text-secondary mb-4">PayMongo Payment ID: <strong>{{ $booking->payment->provider_payment_id }}</strong></p>
+                @endif
 
                 <div class="d-flex flex-wrap justify-content-center gap-2">
                     <a href="{{ route('bookings.show', $booking) }}" class="btn btn-ta">View booking details</a>

@@ -24,6 +24,9 @@
                             <p style="margin:0 0 8px 0;"><strong>Room:</strong> {{ $booking->room->name ?? 'N/A' }}</p>
                             <p style="margin:0 0 8px 0;"><strong>Stay:</strong> {{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</p>
                             <p style="margin:0 0 8px 0;"><strong>Transaction Reference:</strong> {{ $booking->payment?->transaction_reference ?? 'N/A' }}</p>
+                            @if($booking->payment?->provider_payment_id)
+                                <p style="margin:0 0 8px 0;"><strong>PayMongo Payment ID:</strong> {{ $booking->payment->provider_payment_id }}</p>
+                            @endif
                             <p style="margin:0 0 16px 0;"><strong>Total:</strong> &#8369;{{ number_format($booking->total_price, 2) }}</p>
 
                             <p style="margin:0 0 16px 0;line-height:1.6;">

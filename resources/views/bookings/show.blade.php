@@ -602,6 +602,9 @@
                 @if($booking->payment?->transaction_reference)
                     <p class="small text-secondary mb-3">Transaction Reference: <strong>{{ $booking->payment->transaction_reference }}</strong></p>
                 @endif
+                @if($booking->payment?->provider_payment_id)
+                    <p class="small text-secondary mb-3">PayMongo Payment ID: <strong>{{ $booking->payment->provider_payment_id }}</strong></p>
+                @endif
 
                 <div class="d-grid gap-2">
                     @if(!$isCashAwaitingVerification && !$isOnlineAwaitingVerification && $booking->payment_status !== 'paid' && $booking->status === 'confirmed')
