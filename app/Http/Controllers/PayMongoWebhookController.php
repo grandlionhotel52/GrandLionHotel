@@ -32,12 +32,12 @@ class PayMongoWebhookController extends Controller
         }
 
         $eventType = (string) data_get($event, 'data.type');
-        if (in_array($eventType, ['payment.refunded', 'payment.refund.updated'], true)) {
+        if (in_array($eventType, ['payment.refunded', 'payment.refund.update', 'payment.refund.updated'], true)) {
             $resource = data_get($event, 'data.data');
             $resourceId = trim((string) data_get($resource, 'id'));
             $status = strtolower(trim((string) data_get($resource, 'attributes.status')));
 
-            if ($eventType === 'payment.refund.updated') {
+            if (in_array($eventType, ['payment.refund.update', 'payment.refund.updated'], true)) {
                 $refund = RefundRequest::query()->where('provider_refund_id', $resourceId)->first();
                 if ($refund && in_array($status, ['pending', 'processing', 'succeeded', 'failed'], true)) {
                     $refund->update([
