@@ -579,30 +579,32 @@
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end p-2 shadow" style="width: min(340px, 92vw)">
                                         <p class="small text-uppercase fw-bold text-secondary px-2 pt-1 mb-2">Booking updates</p>
-                                        @forelse($recentNotifications as $notification)
-                                            @php
-                                                $notificationBooking = \App\Models\Booking::query()->find(data_get($notification->data, 'booking_id'));
-                                            @endphp
-                                            @if($notificationBooking)
-                                                <div class="d-flex align-items-start gap-1 rounded px-1 py-1 {{ $notification->read_at ? '' : 'bg-light' }}">
-                                                    <a class="dropdown-item rounded text-wrap py-2 flex-grow-1" href="{{ route('bookings.show', ['booking' => $notificationBooking, 'return_to' => request()->getRequestUri()]) }}">
-                                                        <span class="d-flex align-items-center gap-2 small fw-bold">
-                                                            @if(!$notification->read_at)<span class="rounded-circle bg-primary flex-shrink-0" style="width: .45rem; height: .45rem" aria-label="Unread"></span>@endif
-                                                            {{ data_get($notification->data, 'message', 'Booking updated.') }}
-                                                        </span>
-                                                        <span class="d-block text-secondary" style="font-size: .72rem">{{ $notification->created_at->diffForHumans() }}{{ $notification->read_at ? ' · Read' : '' }}</span>
-                                                    </a>
-                                                    @if(!$notification->read_at)
-                                                        <form method="POST" action="{{ route('notifications.read-one', $notification->id) }}" class="pt-2 pe-1">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-sm btn-link text-secondary p-1" title="Mark as read" aria-label="Mark this notification as read"><i class="bi bi-check2" aria-hidden="true"></i></button>
-                                                        </form>
-                                                    @endif
-                                                </div>
-                                            @endif
-                                        @empty
-                                            <p class="small text-secondary px-2 py-2 mb-0">No notifications yet.</p>
-                                        @endforelse
+                                        <div style="max-height: min(360px, 55vh); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;">
+                                            @forelse($recentNotifications as $notification)
+                                                @php
+                                                    $notificationBooking = \App\Models\Booking::query()->find(data_get($notification->data, 'booking_id'));
+                                                @endphp
+                                                @if($notificationBooking)
+                                                    <div class="d-flex align-items-start gap-1 rounded px-1 py-1 {{ $notification->read_at ? '' : 'bg-light' }}">
+                                                        <a class="dropdown-item rounded text-wrap py-2 flex-grow-1" href="{{ route('bookings.show', ['booking' => $notificationBooking, 'return_to' => request()->getRequestUri()]) }}">
+                                                            <span class="d-flex align-items-center gap-2 small fw-bold">
+                                                                @if(!$notification->read_at)<span class="rounded-circle bg-primary flex-shrink-0" style="width: .45rem; height: .45rem" aria-label="Unread"></span>@endif
+                                                                {{ data_get($notification->data, 'message', 'Booking updated.') }}
+                                                            </span>
+                                                            <span class="d-block text-secondary" style="font-size: .72rem">{{ $notification->created_at->diffForHumans() }}{{ $notification->read_at ? ' · Read' : '' }}</span>
+                                                        </a>
+                                                        @if(!$notification->read_at)
+                                                            <form method="POST" action="{{ route('notifications.read-one', $notification->id) }}" class="pt-2 pe-1">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-sm btn-link text-secondary p-1" title="Mark as read" aria-label="Mark this notification as read"><i class="bi bi-check2" aria-hidden="true"></i></button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            @empty
+                                                <p class="small text-secondary px-2 py-2 mb-0">No notifications yet.</p>
+                                            @endforelse
+                                        </div>
                                         @if($unreadNotificationCount > 0)
                                             <form method="POST" action="{{ route('notifications.read') }}" class="px-2 pt-2">
                                                 @csrf
