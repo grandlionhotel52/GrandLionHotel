@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\BookingPaidMail;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\PayMongoCheckoutSession;
 use App\Services\PaymentService;
 use App\Services\PayMongoService;
 use Illuminate\Http\Request;
@@ -88,6 +89,19 @@ class PaymentController extends Controller
         ]);
 
         if ($validated['method'] === Payment::METHOD_CREDIT_DEBIT_CARD) {
+            $amountCentavos = (int) round((float) $booking->total_price * 100);
+            $existingSession = PayMongoCheckoutSession::query()
+                ->where('booking_id', $booking->id)
+                ->where('amount_centavos', $amountCentavos)
+                ->where('status', 'pending')
+                ->where('created_at', '>=', now()->subMinutes(30))
+                ->latest('paymongo_checkout_session_id')
+                ->first();
+
+            if ($existingSession) {
+                return redirect()->away($existingSession->checkout_url);
+            }
+
             try {
                 $session = $this->payMongoService->createCardCheckout($booking);
             } catch (Throwable $exception) {
@@ -115,6 +129,14 @@ class PaymentController extends Controller
                     'verified_at' => null,
                 ]
             );
+
+            PayMongoCheckoutSession::query()->create([
+                'booking_id' => $booking->id,
+                'provider_session_id' => $session['id'],
+                'checkout_url' => $session['checkout_url'],
+                'amount_centavos' => $amountCentavos,
+                'status' => 'pending',
+            ]);
 
             return redirect()->away($session['checkout_url']);
         }

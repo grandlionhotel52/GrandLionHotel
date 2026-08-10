@@ -39,12 +39,15 @@ class Booking extends Model
         'room_transfer_request_reason',
         'room_transfer_requested_at',
         'status',
+        'cancellation_reason',
         'expired_at',
         'payment_due_at',
+        'payment_reminder_sent_at',
         'check_in_reminder_sent_at',
         'notes',
         'actual_check_in_at',
         'actual_check_out_at',
+        'no_show_at',
         'staff_id',
         'staff_notes',
     ];
@@ -60,8 +63,10 @@ class Booking extends Model
             'room_transfer_requested_at' => 'datetime',
             'actual_check_in_at' => 'datetime',
             'actual_check_out_at' => 'datetime',
+            'no_show_at' => 'datetime',
             'expired_at' => 'datetime',
             'payment_due_at' => 'datetime',
+            'payment_reminder_sent_at' => 'datetime',
             'check_in_reminder_sent_at' => 'datetime',
         ];
     }
@@ -73,7 +78,14 @@ class Booking extends Model
                 && $booking->getOriginal('status') !== 'confirmed'
                 && is_null($booking->payment_due_at)) {
                 $hours = max(1, (int) config('booking_automation.payment_due_hours', 24));
-                $booking->payment_due_at = now()->addHours($hours);
+                $deadline = now()->addHours($hours);
+                if ($booking->check_in) {
+                    $checkInDeadline = Carbon::parse($booking->check_in)->startOfDay();
+                    if ($checkInDeadline->isFuture()) {
+                        $deadline = $deadline->min($checkInDeadline);
+                    }
+                }
+                $booking->payment_due_at = $deadline;
             }
 
             if (in_array($booking->status, ['cancelled', 'completed'], true)) {

@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Mail\BookingPaidMail;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\PayMongoCheckoutSession;
+use App\Models\RefundRequest;
 use App\Services\PaymentService;
 use App\Services\PayMongoService;
+use App\Services\RefundRequestService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,7 +17,7 @@ use Throwable;
 
 class PayMongoWebhookController extends Controller
 {
-    public function __invoke(Request $request, PayMongoService $payMongo, PaymentService $payments): Response
+    public function __invoke(Request $request, PayMongoService $payMongo, PaymentService $payments, RefundRequestService $refunds): Response
     {
         $payload = $request->getContent();
         $signature = (string) ($request->header('Paymongo-Signature') ?? $request->header('X-Paymongo-Signature'));
@@ -24,7 +27,42 @@ class PayMongoWebhookController extends Controller
         }
 
         $event = json_decode($payload, true);
-        if (!is_array($event) || data_get($event, 'data.type') !== 'checkout_session.payment.paid') {
+        if (!is_array($event)) {
+            return response('Received.', 200);
+        }
+
+        $eventType = (string) data_get($event, 'data.type');
+        if (in_array($eventType, ['payment.refunded', 'payment.refund.updated'], true)) {
+            $resource = data_get($event, 'data.data');
+            $resourceId = trim((string) data_get($resource, 'id'));
+            $status = strtolower(trim((string) data_get($resource, 'attributes.status')));
+
+            if ($eventType === 'payment.refund.updated') {
+                $refund = RefundRequest::query()->where('provider_refund_id', $resourceId)->first();
+                if ($refund && in_array($status, ['pending', 'processing', 'succeeded', 'failed'], true)) {
+                    $refund->update([
+                        'provider_refund_status' => $status,
+                        'status' => $status === 'succeeded' ? RefundRequest::STATUS_PROCESSED : $refund->status,
+                        'processed_at' => $status === 'succeeded' ? now() : $refund->processed_at,
+                    ]);
+                    if ($status === 'succeeded') {
+                        $refund->payment()->update(['status' => 'refunded']);
+                    }
+                }
+            } else {
+                $payment = Payment::query()->where('provider_payment_id', $resourceId)->first();
+                if ($payment) {
+                    $payment->update(['status' => 'refunded']);
+                    $payment->refundRequests()
+                        ->where('status', RefundRequest::STATUS_APPROVED)
+                        ->update(['status' => RefundRequest::STATUS_PROCESSED, 'provider_refund_status' => 'succeeded', 'processed_at' => now()]);
+                }
+            }
+
+            return response('Received.', 200);
+        }
+
+        if ($eventType !== 'checkout_session.payment.paid') {
             return response('Received.', 200);
         }
 
@@ -34,7 +72,10 @@ class PayMongoWebhookController extends Controller
         $paymentData = collect((array) data_get($session, 'attributes.payments', []))
             ->first(fn (array $item): bool => data_get($item, 'attributes.status') === 'paid');
 
-        $payment = Payment::query()->where('provider_session_id', $sessionId)->first();
+        $checkoutSession = PayMongoCheckoutSession::query()->where('provider_session_id', $sessionId)->first();
+        $payment = $checkoutSession
+            ? Payment::query()->where('booking_id', $checkoutSession->booking_id)->first()
+            : Payment::query()->where('provider_session_id', $sessionId)->first();
         if (!$payment || $reference !== 'BOOKING-'.$payment->booking_id || !$paymentData) {
             return response('Ignored.', 200);
         }
@@ -63,8 +104,18 @@ class PayMongoWebhookController extends Controller
             'source' => 'paymongo_checkout',
         ]);
         $paidPayment->forceFill(['provider_payment_id' => $providerPaymentId ?: null])->save();
+        $checkoutSession?->update(['status' => 'paid']);
 
-        if (!$wasPaid) {
+        $booking->refresh();
+        if ($booking->status === 'cancelled') {
+            $paidPayment->update(['status' => 'refund_pending']);
+            $refunds->createPendingForCancellation($booking, $paidPayment, [
+                'reason' => 'Payment completed after the reservation was cancelled.',
+                'notes' => 'Automatically created because PayMongo confirmed a late payment for a cancelled booking.',
+            ]);
+        }
+
+        if (!$wasPaid && $booking->status !== 'cancelled') {
             $booking->loadMissing(['user', 'room', 'payment']);
             try {
                 Mail::to($booking->user->email)->queue(new BookingPaidMail($booking));

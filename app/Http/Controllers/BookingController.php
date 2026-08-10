@@ -262,21 +262,20 @@ class BookingController extends Controller
                 ->withErrors(['booking' => 'This booking can no longer be cancelled online.']);
         }
 
-        $validated = [];
-        if ($booking->payment_status === 'paid') {
-            $validated = $request->validate([
-                'refund_reason' => ['required', 'string', 'max:1000'],
-            ], [
-                'refund_reason.required' => 'Please tell us why you are requesting the refund.',
-                'refund_reason.max' => 'Refund reason must not exceed 1000 characters.',
-            ]);
-        }
+        $validated = $request->validate([
+            'cancellation_reason' => ['required', 'string', 'max:1000'],
+            'cancellation_confirmation' => ['required', 'in:CANCEL'],
+        ], [
+            'cancellation_reason.required' => 'Please tell us why you are cancelling this booking.',
+            'cancellation_confirmation.in' => 'Type CANCEL exactly to confirm this action.',
+        ]);
 
         $newPaymentStatus = $booking->payment_status === 'paid' ? 'refund_pending' : $booking->payment_status;
         $refundMethodLabel = null;
 
         $booking->update([
             'status' => 'cancelled',
+            'cancellation_reason' => trim((string) $validated['cancellation_reason']),
         ]);
 
         if ($newPaymentStatus === 'refund_pending') {
@@ -291,7 +290,7 @@ class BookingController extends Controller
             $refundMethodLabel = Payment::methodLabel((string) $payment->method);
 
             $this->refundRequestService->createPendingForCancellation($booking, $payment, [
-                'reason' => trim((string) ($validated['refund_reason'] ?? '')) ?: 'Customer cancelled the booking and requested a refund.',
+                'reason' => trim((string) $validated['cancellation_reason']),
                 'notes' => 'Customer initiated the cancellation from the booking page. Refund request was created automatically from the cancellation flow.',
             ]);
         }

@@ -66,6 +66,38 @@ class PayMongoService
         return 'BOOKING-'.$booking->getKey();
     }
 
+    public function createRefund(string $paymentId, float $amount, string $notes = ''): array
+    {
+        $secretKey = trim((string) config('services.paymongo.secret_key'));
+        if ($secretKey === '' || !str_starts_with($paymentId, 'pay_')) {
+            throw new RuntimeException('A valid PayMongo payment is required for an automatic refund.');
+        }
+
+        $response = $this->client($secretKey)->post('/v1/refunds', [
+            'data' => [
+                'attributes' => [
+                    'amount' => (int) round($amount * 100),
+                    'payment_id' => $paymentId,
+                    'reason' => 'requested_by_customer',
+                    'notes' => mb_substr(trim($notes) ?: 'Hotel booking cancellation refund', 0, 255),
+                ],
+            ],
+        ]);
+
+        if ($response->failed()) {
+            report(new RuntimeException('PayMongo refund creation failed with HTTP '.$response->status()));
+            throw new RuntimeException('PayMongo could not process the refund. Check the available payout balance and try again.');
+        }
+
+        $id = trim((string) $response->json('data.id'));
+        $status = strtolower(trim((string) $response->json('data.attributes.status')));
+        if ($id === '' || !in_array($status, ['pending', 'processing', 'succeeded'], true)) {
+            throw new RuntimeException('PayMongo returned an invalid refund response.');
+        }
+
+        return ['id' => $id, 'status' => $status];
+    }
+
     public function hasValidWebhookSignature(string $payload, string $header): bool
     {
         $secret = trim((string) config('services.paymongo.webhook_secret'));

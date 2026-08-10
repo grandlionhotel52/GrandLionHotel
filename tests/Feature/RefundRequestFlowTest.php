@@ -11,6 +11,7 @@ use App\Models\Staff;
 use App\Mail\RefundStatusMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class RefundRequestFlowTest extends TestCase
@@ -31,7 +32,8 @@ class RefundRequestFlowTest extends TestCase
         $refundReason = 'Change of travel plans due to a family emergency.';
 
         $response = $this->actingAs($customer, 'customer')->patch(route('bookings.cancel', $booking), [
-            'refund_reason' => $refundReason,
+            'cancellation_reason' => $refundReason,
+            'cancellation_confirmation' => 'CANCEL',
         ]);
 
         $response->assertRedirect(route('bookings.show', $booking));
@@ -58,7 +60,7 @@ class RefundRequestFlowTest extends TestCase
             ->patch(route('bookings.cancel', $booking));
 
         $response->assertRedirect(route('bookings.show', $booking));
-        $response->assertSessionHasErrors('refund_reason');
+        $response->assertSessionHasErrors('cancellation_reason');
 
         $booking->refresh();
 
@@ -146,6 +148,45 @@ class RefundRequestFlowTest extends TestCase
         $this->assertSame('RF-2026-0001', $refund->transaction_reference);
         $this->assertSame('refunded', $payment->fresh()->status);
         Mail::assertQueued(RefundStatusMail::class, 2);
+    }
+
+    public function test_admin_can_return_a_paymongo_payment_to_the_original_method(): void
+    {
+        $admin = Admin::factory()->create();
+        $booking = $this->createPaidBooking(Customer::factory()->create());
+        $booking->payment->update([
+            'status' => 'refund_pending',
+            'provider_payment_id' => 'pay_test_original',
+        ]);
+        $refund = RefundRequest::create([
+            'payment_id' => $booking->payment->id,
+            'status' => RefundRequest::STATUS_APPROVED,
+            'amount' => $booking->payment->amount,
+            'refund_method' => 'credit_debit_card',
+            'requested_at' => now(),
+            'approved_at' => now(),
+        ]);
+
+        config(['services.paymongo.secret_key' => 'sk_test_example']);
+        Http::fake([
+            'api.paymongo.com/v1/refunds' => Http::response([
+                'data' => ['id' => 'ref_test_123', 'attributes' => ['status' => 'succeeded']],
+            ]),
+        ]);
+
+        $this->actingAs($admin, 'admin')
+            ->patch(route('admin.refunds.process', $refund), ['notes' => 'Approved cancellation refund.'])
+            ->assertRedirect(route('admin.refunds.show', $refund));
+
+        $refund->refresh();
+        $this->assertSame(RefundRequest::STATUS_PROCESSED, $refund->status);
+        $this->assertSame('ref_test_123', $refund->provider_refund_id);
+        $this->assertSame('succeeded', $refund->provider_refund_status);
+        $this->assertSame('refunded', $booking->payment->fresh()->status);
+        Http::assertSent(fn ($request): bool =>
+            $request->url() === 'https://api.paymongo.com/v1/refunds'
+            && $request['data']['attributes']['payment_id'] === 'pay_test_original'
+        );
     }
 
     public function test_admin_can_reject_refund_and_payment_returns_to_paid(): void

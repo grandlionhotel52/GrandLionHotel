@@ -29,6 +29,10 @@
                 <dt class="col-sm-5">Approved refund</dt><dd class="col-sm-7">{{ $refund->amount ? '₱'.number_format((float) $refund->amount, 2) : 'Not set' }}</dd>
                 <dt class="col-sm-5">Refund method</dt><dd class="col-sm-7">{{ $refund->refund_method ? \App\Models\Payment::methodLabel($refund->refund_method) : 'Not set' }}</dd>
                 <dt class="col-sm-5">Refund reference</dt><dd class="col-sm-7">{{ $refund->transaction_reference ?: 'Not set' }}</dd>
+                @if($refund->provider_refund_id)
+                    <dt class="col-sm-5">PayMongo refund ID</dt><dd class="col-sm-7">{{ $refund->provider_refund_id }}</dd>
+                    <dt class="col-sm-5">PayMongo status</dt><dd class="col-sm-7">{{ ucfirst($refund->provider_refund_status ?: 'pending') }}</dd>
+                @endif
                 <dt class="col-sm-5">Handled by</dt><dd class="col-sm-7">{{ $refund->handledByAdmin?->name ?? 'Unassigned' }}</dd>
             </dl>
         </div>
@@ -68,16 +72,19 @@
                 </form>
             </div>
         @elseif($refund->status === 'approved')
+            @php($isPayMongoRefund = filled($refund->payment->provider_payment_id))
             <div class="soft-card p-4">
-                <h2 class="h5">Complete refund</h2>
-                <p class="small text-secondary">Only complete this after the money has been returned.</p>
+                <h2 class="h5">{{ $isPayMongoRefund ? 'Send PayMongo refund' : 'Complete refund' }}</h2>
+                <p class="small text-secondary">{{ $isPayMongoRefund ? 'PayMongo will return the approved amount to the original payment method.' : 'Only complete this after the money has been returned.' }}</p>
                 <form method="POST" action="{{ route('admin.refunds.process', $refund) }}">
                     @csrf @method('PATCH')
-                    <label class="form-label">Transaction/reference number</label>
-                    <input name="transaction_reference" class="form-control mb-3" maxlength="120" required>
+                    @unless($isPayMongoRefund)
+                        <label class="form-label">Transaction/reference number</label>
+                        <input name="transaction_reference" class="form-control mb-3" maxlength="120" required>
+                    @endunless
                     <label class="form-label">Completion notes</label>
                     <textarea name="notes" class="form-control mb-3" rows="3">{{ old('notes', $refund->notes) }}</textarea>
-                    <button class="btn btn-success w-100" onclick="return confirm('Confirm that this refund was completed?')">Mark refund completed</button>
+                    <button class="btn btn-success w-100" onclick="return confirm('{{ $isPayMongoRefund ? 'Send this refund request to PayMongo?' : 'Confirm that this refund was completed?' }}')">{{ $isPayMongoRefund ? 'Refund through PayMongo' : 'Mark refund completed' }}</button>
                 </form>
             </div>
         @else

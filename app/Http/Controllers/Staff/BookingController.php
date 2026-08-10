@@ -9,6 +9,7 @@ use App\Mail\BookingConfirmedMail;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Room;
+use App\Models\RoomStatus;
 use App\Services\AvailabilityService;
 use App\Services\PaymentService;
 use App\Services\PricingService;
@@ -377,7 +378,15 @@ class BookingController extends Controller
             'actual_check_out_at' => $actualCheckOutAt,
         ]));
 
-        return $this->redirectAfterBookingAction($request, $booking, 'Guest checked out and booking marked completed.');
+        $dirtyStatusId = RoomStatus::query()->where('slug', 'dirty')->value('room_status_id');
+        if ($dirtyStatusId) {
+            $booking->room()->update([
+                'room_status_id' => $dirtyStatusId,
+                'status_updated_at' => now(),
+            ]);
+        }
+
+        return $this->redirectAfterBookingAction($request, $booking, 'Guest checked out, booking completed, and room marked for cleaning.');
     }
 
     public function arrivals()

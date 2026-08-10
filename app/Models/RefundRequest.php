@@ -27,6 +27,8 @@ class RefundRequest extends Model
         'amount',
         'refund_method',
         'transaction_reference',
+        'provider_refund_id',
+        'provider_refund_status',
         'rejection_reason',
         'handled_by_admin_id',
         'notes',

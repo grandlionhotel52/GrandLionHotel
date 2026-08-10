@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\BookingCheckInReminderMail;
 use App\Mail\BookingExpiredMail;
+use App\Mail\PaymentDueReminderMail;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Notifications\BookingAutomationNotification;
@@ -111,5 +112,48 @@ class BookingAutomationTest extends TestCase
         $this->assertNotNull($overdue->fresh()->expired_at);
         $this->assertSame('confirmed', $paid->fresh()->status);
         Mail::assertQueued(BookingExpiredMail::class, fn (BookingExpiredMail $mail): bool => $mail->booking->is($overdue));
+    }
+
+    public function test_upcoming_payment_deadline_sends_only_one_reminder(): void
+    {
+        Mail::fake();
+        Notification::fake();
+        config()->set('booking_automation.payment_reminder_hours', 6);
+
+        $booking = Booking::factory()->create([
+            'status' => 'confirmed',
+            'payment_due_at' => now()->addHours(3),
+            'payment_reminder_sent_at' => null,
+        ]);
+        $booking->payment()->update(['status' => 'unpaid', 'paid_at' => null]);
+
+        $this->artisan('bookings:process-automation')->assertSuccessful();
+        $this->artisan('bookings:process-automation')->assertSuccessful();
+
+        $this->assertNotNull($booking->fresh()->payment_reminder_sent_at);
+        Mail::assertQueued(PaymentDueReminderMail::class, 1);
+    }
+
+    public function test_missed_check_in_is_marked_as_no_show_after_grace_period(): void
+    {
+        Mail::fake();
+        Notification::fake();
+        config()->set('booking_automation.no_show_grace_hours', 24);
+
+        $booking = Booking::factory()->create([
+            'status' => 'confirmed',
+            'check_in' => today()->subDays(2),
+            'check_out' => today()->addDay(),
+            'actual_check_in_at' => null,
+            'no_show_at' => null,
+        ]);
+        $booking->payment()->update(['status' => 'paid', 'paid_at' => now()->subDays(3)]);
+
+        $this->artisan('bookings:process-automation')->assertSuccessful();
+
+        $booking->refresh();
+        $this->assertSame('cancelled', $booking->status);
+        $this->assertNotNull($booking->no_show_at);
+        $this->assertStringContainsString('no-show', $booking->cancellation_reason);
     }
 }

@@ -92,6 +92,33 @@ class QrPaymentMethodsTest extends TestCase
         );
     }
 
+    public function test_repeated_checkout_click_reuses_the_active_paymongo_session(): void
+    {
+        $user = Customer::factory()->create();
+        $booking = Booking::factory()->create(['customer_id' => $user->id, 'status' => 'confirmed']);
+        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
+
+        config(['services.paymongo.secret_key' => 'sk_test_example']);
+        Http::fake([
+            'api.paymongo.com/v2/checkout_sessions' => Http::response([
+                'data' => [
+                    'id' => 'cs_reused',
+                    'attributes' => ['checkout_url' => 'https://checkout.paymongo.com/reused'],
+                ],
+            ]),
+        ]);
+
+        $this->actingAs($user)->post(route('payments.process', $booking), [
+            'method' => 'credit_debit_card',
+        ])->assertRedirect('https://checkout.paymongo.com/reused');
+        $this->actingAs($user)->post(route('payments.process', $booking), [
+            'method' => 'credit_debit_card',
+        ])->assertRedirect('https://checkout.paymongo.com/reused');
+
+        Http::assertSentCount(1);
+        $this->assertDatabaseCount('paymongo_checkout_sessions', 1);
+    }
+
     public function test_signed_paymongo_webhook_marks_card_payment_as_paid(): void
     {
         $booking = Booking::factory()->create(['status' => 'confirmed']);

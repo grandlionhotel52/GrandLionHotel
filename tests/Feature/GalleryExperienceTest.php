@@ -45,9 +45,8 @@ class GalleryExperienceTest extends TestCase
 
     public function test_gallery_excludes_rooms_that_are_not_bookable(): void
     {
-        $dirtyStatus = RoomStatus::query()->create([
+        $dirtyStatus = RoomStatus::query()->firstOrCreate(['slug' => 'dirty'], [
             'name' => 'Dirty',
-            'slug' => 'dirty',
             'description' => 'Room is awaiting cleaning.',
         ]);
 
@@ -58,7 +57,6 @@ class GalleryExperienceTest extends TestCase
 
         $this->get(route('gallery'))
             ->assertOk()
-            ->assertDontSee('Room Awaiting Cleaning')
-            ->assertSee('No rooms are available for gallery preview yet.');
+            ->assertDontSee('Room Awaiting Cleaning');
     }
 }

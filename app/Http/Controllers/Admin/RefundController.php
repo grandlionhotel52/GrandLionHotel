@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\RefundStatusMail;
 use App\Models\Payment;
 use App\Models\RefundRequest;
+use App\Services\PayMongoService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,9 @@ use Throwable;
 
 class RefundController extends Controller
 {
+    public function __construct(private readonly PayMongoService $payMongoService)
+    {
+    }
     public function index(Request $request)
     {
         $status = trim($request->string('status')->toString());
@@ -123,10 +127,49 @@ class RefundController extends Controller
 
     public function process(Request $request, RefundRequest $refund)
     {
+        $refund->loadMissing('payment');
+        $isPayMongo = filled($refund->payment?->provider_payment_id);
         $validated = $request->validate([
-            'transaction_reference' => ['required', 'string', 'max:120'],
+            'transaction_reference' => [Rule::requiredIf(! $isPayMongo), 'nullable', 'string', 'max:120'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
+
+        if ($isPayMongo) {
+            if ($refund->status !== RefundRequest::STATUS_APPROVED) {
+                throw ValidationException::withMessages(['refund' => 'Only approved refund requests can be sent to PayMongo.']);
+            }
+
+            try {
+                $providerRefund = $this->payMongoService->createRefund(
+                    (string) $refund->payment->provider_payment_id,
+                    (float) $refund->amount,
+                    (string) ($validated['notes'] ?? $refund->notes ?? '')
+                );
+            } catch (Throwable $exception) {
+                report($exception);
+                return back()->withErrors(['refund' => $exception->getMessage()]);
+            }
+
+            $succeeded = $providerRefund['status'] === 'succeeded';
+            $refund->update([
+                'provider_refund_id' => $providerRefund['id'],
+                'provider_refund_status' => $providerRefund['status'],
+                'transaction_reference' => strtoupper($providerRefund['id']),
+                'status' => $succeeded ? RefundRequest::STATUS_PROCESSED : RefundRequest::STATUS_APPROVED,
+                'notes' => $validated['notes'] ?? $refund->notes,
+                'handled_by_admin_id' => auth('admin')->id(),
+                'processed_at' => $succeeded ? now() : null,
+            ]);
+            if ($succeeded) {
+                $refund->payment->update(['status' => 'refunded']);
+            }
+
+            $this->sendStatusMail($refund->fresh(['payment.booking.customer', 'payment.booking.guestDetail']));
+
+            return redirect()->route('admin.refunds.show', $refund)->with('status', $succeeded
+                ? 'PayMongo refund completed.'
+                : 'PayMongo refund submitted and is still processing.');
+        }
 
         $refund = DB::transaction(function () use ($refund, $validated): RefundRequest {
             $locked = RefundRequest::query()->with('payment')->lockForUpdate()->findOrFail($refund->id);
@@ -134,7 +177,7 @@ class RefundController extends Controller
                 throw ValidationException::withMessages(['refund' => 'Only approved refund requests can be completed.']);
             }
 
-            $reference = strtoupper(trim($validated['transaction_reference']));
+            $reference = strtoupper(trim((string) $validated['transaction_reference']));
             $duplicate = RefundRequest::query()
                 ->where('transaction_reference', $reference)
                 ->whereKeyNot($locked->id)

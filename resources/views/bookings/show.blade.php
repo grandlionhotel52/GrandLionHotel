@@ -544,17 +544,22 @@
                             @csrf
                             @method('PATCH')
                             <div class="col-12">
-                                <label class="form-label">Reason for refund</label>
+                                <label class="form-label">Reason for cancellation and refund</label>
                                 <textarea
-                                    name="refund_reason"
-                                    class="form-control @error('refund_reason') is-invalid @enderror"
+                                    name="cancellation_reason"
+                                    class="form-control @error('cancellation_reason') is-invalid @enderror"
                                     rows="3"
                                     placeholder="Tell us why you are cancelling this paid booking."
                                     required
-                                >{{ old('refund_reason', $latestRefundRequest?->reason) }}</textarea>
-                                @error('refund_reason')
+                                >{{ old('cancellation_reason', $latestRefundRequest?->reason) }}</textarea>
+                                @error('cancellation_reason')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Type CANCEL to confirm</label>
+                                <input name="cancellation_confirmation" class="form-control @error('cancellation_confirmation') is-invalid @enderror" autocomplete="off" required>
+                                @error('cancellation_confirmation')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-12">
                                 <button
@@ -626,9 +631,11 @@
                     @endif
 
                     @if($canCancelWithoutRefund)
-                        <form method="POST" action="{{ route('bookings.cancel', $booking) }}">
+                        <form method="POST" action="{{ route('bookings.cancel', $booking) }}" class="d-grid gap-2">
                             @csrf
                             @method('PATCH')
+                            <textarea name="cancellation_reason" class="form-control form-control-sm" rows="2" placeholder="Reason for cancellation" required>{{ old('cancellation_reason') }}</textarea>
+                            <input name="cancellation_confirmation" class="form-control form-control-sm" placeholder="Type CANCEL" autocomplete="off" required>
                             <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Cancel this booking?')">Cancel booking</button>
                         </form>
                     @endif

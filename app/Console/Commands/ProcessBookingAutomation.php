@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Mail\BookingCheckInReminderMail;
 use App\Mail\BookingExpiredMail;
+use App\Mail\PaymentDueReminderMail;
 use App\Models\Booking;
 use App\Notifications\BookingAutomationNotification;
 use Illuminate\Console\Command;
@@ -21,9 +22,11 @@ class ProcessBookingAutomation extends Command
     {
         $expired = $this->expirePendingBookings();
         $paymentExpired = $this->expireUnpaidConfirmedBookings();
+        $paymentReminded = $this->sendPaymentDeadlineReminders();
+        $noShows = $this->markNoShows();
         $reminded = $this->sendCheckInReminders();
 
-        $this->info("Expired {$expired} pending booking(s); cancelled {$paymentExpired} unpaid confirmed booking(s); sent {$reminded} check-in reminder(s).");
+        $this->info("Expired {$expired} pending; cancelled {$paymentExpired} unpaid; sent {$paymentReminded} payment reminders; marked {$noShows} no-shows; sent {$reminded} check-in reminders.");
 
         return self::SUCCESS;
     }
@@ -128,6 +131,54 @@ class ProcessBookingAutomation extends Command
             }, 'booking_id');
 
         return $expired;
+    }
+
+    private function sendPaymentDeadlineReminders(): int
+    {
+        $hours = max(1, (int) config('booking_automation.payment_reminder_hours', 6));
+        $reminded = 0;
+
+        Booking::query()
+            ->where('status', 'confirmed')
+            ->whereNull('payment_reminder_sent_at')
+            ->whereBetween('payment_due_at', [now(), now()->addHours($hours)])
+            ->whereDoesntHave('payment', static fn ($query) => $query->whereIn('status', ['paid', 'pending_verification', 'refund_pending']))
+            ->with(['customer', 'room', 'guestDetail', 'payment'])
+            ->each(function (Booking $booking) use (&$reminded): void {
+                $booking->update(['payment_reminder_sent_at' => now()]);
+                $message = 'Payment for booking #'.$booking->id.' is due '.$booking->payment_due_at->diffForHumans().'. Complete payment to keep the reservation.';
+                $booking->customer?->notify(new BookingAutomationNotification($booking, 'payment_due_reminder', $message));
+                $this->queueMail($booking, new PaymentDueReminderMail($booking));
+                $reminded++;
+            });
+
+        return $reminded;
+    }
+
+    private function markNoShows(): int
+    {
+        $hours = max(24, (int) config('booking_automation.no_show_grace_hours', 30));
+        $cutoff = now()->subHours($hours)->toDateString();
+        $count = 0;
+
+        Booking::query()
+            ->where('status', 'confirmed')
+            ->whereNull('actual_check_in_at')
+            ->whereNull('no_show_at')
+            ->whereDate('check_in', '<=', $cutoff)
+            ->with(['customer', 'room', 'guestDetail', 'payment'])
+            ->each(function (Booking $booking) use (&$count): void {
+                $booking->update([
+                    'status' => 'cancelled',
+                    'no_show_at' => now(),
+                    'cancellation_reason' => 'Automatically marked as no-show after the check-in grace period.',
+                ]);
+                $message = 'Booking #'.$booking->id.' was marked as a no-show because check-in was not recorded within the grace period.';
+                $booking->customer?->notify(new BookingAutomationNotification($booking, 'booking_no_show', $message));
+                $count++;
+            });
+
+        return $count;
     }
 
     private function sendCheckInReminders(): int
