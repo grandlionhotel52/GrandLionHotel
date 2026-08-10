@@ -5,9 +5,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>{{ config('app.name', 'The Grand Lion Hotel') }}</title>
-        <link rel="icon" type="image/png" sizes="128x128" href="{{ asset('brand/favicon-lion-128.png') }}?v=5">
+        <link rel="icon" type="image/png" sizes="128x128" href="{{ asset('brand/favicon-lion-transparent.png') }}?v=6">
         <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('brand/apple-touch-icon.png') }}?v=5">
-        <link rel="shortcut icon" href="{{ asset('brand/favicon-lion-128.png') }}?v=5">
+        <link rel="shortcut icon" href="{{ asset('brand/favicon-lion-transparent.png') }}?v=6">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
