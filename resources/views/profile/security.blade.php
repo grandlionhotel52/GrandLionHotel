@@ -74,13 +74,12 @@
 
 @section('content')
     <div class="security-card">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div class="mb-3">
             <div>
                 <p class="ta-eyebrow mb-1">Account Security</p>
                 <h1 class="h4 mb-0">Change Password</h1>
                 <p class="security-header-copy">Update your password to protect your account and bookings.</p>
             </div>
-            <a href="{{ route('profile.edit') }}" class="btn btn-ta-outline">Back</a>
         </div>
 
         <form method="POST" action="{{ route('profile.password.update') }}" class="row g-3">

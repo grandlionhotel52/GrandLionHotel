@@ -305,8 +305,12 @@ class BookingController extends Controller
 
     public function checkIn(Request $request, Booking $booking)
     {
+        if ($booking->payment_status !== 'paid') {
+            return back()->withErrors(['booking' => 'Payment must be recorded as paid before the guest can check in.']);
+        }
+
         if (!$booking->canBeCheckedInByStaff()) {
-            return back()->withErrors(['booking' => 'Only confirmed bookings can be checked in.']);
+            return back()->withErrors(['booking' => 'Only paid, confirmed bookings on or after the arrival date can be checked in.']);
         }
 
         $validated = $request->validate([
@@ -657,7 +661,7 @@ class BookingController extends Controller
         }
 
         if (!Payment::isOnlineMethod((string) $payment->method)) {
-            return back()->withErrors(['payment' => 'Only InstaPay or Credit/Debit Card submissions can be approved here.']);
+            return back()->withErrors(['payment' => 'Only submitted online payments can be approved here.']);
         }
 
         $payment->update([
@@ -690,7 +694,7 @@ class BookingController extends Controller
         }
 
         if (!Payment::isOnlineMethod((string) $payment->method)) {
-            return back()->withErrors(['payment' => 'Only InstaPay or Credit/Debit Card submissions can be rejected here.']);
+            return back()->withErrors(['payment' => 'Only submitted online payments can be rejected here.']);
         }
 
         $payment->update([

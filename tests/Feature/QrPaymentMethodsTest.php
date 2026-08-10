@@ -9,6 +9,7 @@ use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class QrPaymentMethodsTest extends TestCase
@@ -20,7 +21,7 @@ class QrPaymentMethodsTest extends TestCase
         $user = Customer::factory()->create();
         Storage::fake('public');
 
-        foreach (['instapay', 'credit_debit_card'] as $method) {
+        foreach (['instapay'] as $method) {
             $room = Room::factory()->create(['is_available' => true]);
             $booking = Booking::factory()->create([
                 'customer_id' => $user->id,
@@ -35,6 +36,7 @@ class QrPaymentMethodsTest extends TestCase
                 'method' => $method,
                 'customer_reference' => $customerReference,
                 'payment_proof' => UploadedFile::fake()->create('proof.jpg', 10, 'image/jpeg'),
+                'terms_accepted' => '1',
             ]);
 
             $response->assertRedirect(route('bookings.show', $booking));
@@ -47,6 +49,101 @@ class QrPaymentMethodsTest extends TestCase
             $this->assertSame($customerReference, $booking->payment->customer_reference);
             Storage::disk('public')->assertExists($booking->payment->payment_proof_path);
         }
+    }
+
+    public function test_customer_is_redirected_to_paymongo_for_card_payment(): void
+    {
+        $user = Customer::factory()->create();
+        $room = Room::factory()->create(['is_available' => true]);
+        $booking = Booking::factory()->create([
+            'customer_id' => $user->id,
+            'room_id' => $room->id,
+            'status' => 'confirmed',
+        ]);
+        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
+
+        config(['services.paymongo.secret_key' => 'sk_test_example']);
+        Http::fake([
+            'api.paymongo.com/v2/checkout_sessions' => Http::response([
+                'data' => [
+                    'id' => 'cs_test_123',
+                    'attributes' => ['checkout_url' => 'https://checkout.paymongo.com/test-session'],
+                ],
+            ]),
+        ]);
+
+        $response = $this->actingAs($user)->post(route('payments.process', $booking), [
+            'method' => 'credit_debit_card',
+        ]);
+
+        $response->assertRedirect('https://checkout.paymongo.com/test-session');
+
+        $booking->refresh()->load('payment');
+        $this->assertSame('unpaid', $booking->payment_status);
+        $this->assertSame('credit_debit_card', $booking->payment->method);
+        $this->assertSame('paymongo_checkout_pending', $booking->payment->source);
+        $this->assertSame('cs_test_123', $booking->payment->provider_session_id);
+        $this->assertNull($booking->payment->payment_proof_path);
+
+        Http::assertSent(fn ($request): bool =>
+            $request->url() === 'https://api.paymongo.com/v2/checkout_sessions'
+            && $request['data']['attributes']['payment_method_types'] === ['card']
+            && $request['data']['attributes']['reference_number'] === 'BOOKING-'.$booking->id
+        );
+    }
+
+    public function test_signed_paymongo_webhook_marks_card_payment_as_paid(): void
+    {
+        $booking = Booking::factory()->create(['status' => 'confirmed']);
+        $booking->payment()->update([
+            'amount' => 2500,
+            'status' => 'unpaid',
+            'method' => 'credit_debit_card',
+            'source' => 'paymongo_checkout_pending',
+            'provider_session_id' => 'cs_test_paid',
+            'paid_at' => null,
+        ]);
+        config([
+            'services.paymongo.secret_key' => 'sk_test_example',
+            'services.paymongo.webhook_secret' => 'whsec_test_example',
+        ]);
+
+        $payload = json_encode([
+            'data' => [
+                'type' => 'checkout_session.payment.paid',
+                'data' => [
+                    'id' => 'cs_test_paid',
+                    'attributes' => [
+                        'reference_number' => 'BOOKING-'.$booking->id,
+                        'payments' => [[
+                            'id' => 'pay_test_paid',
+                            'attributes' => ['status' => 'paid', 'amount' => 250000, 'currency' => 'PHP'],
+                        ]],
+                    ],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR);
+        $timestamp = (string) time();
+        $signature = hash_hmac('sha256', $timestamp.'.'.$payload, 'whsec_test_example');
+
+        $this->call('POST', route('webhooks.paymongo'), [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_PAYMONGO_SIGNATURE' => "t={$timestamp},te={$signature},li=",
+        ], $payload)->assertOk();
+
+        $booking->refresh()->load('payment');
+        $this->assertSame('paid', $booking->payment_status);
+        $this->assertSame('paymongo_checkout', $booking->payment->source);
+        $this->assertSame('pay_test_paid', $booking->payment->provider_payment_id);
+    }
+
+    public function test_paymongo_webhook_rejects_an_invalid_signature(): void
+    {
+        config(['services.paymongo.webhook_secret' => 'whsec_test_example']);
+
+        $this->withHeader('Paymongo-Signature', 't='.time().',te=invalid,li=')
+            ->postJson(route('webhooks.paymongo'), ['data' => []])
+            ->assertUnauthorized();
     }
 
     public function test_online_payment_requires_reference_and_proof(): void
@@ -64,7 +161,7 @@ class QrPaymentMethodsTest extends TestCase
             'method' => 'instapay',
         ]);
 
-        $response->assertSessionHasErrors(['customer_reference', 'payment_proof']);
+        $response->assertSessionHasErrors(['customer_reference', 'payment_proof', 'terms_accepted']);
 
         $booking->refresh();
         $this->assertSame('unpaid', $booking->payment_status);

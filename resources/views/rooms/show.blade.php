@@ -48,8 +48,8 @@
         @media (min-width: 992px) {
             .room-booking-panel {
                 position: sticky;
-                top: clamp(74px, 7vh, 96px);
-                max-height: calc(100vh - clamp(74px, 7vh, 96px) - 1rem);
+                top: 78px;
+                max-height: calc(100vh - 78px);
                 overflow-y: auto;
             }
         }
@@ -119,7 +119,9 @@
                         <div class="room-feature"><i class="bi bi-person-check me-1"></i> {{ $standardGuests }} guests</div>
                         <div class="room-feature"><i class="bi bi-grid-1x2 me-1"></i> {{ $room->type }}</div>
                         <div class="room-feature"><i class="bi bi-tree me-1"></i> {{ $room->view_type ?: 'View not specified' }}</div>
-                        <div class="room-feature"><i class="bi bi-shield-check me-1"></i> Extra bed on request</div>
+                        @foreach($room->amenities as $amenity)
+                            <div class="room-feature"><i class="bi {{ $amenity['icon'] }} me-1" aria-hidden="true"></i> {{ $amenity['label'] }}</div>
+                        @endforeach
                     </div>
                 </div>
             </article>
@@ -129,19 +131,19 @@
             <aside class="room-booking-panel p-4">
                 <p class="ta-eyebrow mb-1">Start Reservation</p>
                 <div class="price-tag mb-1" id="room_headline_rate">
-                    &#8369;{{ number_format($pricingPreview['average_nightly_rate'] ?? $room->price_per_night, 2) }}
+                    &#8369;{{ \App\Support\Money::display($pricingPreview['average_nightly_rate'] ?? $room->price_per_night) }}
                 </div>
                 <small class="text-secondary d-block" id="room_price_caption">
                     {{ $pricingPreview ? 'average per night' : 'per night' }}
                 </small>
                 <p class="small mb-3 {{ $pricingPreview && $pricingPreview['has_date_discount'] ? '' : 'd-none' }}" id="room_base_rate_wrap">
                     <span class="text-secondary text-decoration-line-through" id="room_base_rate">
-                        &#8369;{{ number_format($room->price_per_night, 2) }}
+                        &#8369;{{ \App\Support\Money::display($room->price_per_night) }}
                     </span>
                     <span class="text-success ms-2" id="room_discount_note">
                         @if($pricingPreview && $pricingPreview['has_date_discount'])
                             Date discount on {{ $pricingPreview['discounted_nights'] }} night{{ $pricingPreview['discounted_nights'] === 1 ? '' : 's' }}
-                            &middot; Save &#8369;{{ number_format($pricingPreview['discount_amount'], 2) }}
+                            &middot; Save &#8369;{{ \App\Support\Money::display($pricingPreview['discount_amount']) }}
                         @endif
                     </span>
                 </p>
@@ -164,7 +166,7 @@
                         Total:
                         <strong class="text-dark" id="room_total_value">
                             @if($pricingPreview)
-                                &#8369;{{ number_format($pricingPreview['total'], 2) }}
+                                &#8369;{{ \App\Support\Money::display($pricingPreview['total']) }}
                             @else
                                 Select dates to preview
                             @endif
@@ -267,6 +269,7 @@
             const currencyFormatter = new Intl.NumberFormat('en-PH', {
                 style: 'currency',
                 currency: 'PHP',
+                minimumFractionDigits: 0,
                 maximumFractionDigits: 2,
             });
 

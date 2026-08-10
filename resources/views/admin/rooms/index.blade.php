@@ -207,13 +207,13 @@
                 <tbody>
                     @forelse($rooms as $room)
                         <tr>
-                            <td>#{{ $room->id }}</td>
+                            <td>{{ $room->id }}</td>
                             <td>{{ $room->name }}</td>
                             <td>{{ $room->type }}</td>
                             <td>{{ $room->view_type ?: '-' }}</td>
                             <td>2 guests</td>
                             <td>
-                                <div>&#8369;{{ number_format($room->price_per_night, 2) }} / night</div>
+                                <div>&#8369;{{ \App\Support\Money::display($room->price_per_night) }} / night</div>
                             </td>
                             <td>
                                 <form action="{{ route('admin.rooms.update-room-status', $room) }}" method="POST" class="d-inline">
@@ -247,6 +247,7 @@
                                         data-bs-toggle="modal"
                                         data-bs-target="#editRoomModal"
                                         data-room-id="{{ $room->id }}"
+                                        data-room-update-url="{{ route('admin.rooms.update', $room) }}"
                                         data-room-name="{{ $room->name }}"
                                         data-room-type="{{ $room->type }}"
                                         data-room-view-type="{{ $room->view_type ?? '' }}"
@@ -579,7 +580,6 @@
                 return;
             }
 
-            const updateUrlTemplate = @json(route('admin.rooms.update', ['room' => '__ROOM__']));
             const oldFormValues = {
                 name: @json(old('name')),
                 type: @json(old('type')),
@@ -604,6 +604,7 @@
                 }
 
                 const roomId = trigger.getAttribute('data-room-id') || '';
+                const roomUpdateUrl = trigger.getAttribute('data-room-update-url') || '';
                 const name = trigger.getAttribute('data-room-name') || '';
                 const type = trigger.getAttribute('data-room-type') || '';
                 const viewType = trigger.getAttribute('data-room-view-type') || '';
@@ -611,7 +612,11 @@
                 const priceNight = trigger.getAttribute('data-room-price-night') || '0';
                 const image = trigger.getAttribute('data-room-image') || '';
 
-                formEl.action = updateUrlTemplate.replace('__ROOM__', roomId);
+                if (!roomUpdateUrl) {
+                    return;
+                }
+
+                formEl.action = roomUpdateUrl;
                 fieldRoomId.value = roomId;
                 fieldName.value = name;
                 fieldType.value = type;

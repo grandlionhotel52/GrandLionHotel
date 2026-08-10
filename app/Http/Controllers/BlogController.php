@@ -67,9 +67,10 @@ class BlogController extends Controller
                     ],
                     [
                         'heading' => 'Watch total value, not headline price',
-                        'body' => 'A slightly higher nightly rate may include breakfast, airport transfer, or flexible cancellation. Compare final value and policies before deciding based only on the base price.',
+                        'body' => 'A slightly higher nightly rate may include airport transfer, late checkout, or flexible cancellation. Compare final value and policies before deciding based only on the base price.',
                     ],
                 ],
+                'conclusion' => 'The best booking decision is rarely about finding the absolute lowest number. Give yourself enough lead time, compare the complete stay value, and choose terms that match how certain your travel plans really are. That combination protects both your budget and your peace of mind.',
                 'tags' => ['Rate Strategy', 'Trip Planning', 'City Stay'],
                 'author' => [
                     'name' => 'Lara Mendoza',
@@ -101,9 +102,10 @@ class BlogController extends Controller
                     ],
                     [
                         'heading' => 'Review details before confirming',
-                        'body' => 'Look closely at inclusions like breakfast, parking, and early check-in access. Small policy details can matter more than room photos when you are finalizing your booking.',
+                        'body' => 'Look closely at inclusions like parking, airport transfer, and early check-in access. Small policy details can matter more than room photos when you are finalizing your booking.',
                     ],
                 ],
+                'conclusion' => 'Start with the purpose and length of your trip, then choose the smallest room that comfortably supports those needs. Confirm the bed, space, view, and inclusions before paying. A thoughtful match will usually improve the stay more than upgrading simply because a room carries a premium label.',
                 'tags' => ['Room Types', 'Comfort', 'Family Travel'],
                 'author' => [
                     'name' => 'Miguel Santos',
@@ -138,6 +140,7 @@ class BlogController extends Controller
                         'body' => 'Review mini-bar, room service, and incidental charges before leaving. A two-minute billing check prevents follow-up disputes after your trip.',
                     ],
                 ],
+                'conclusion' => 'Good travel safety is mostly a collection of small, repeatable habits. Organize your documents, protect valuables, verify official payment channels, and review charges before leaving. These simple checks reduce uncertainty and let you focus on enjoying the trip itself.',
                 'tags' => ['Checklist', 'Safety Tips', 'Guest Guide'],
                 'author' => [
                     'name' => 'Andrea Cruz',
@@ -147,14 +150,14 @@ class BlogController extends Controller
             [
                 'slug' => 'weekend-stay-itinerary-near-the-city-center',
                 'title' => 'Weekend Stay Itinerary Near The City Center',
-                'excerpt' => 'A balanced two-day plan for guests who want food, culture, and rest without rushing.',
+                'excerpt' => 'A balanced two-day plan for guests who want culture, exploration, and rest without rushing.',
                 'image' => 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=1400&q=80',
                 'date' => 'January 10, 2026',
                 'category' => 'Local Guide',
                 'read_time' => '5 min read',
                 'intro' => 'City weekends are better with structure. A simple itinerary helps you enjoy top spots while keeping enough downtime between activities.',
                 'highlights' => [
-                    'Plan mornings for light sightseeing and evenings for dining experiences.',
+                    'Plan mornings for light sightseeing and evenings for relaxed city experiences.',
                     'Book one anchor activity per day to avoid overpacked schedules.',
                     'Keep one open block for spontaneous plans or rest.',
                 ],
@@ -172,6 +175,7 @@ class BlogController extends Controller
                         'body' => 'Schedule checkout with enough buffer for transport and last-minute purchases. A low-pressure departure closes your weekend stay on a better note.',
                     ],
                 ],
+                'conclusion' => 'A rewarding weekend does not need a packed schedule. Choose a few meaningful experiences, group plans by location, and protect time for meals and rest. Leaving some space in the itinerary makes the trip feel personal instead of rushed.',
                 'tags' => ['Weekend Plan', 'City Guide', 'Leisure'],
                 'author' => [
                     'name' => 'Paolo Reyes',
@@ -199,17 +203,135 @@ class BlogController extends Controller
                     ],
                     [
                         'heading' => 'At check-in: prioritize essentials',
-                        'body' => 'Ask about Wi-Fi access, breakfast window, and quiet-room availability immediately. Getting these details early helps you structure your next business day.',
+                        'body' => 'Ask about Wi-Fi access, workspace hours, and quiet-room availability immediately. Getting these details early helps you structure your next business day.',
                     ],
                     [
                         'heading' => 'In-room setup: ready in 10 minutes',
                         'body' => 'Charge devices, test your connection, set meeting reminders, and prep next-day attire. A short routine lowers stress and keeps your focus on work priorities.',
                     ],
                 ],
+                'conclusion' => 'Consistency is what makes business travel easier. Reuse the same document system, arrival checklist, and room setup on every trip. The routine takes only a few minutes but prevents forgotten details from competing with the work that brought you there.',
                 'tags' => ['Productivity', 'Business Stay', 'Routine'],
                 'author' => [
                     'name' => 'Nina Valdez',
                     'role' => 'Business Travel Columnist',
+                ],
+            ],
+            [
+                'slug' => 'smart-packing-guide-for-hotel-stays',
+                'title' => 'A Smart Packing Guide For Hotel Stays',
+                'excerpt' => 'Pack lighter without forgetting the essentials that make a hotel stay comfortable.',
+                'image' => 'https://images.unsplash.com/photo-1553531384-cc64ac80f931?auto=format&fit=crop&w=1400&q=80',
+                'date' => 'December 8, 2025',
+                'category' => 'Packing Guide',
+                'read_time' => '5 min read',
+                'intro' => 'Packing well is less about bringing more and more about knowing what the hotel already provides. A simple system keeps your luggage manageable and your essentials easy to find.',
+                'highlights' => [
+                    'Check the hotel amenity list before packing duplicate toiletries or equipment.',
+                    'Organize belongings by use so arrival and checkout both take less time.',
+                    'Keep medication, documents, and one change of clothes in your carry-on.',
+                ],
+                'sections' => [
+                    [
+                        'heading' => 'Start with the hotel amenity list',
+                        'body' => 'Review which toiletries, linens, appliances, and services are already available. Confirm anything important directly with the hotel, then remove unnecessary duplicates from your luggage.',
+                    ],
+                    [
+                        'heading' => 'Pack around complete outfits',
+                        'body' => 'Choose clothing by day and activity instead of adding individual pieces at random. A small coordinated wardrobe creates more combinations while keeping shoes and bulky items under control.',
+                    ],
+                    [
+                        'heading' => 'Build one arrival pouch',
+                        'body' => 'Group chargers, sleepwear, toiletries, and the next morning’s essentials together. When you reach the room, you can settle in quickly without unpacking every compartment.',
+                    ],
+                    [
+                        'heading' => 'Prepare for a smooth checkout',
+                        'body' => 'Use one consistent place for keys, documents, and small valuables throughout the stay. Repack non-essential items the night before and perform a final check of drawers, outlets, and the room safe.',
+                    ],
+                ],
+                'conclusion' => 'Smart packing reduces decisions at every stage of a trip. Use the hotel amenity list, plan complete outfits, and organize around arrival and departure. You will carry less while keeping the things you genuinely need close at hand.',
+                'tags' => ['Packing List', 'Travel Essentials', 'Organization'],
+                'author' => [
+                    'name' => 'Camille Flores',
+                    'role' => 'Travel Organization Writer',
+                ],
+            ],
+            [
+                'slug' => 'stress-free-family-hotel-stay',
+                'title' => 'How To Plan A Stress-Free Family Hotel Stay',
+                'excerpt' => 'Simple room, packing, and arrival decisions that make traveling with children easier.',
+                'image' => 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1400&q=80',
+                'date' => 'November 18, 2025',
+                'category' => 'Family Travel',
+                'read_time' => '7 min read',
+                'intro' => 'Family trips run more smoothly when the hotel supports your everyday routines. A few specific questions before booking can prevent the most common space, sleep, and meal-time problems.',
+                'highlights' => [
+                    'Confirm the exact bed setup and maximum room occupancy before paying.',
+                    'Choose a location that reduces daily transport and unnecessary transfers.',
+                    'Keep the first evening simple so everyone can settle into the new routine.',
+                ],
+                'sections' => [
+                    [
+                        'heading' => 'Match the room to your family routine',
+                        'body' => 'Think beyond the number of beds. Separate seating, blackout curtains, a refrigerator, and enough storage can matter more during a multi-night stay, especially when children have different sleep schedules.',
+                    ],
+                    [
+                        'heading' => 'Ask the hotel specific questions',
+                        'body' => 'Confirm crib availability, extra bedding fees, connecting-room policies, and child-friendly amenities in advance. Written confirmation makes arrival faster and gives the hotel time to prepare what you need.',
+                    ],
+                    [
+                        'heading' => 'Pack a small arrival kit',
+                        'body' => 'Keep pajamas, toiletries, medicine, chargers, and a familiar snack in one easy-to-reach bag. You can settle in without opening every suitcase after a tiring journey.',
+                    ],
+                    [
+                        'heading' => 'Protect downtime in the itinerary',
+                        'body' => 'Schedule fewer fixed activities than you would on an adults-only trip. A quiet afternoon at the hotel can prevent an overtired evening and gives everyone room to enjoy the destination at a comfortable pace.',
+                    ],
+                ],
+                'conclusion' => 'A successful family stay is built around realistic routines, not a packed itinerary. Confirm the room details, organize the first night, and leave space for rest. Those choices give the whole family more energy for the experiences that matter.',
+                'tags' => ['Family Stay', 'Packing', 'Room Planning'],
+                'author' => [
+                    'name' => 'Sofia Ramos',
+                    'role' => 'Family Travel Contributor',
+                ],
+            ],
+            [
+                'slug' => 'rest-and-recharge-on-a-short-stay',
+                'title' => 'How To Rest And Recharge On A Short Hotel Stay',
+                'excerpt' => 'Create a restorative overnight escape with better boundaries, sleep habits, and pacing.',
+                'image' => 'https://images.unsplash.com/photo-1602002418082-a4443e081dd1?auto=format&fit=crop&w=1400&q=80',
+                'date' => 'October 30, 2025',
+                'category' => 'Wellness',
+                'read_time' => '6 min read',
+                'intro' => 'Even one night away can feel restorative when you protect it from the habits that make ordinary days exhausting. The goal is not to fit in everything, but to create space for genuine recovery.',
+                'highlights' => [
+                    'Set one clear intention for the stay instead of filling every hour.',
+                    'Prepare the room for sleep before you begin your evening activities.',
+                    'Leave a gentle buffer between checkout and your next obligation.',
+                ],
+                'sections' => [
+                    [
+                        'heading' => 'Decide what rest means for this trip',
+                        'body' => 'You may need uninterrupted sleep, quiet reading time, a long meal, or distance from work notifications. Naming the priority makes it easier to decline activities that would leave the stay feeling rushed.',
+                    ],
+                    [
+                        'heading' => 'Set up the room as soon as you arrive',
+                        'body' => 'Adjust the temperature, close the curtains, locate charging points, and request anything missing early. A comfortable room removes small interruptions later when you are ready to unwind.',
+                    ],
+                    [
+                        'heading' => 'Create a low-stimulation evening',
+                        'body' => 'Choose an unhurried dinner, dim screens, and prepare for the morning before bed. Familiar cues help your body settle even when you are sleeping in a new environment.',
+                    ],
+                    [
+                        'heading' => 'Make checkout part of the reset',
+                        'body' => 'Pack most belongings the night before and review the bill with time to spare. A calm departure preserves the benefit of the stay instead of replacing it with a final burst of stress.',
+                    ],
+                ],
+                'conclusion' => 'A short stay can still create meaningful distance from a demanding routine. Protect one purpose, remove small sources of friction, and leave without rushing. Rest is more likely to last when the entire stay supports it.',
+                'tags' => ['Rest', 'Sleep', 'Short Escape'],
+                'author' => [
+                    'name' => 'Elena Torres',
+                    'role' => 'Wellness Editor',
                 ],
             ],
         ];

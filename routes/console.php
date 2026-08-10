@@ -11,3 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('hotel:backup --keep=14')
     ->dailyAt('02:30')
     ->withoutOverlapping();
+
+Schedule::command('bookings:process-automation')
+    ->hourly()
+    ->withoutOverlapping();

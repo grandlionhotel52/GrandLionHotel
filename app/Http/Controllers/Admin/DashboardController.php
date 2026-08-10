@@ -7,6 +7,7 @@ use App\Models\Admin;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Payment;
+use App\Models\RefundRequest;
 use App\Models\Room;
 use App\Models\Staff;
 use Carbon\Carbon;
@@ -87,7 +88,7 @@ class DashboardController extends Controller
         $paymentsQuery = Payment::query()
             ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
             ->leftJoin('staff', 'staff.staff_id', '=', 'bookings.staff_id')
-            ->where('payments.status', 'paid')
+            ->whereIn('payments.status', ['paid', 'refunded'])
             ->whereNotNull('payments.paid_at')
             ->whereDate('payments.paid_at', '>=', $from)
             ->whereDate('payments.paid_at', '<=', $to);
@@ -110,11 +111,19 @@ class DashboardController extends Controller
             ->orderByDesc('payments.paid_at')
             ->get();
 
-        $totalRevenue = (float) $payments->sum(static fn ($payment): float => (float) $payment->amount);
+        $grossRevenue = (float) $payments->sum(static fn ($payment): float => (float) $payment->amount);
+        $refundedTotal = (float) RefundRequest::query()
+            ->where('status', RefundRequest::STATUS_PROCESSED)
+            ->whereDate('processed_at', '>=', $from)
+            ->whereDate('processed_at', '<=', $to)
+            ->sum('amount');
+        $totalRevenue = $grossRevenue - $refundedTotal;
         $paidBookings = $payments->count();
 
         $summary = [
             'total_revenue' => $totalRevenue,
+            'gross_revenue' => $grossRevenue,
+            'refunded_total' => $refundedTotal,
             'paid_bookings' => $paidBookings,
             'average_sale' => $paidBookings > 0 ? round($totalRevenue / $paidBookings, 2) : 0.0,
             'total_discount' => (float) $payments->sum(static fn ($payment): float => (float) ($payment->discount_amount ?? 0)),

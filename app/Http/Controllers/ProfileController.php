@@ -11,11 +11,19 @@ use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
-    public function markNotificationsRead()
+    public function markNotificationsRead(Request $request)
     {
-        request()->user()->unreadNotifications->markAsRead();
+        $request->user()->unreadNotifications->markAsRead();
 
         return back()->with('status', 'Notifications marked as read.');
+    }
+
+    public function markNotificationRead(Request $request, string $notification)
+    {
+        $item = $request->user()->notifications()->whereKey($notification)->firstOrFail();
+        $item->markAsRead();
+
+        return back()->with('status', 'Notification marked as read.');
     }
 
     public function edit(Request $request)

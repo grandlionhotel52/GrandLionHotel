@@ -151,6 +151,44 @@
             color: #1f2937;
             margin-bottom: 0.65rem;
         }
+        .booking-command-bar {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            border: 1px solid #d9e1ef;
+            border-radius: 8px;
+            background: #fff;
+            overflow: hidden;
+        }
+        .booking-command-item { padding: .9rem 1rem; border-right: 1px solid #e2e8f3; }
+        .booking-command-item:last-child { border-right: 0; }
+        .booking-command-value { color: #172033; font-size: .95rem; font-weight: 800; line-height: 1.35; }
+        .booking-next-step {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            border-left: 4px solid var(--staff-brand);
+            background: rgba(var(--theme-primary-rgb), .1);
+            padding: .8rem 1rem;
+        }
+        .booking-next-step i { color: var(--theme-primary); font-size: 1.15rem; }
+        .booking-section-nav { display: flex; flex-wrap: wrap; gap: .4rem; }
+        .booking-section-nav a {
+            border: 1px solid #d7deec;
+            border-radius: 6px;
+            background: #fff;
+            color: #334155;
+            padding: .4rem .65rem;
+            font-size: .78rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .booking-section-nav a:hover,
+        .booking-section-nav a:focus { border-color: var(--staff-brand); color: var(--theme-primary); }
+        @media (max-width: 767.98px) {
+            .booking-command-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .booking-command-item:nth-child(2) { border-right: 0; }
+            .booking-command-item:nth-child(-n+2) { border-bottom: 1px solid #e2e8f3; }
+        }
     </style>
 @endpush
 
@@ -213,13 +251,23 @@
             'refund_pending' => 'warning',
             default => $booking->status === 'cancelled' ? 'danger' : 'warning',
         };
+        $nextStep = match (true) {
+            $booking->status === 'cancelled' => 'No arrival action is required. Review refund information if a payment was collected.',
+            $booking->status === 'completed' => 'Stay completed. Confirm the receipt and internal notes are complete.',
+            $isOnlineAwaitingVerification => 'Verify the submitted online payment proof before continuing.',
+            $booking->status === 'pending' => 'Review the reservation details and confirm the booking.',
+            is_null($booking->actual_check_in_at) => 'Prepare for arrival and record check-in when the guest reaches the hotel.',
+            is_null($booking->actual_check_out_at) && $booking->payment_status !== 'paid' => 'Collect and record payment before guest check-out.',
+            is_null($booking->actual_check_out_at) => 'Record the guest departure to complete this stay.',
+            default => 'Review the booking record and complete any remaining staff notes.',
+        };
     @endphp
 
     <section class="mb-4">
         <div class="mb-2">
             <a href="{{ $backUrl }}" class="btn btn-staff-outline btn-sm">
                 <i class="bi bi-arrow-left"></i>
-                <span>Back</span>
+                <span>Back to bookings</span>
             </a>
         </div>
         <h1 class="h4 mb-1">Booking #{{ $booking->id }}</h1>
@@ -228,6 +276,38 @@
             <span class="booking-top-chip {{ $paymentChipClass }}">Payment: {{ $paymentStatusLabel }}</span>
             <span class="booking-top-chip">Guest: {{ $displayName }}</span>
         </div>
+    </section>
+
+    <section class="mb-3" aria-label="Booking operational summary">
+        <div class="booking-command-bar mb-3">
+            <div class="booking-command-item">
+                <p class="booking-info-label">Stay</p>
+                <div class="booking-command-value">{{ $booking->check_in->format('M d') }} - {{ $booking->check_out->format('M d, Y') }}</div>
+            </div>
+            <div class="booking-command-item">
+                <p class="booking-info-label">Room</p>
+                <div class="booking-command-value">{{ $booking->room->name ?? 'Not assigned' }}</div>
+            </div>
+            <div class="booking-command-item">
+                <p class="booking-info-label">Occupancy</p>
+                <div class="booking-command-value">{{ $booking->guests }} guest{{ $booking->guests === 1 ? '' : 's' }} &middot; {{ $billedUnits }} night{{ $billedUnits === 1 ? '' : 's' }}</div>
+            </div>
+            <div class="booking-command-item">
+                <p class="booking-info-label">Booking Total</p>
+                <div class="booking-command-value">PHP {{ number_format((float) $booking->total_price, 2) }}</div>
+            </div>
+        </div>
+        <div class="booking-next-step mb-3">
+            <i class="bi bi-compass" aria-hidden="true"></i>
+            <div><span class="booking-info-label d-block mb-1">Recommended Next Step</span><strong>{{ $nextStep }}</strong></div>
+        </div>
+        <nav class="booking-section-nav" aria-label="Booking detail sections">
+            <a href="#arrival-departure-log"><i class="bi bi-door-open me-1" aria-hidden="true"></i>Arrival</a>
+            <a href="#guest-stay-information"><i class="bi bi-person-vcard me-1" aria-hidden="true"></i>Guest &amp; stay</a>
+            <a href="#occupancy-update"><i class="bi bi-people me-1" aria-hidden="true"></i>Occupancy</a>
+            <a href="#payment-desk"><i class="bi bi-credit-card me-1" aria-hidden="true"></i>Payment</a>
+            <a href="#internal-staff-notes"><i class="bi bi-journal-text me-1" aria-hidden="true"></i>Staff notes</a>
+        </nav>
     </section>
 
     <div class="booking-actions mb-3" id="booking-top-actions">
@@ -313,6 +393,12 @@
                             </button>
                         </div>
                     </form>
+                @elseif($booking->payment_status !== 'paid')
+                    <div class="alert alert-warning small mb-0">
+                        <i class="bi bi-credit-card me-1" aria-hidden="true"></i>
+                        Record the full payment before checking in this guest.
+                        <a href="#payment-desk" class="alert-link">Go to Payment Desk</a>
+                    </div>
                 @elseif($booking->actual_check_in_at)
                     <p class="booking-note mb-0">This is the staff-recorded arrival time for the guest.</p>
                 @else

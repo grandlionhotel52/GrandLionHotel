@@ -39,6 +39,25 @@ class OperationalFeaturesTest extends TestCase
         Storage::disk('public')->assertExists($room->image);
     }
 
+    public function test_room_with_a_missing_managed_image_uses_the_local_placeholder(): void
+    {
+        Storage::fake('public');
+
+        $room = Room::factory()->create([
+            'image' => 'room-images/missing-room.jpg',
+        ]);
+
+        $this->assertSame(asset(Room::FALLBACK_IMAGE_PATH), $room->image_url);
+    }
+
+    public function test_room_without_an_upload_receives_a_room_interior_image(): void
+    {
+        $room = Room::factory()->create(['image' => null]);
+
+        $this->assertStringStartsWith('https://images.unsplash.com/photo-', $room->image_url);
+        $this->assertStringContainsString('fit=crop', $room->image_url);
+    }
+
     public function test_booking_changes_are_audited_and_notify_the_customer(): void
     {
         $customer = Customer::factory()->create();

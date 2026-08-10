@@ -209,6 +209,7 @@
                                         data-bs-toggle="modal"
                                         data-bs-target="#editUserModal"
                                         data-user-id="{{ $customer->id }}"
+                                        data-user-update-url="{{ route('admin.users.update', $customer) }}"
                                         data-user-first-name="{{ $customerName['first_name'] }}"
                                         data-user-last-name="{{ $customerName['last_name'] }}"
                                         data-user-email="{{ $customer->email }}"
@@ -354,7 +355,6 @@
                 return;
             }
 
-            const updateUrlTemplate = @json(route('admin.users.update', ['user' => '__USER__']));
             const oldFormValues = {
                 firstName: @json(old('first_name')),
                 lastName: @json(old('last_name')),
@@ -385,7 +385,12 @@
                 }
 
                 const userId = trigger.getAttribute('data-user-id') || '';
-                formEl.action = updateUrlTemplate.replace('__USER__', userId);
+                const userUpdateUrl = trigger.getAttribute('data-user-update-url') || '';
+                if (!userUpdateUrl) {
+                    return;
+                }
+
+                formEl.action = userUpdateUrl;
                 fieldModalId.value = userId;
                 fieldFirstName.value = trigger.getAttribute('data-user-first-name') || '';
                 fieldLastName.value = trigger.getAttribute('data-user-last-name') || '';
@@ -412,7 +417,7 @@
                     if (oldFormValues.city !== null) fieldCity.value = oldFormValues.city;
                     if (oldFormValues.province !== null) fieldProvince.value = oldFormValues.province;
                     if (oldFormValues.country !== null) fieldCountry.value = oldFormValues.country;
-                    formEl.action = updateUrlTemplate.replace('__USER__', oldModalUserId);
+                    formEl.action = oldButton.getAttribute('data-user-update-url') || formEl.action;
                     fieldModalId.value = oldModalUserId;
                 }
             }

@@ -60,8 +60,8 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Date Discount Room');
-        $response->assertSee('1,750.00');
-        $response->assertSee('3,500.00 total for 2 nights');
+        $response->assertSee('1,750');
+        $response->assertSee('3,500 total for 2 nights');
         $response->assertSee('Date discount on 1 night');
     }
 
@@ -92,8 +92,8 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertSee('1,750.00');
-        $response->assertSee('3,500.00');
+        $response->assertSee('1,750');
+        $response->assertSee('3,500');
         $response->assertSee('Date discount on 1 night');
     }
 

@@ -41,6 +41,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL', 'http://localhost').'/auth/google/callback'),
     ],
 
+    'paymongo' => [
+        'secret_key' => env('PAYMONGO_SECRET_KEY'),
+        'webhook_secret' => env('PAYMONGO_WEBHOOK_SECRET'),
+        'base_url' => env('PAYMONGO_BASE_URL', 'https://api.paymongo.com'),
+    ],
+
     'qr_wallets' => [
         'merchant_name' => env('QR_MERCHANT_NAME', 'The Grand Lion Hotel'),
         'instapay' => [

@@ -4,9 +4,8 @@
 
 @section('content')
     @php($userName = \App\Support\PersonName::split($user->name))
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="mb-3">
         <h1 class="h3 mb-0">Edit Customer Account</h1>
-        <a href="{{ route('admin.users.index') }}" class="btn btn-ta-outline">Back to customers</a>
     </div>
 
     <section class="soft-card p-4 mb-4">

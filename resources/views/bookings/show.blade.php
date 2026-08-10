@@ -186,6 +186,11 @@
             'refund_pending' => 'warning',
             default => $isCancelled ? 'danger' : 'warning',
         };
+        $requestedReturnTo = (string) request('return_to', '');
+        $hasReturnLocation = str_starts_with($requestedReturnTo, '/') && !str_starts_with($requestedReturnTo, '//');
+        $backUrl = $hasReturnLocation
+            ? $requestedReturnTo
+            : route('bookings.my');
 
         $nextAction = match (true) {
             $isRefundPending => 'Your refund is under review and will be returned through your original payment method'
@@ -225,7 +230,9 @@
                         </span>
                     </div>
                 </div>
-                <a href="{{ route('bookings.my') }}" class="btn btn-ta-outline">All bookings</a>
+                <a href="{{ $backUrl }}" class="btn btn-ta-outline">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>{{ $hasReturnLocation ? 'Back' : 'Back to my bookings' }}
+                </a>
             </div>
         </div>
     </section>
@@ -511,6 +518,18 @@
                             <p class="mb-1">Status: <strong>{{ $refundStatusLabel }}</strong></p>
                             <p class="mb-1">Submitted: <strong>{{ optional($latestRefundRequest->requested_at)->format('M d, Y h:i A') ?? '-' }}</strong></p>
                             <p class="mb-0">Reason: <strong>{{ $latestRefundRequest->reason ?: 'No reason submitted yet.' }}</strong></p>
+                            @if($latestRefundRequest->amount)
+                                <p class="mb-0">Refund amount: <strong>₱{{ number_format((float) $latestRefundRequest->amount, 2) }}</strong></p>
+                            @endif
+                            @if($latestRefundRequest->refund_method)
+                                <p class="mb-0">Refund method: <strong>{{ \App\Models\Payment::methodLabel($latestRefundRequest->refund_method) }}</strong></p>
+                            @endif
+                            @if($latestRefundRequest->transaction_reference)
+                                <p class="mb-0">Reference: <strong>{{ $latestRefundRequest->transaction_reference }}</strong></p>
+                            @endif
+                            @if($latestRefundRequest->rejection_reason)
+                                <p class="mb-0 text-danger">Decision: <strong>{{ $latestRefundRequest->rejection_reason }}</strong></p>
+                            @endif
                         </div>
                     @endif
 

@@ -24,10 +24,16 @@ class RefundRequest extends Model
         'payment_id',
         'reason',
         'status',
+        'amount',
+        'refund_method',
+        'transaction_reference',
+        'rejection_reason',
+        'handled_by_admin_id',
         'notes',
         'requested_at',
         'approved_at',
         'processed_at',
+        'rejected_at',
     ];
 
     protected function casts(): array
@@ -36,6 +42,8 @@ class RefundRequest extends Model
             'requested_at' => 'datetime',
             'approved_at' => 'datetime',
             'processed_at' => 'datetime',
+            'rejected_at' => 'datetime',
+            'amount' => 'decimal:2',
         ];
     }
 
@@ -56,4 +64,17 @@ class RefundRequest extends Model
         return $this->belongsTo(Payment::class, 'payment_id', 'payment_id');
     }
 
+    public function handledByAdmin(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'handled_by_admin_id', 'admin_id');
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, match ($this->status) {
+            self::STATUS_PENDING => [self::STATUS_APPROVED, self::STATUS_REJECTED],
+            self::STATUS_APPROVED => [self::STATUS_PROCESSED],
+            default => [],
+        }, true);
+    }
 }

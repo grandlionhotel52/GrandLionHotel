@@ -65,7 +65,7 @@
                 <p class="ta-eyebrow mb-1">Starting Rate</p>
                 <h3 class="mb-1">
                     @if(!is_null($aboutStats['starting_rate']))
-                        &#8369;{{ number_format((float) $aboutStats['starting_rate'], 2) }}
+                        &#8369;{{ \App\Support\Money::display($aboutStats['starting_rate']) }}
                     @else
                         --
                     @endif

@@ -3,12 +3,11 @@
 @section('title', 'Edit Room')
 
 @section('content')
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div class="mb-3">
         <div>
             <h1 class="h3 mb-1">Edit {{ $room->name }}</h1>
             <p class="text-secondary mb-0">Update room information shown to customers.</p>
         </div>
-        <a href="{{ route('admin.rooms.index') }}" class="btn btn-ta-outline">Back to rooms</a>
     </div>
 
     <section class="soft-card p-4">

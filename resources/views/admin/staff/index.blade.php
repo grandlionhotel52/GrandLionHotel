@@ -199,6 +199,7 @@
                                         data-bs-toggle="modal"
                                         data-bs-target="#editStaffModal"
                                         data-staff-id="{{ $staff->id }}"
+                                        data-staff-update-url="{{ route('admin.staff.update', $staff) }}"
                                         data-staff-first-name="{{ $staffName['first_name'] }}"
                                         data-staff-last-name="{{ $staffName['last_name'] }}"
                                         data-staff-email="{{ $staff->email }}"
@@ -383,7 +384,6 @@
                 return;
             }
 
-            const updateUrlTemplate = @json(route('admin.staff.update', ['staff' => '__STAFF__']));
             const oldMode = @json(old('_staff_modal_mode'));
             const oldStaffId = @json(old('_staff_modal_id'));
             const oldFormValues = {
@@ -408,7 +408,12 @@
                 }
 
                 const staffId = trigger.getAttribute('data-staff-id') || '';
-                editFormEl.action = updateUrlTemplate.replace('__STAFF__', staffId);
+                const staffUpdateUrl = trigger.getAttribute('data-staff-update-url') || '';
+                if (!staffUpdateUrl) {
+                    return;
+                }
+
+                editFormEl.action = staffUpdateUrl;
                 editFieldId.value = staffId;
                 editFieldFirstName.value = trigger.getAttribute('data-staff-first-name') || '';
                 editFieldLastName.value = trigger.getAttribute('data-staff-last-name') || '';
@@ -426,7 +431,7 @@
                 const oldButton = document.querySelector(`.js-edit-staff-btn[data-staff-id="${oldStaffId}"]`);
                 if (oldButton) {
                     bootstrap.Modal.getOrCreateInstance(editModalEl).show();
-                    editFormEl.action = updateUrlTemplate.replace('__STAFF__', oldStaffId);
+                    editFormEl.action = oldButton.getAttribute('data-staff-update-url') || editFormEl.action;
                     editFieldId.value = oldStaffId;
                     if (oldFormValues.firstName !== null) editFieldFirstName.value = oldFormValues.firstName;
                     if (oldFormValues.lastName !== null) editFieldLastName.value = oldFormValues.lastName;

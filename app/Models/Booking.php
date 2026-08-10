@@ -39,6 +39,8 @@ class Booking extends Model
         'room_transfer_request_reason',
         'room_transfer_requested_at',
         'status',
+        'expired_at',
+        'check_in_reminder_sent_at',
         'notes',
         'actual_check_in_at',
         'actual_check_out_at',
@@ -57,6 +59,8 @@ class Booking extends Model
             'room_transfer_requested_at' => 'datetime',
             'actual_check_in_at' => 'datetime',
             'actual_check_out_at' => 'datetime',
+            'expired_at' => 'datetime',
+            'check_in_reminder_sent_at' => 'datetime',
         ];
     }
 
@@ -255,6 +259,7 @@ class Booking extends Model
     public function canBeCheckedInByStaff(): bool
     {
         return $this->status === 'confirmed'
+            && $this->payment_status === 'paid'
             && $this->check_in?->copy()->startOfDay()->lessThanOrEqualTo(now()->startOfDay())
             && is_null($this->actual_check_in_at)
             && is_null($this->actual_check_out_at);

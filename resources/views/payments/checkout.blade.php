@@ -68,7 +68,7 @@
         ];
         $selectedMethod = old('method', $preferredMethod);
         $selectedMethod = $legacyMethodMap[$selectedMethod] ?? $selectedMethod;
-        $onlineMethods = ['instapay', 'credit_debit_card'];
+        $onlineMethods = ['instapay'];
         $pricingQuote = $booking->pricingQuote();
         $billedUnits = max(1, $booking->nights());
         $subtotalAmount = (float) $booking->total_price;
@@ -136,11 +136,23 @@
                         <select class="form-select" name="method" id="payment_method_select" required>
                             <option value="cash" @selected($selectedMethod === 'cash')>Cash</option>
                             <option value="instapay" @selected($selectedMethod === 'instapay')>InstaPay</option>
-                            <option value="credit_debit_card" @selected($selectedMethod === 'credit_debit_card')>Credit/Debit Card</option>
+                            <option value="credit_debit_card" @selected($selectedMethod === 'credit_debit_card')>Credit/Debit Card via PayMongo</option>
                         </select>
                         <small class="text-secondary">
-                            Cash is confirmed at the front desk. Online payments require proof.
+                            Card payments open PayMongo's secure checkout. Cash is paid at the front desk; InstaPay requires payment proof.
                         </small>
+                    </div>
+
+                    <div class="col-12 {{ $selectedMethod === 'credit_debit_card' ? '' : 'd-none' }}" id="card_terminal_panel">
+                        <div class="alert alert-info mb-0">
+                            <div class="d-flex gap-2 align-items-start">
+                                <i class="bi bi-credit-card fs-5" aria-hidden="true"></i>
+                                <div>
+                                    <strong class="d-block mb-1">Secure checkout powered by PayMongo</strong>
+                                    <span class="small">You will be redirected to PayMongo to enter your card and complete 3D Secure verification. The hotel never receives or stores your card number or CVV.</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="col-12 {{ in_array($selectedMethod, $onlineMethods, true) ? '' : 'd-none' }}" id="online_verification_fields">
@@ -211,16 +223,34 @@
                                 @enderror
                             </div>
                             <div class="col-12">
-                                <small class="text-secondary">
-                                    Staff will verify online payments. By submitting, you agree to our
-                                    <a href="{{ route('terms') }}" target="_blank" rel="noopener">Terms and Conditions</a>.
-                                </small>
+                                <p class="small text-secondary mb-2">
+                                    Staff will verify online payments before marking the booking as paid.
+                                </p>
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input @error('terms_accepted') is-invalid @enderror"
+                                        type="checkbox"
+                                        value="1"
+                                        name="terms_accepted"
+                                        id="terms_accepted"
+                                        @checked(old('terms_accepted'))
+                                    >
+                                    <label class="form-check-label" for="terms_accepted">
+                                        I agree to the
+                                        <a href="{{ route('terms') }}" target="_blank" rel="noopener">Terms and Conditions</a>.
+                                    </label>
+                                    @error('terms_accepted')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-12 d-flex justify-content-end gap-2">
-                        <a href="{{ $backRoute ?? route('bookings.show', $booking) }}" class="btn btn-ta-outline">Back</a>
+                        <a href="{{ $backRoute ?? route('bookings.show', $booking) }}" class="btn btn-ta-outline">
+                            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to booking details
+                        </a>
                         <button type="submit" class="btn btn-ta" id="payment_submit_button">
                             {{ in_array($selectedMethod, $onlineMethods, true) ? 'Submit for verification' : 'Confirm payment' }}
                         </button>
@@ -237,8 +267,10 @@
             const methodSelect = document.getElementById('payment_method_select');
             const onlineFields = document.getElementById('online_verification_fields');
             const instapayPanel = document.getElementById('instapay_qr_panel');
+            const cardTerminalPanel = document.getElementById('card_terminal_panel');
             const submitButton = document.getElementById('payment_submit_button');
-            const onlineMethods = ['instapay', 'credit_debit_card'];
+            const termsCheckbox = document.getElementById('terms_accepted');
+            const onlineMethods = ['instapay'];
 
             if (!methodSelect || !onlineFields || !submitButton) {
                 return;
@@ -248,10 +280,15 @@
                 const requiresOnlineProof = onlineMethods.includes(methodSelect.value);
                 onlineFields.classList.toggle('d-none', !requiresOnlineProof);
                 instapayPanel?.classList.toggle('d-none', methodSelect.value !== 'instapay');
-                submitButton.textContent = requiresOnlineProof ? 'Submit for verification' : 'Confirm payment';
+                cardTerminalPanel?.classList.toggle('d-none', methodSelect.value !== 'credit_debit_card');
+                submitButton.textContent = requiresOnlineProof
+                    ? 'Submit for verification'
+                    : methodSelect.value === 'credit_debit_card' ? 'Continue to PayMongo' : 'Confirm payment';
+                submitButton.disabled = requiresOnlineProof && !termsCheckbox?.checked;
             };
 
             methodSelect.addEventListener('change', updateUi);
+            termsCheckbox?.addEventListener('change', updateUi);
             updateUi();
         })();
     </script>

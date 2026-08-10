@@ -14,7 +14,7 @@ class RoomSeeder extends Seeder
 
         $sampleRooms = [
             [
-                'name' => 'Room 101',
+                'name' => 'Nature Retreat',
                 'type' => 'Standard',
                 'view_type' => 'Nature View',
                 'description' => 'Comfortable standard room with garden-side windows and work desk.',
@@ -24,7 +24,7 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 102',
+                'name' => 'Garden Haven',
                 'type' => 'Standard',
                 'view_type' => 'Garden View',
                 'description' => 'Bright standard room with lush garden-facing windows and fast Wi-Fi.',
@@ -34,7 +34,7 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 201 - Deluxe Twin',
+                'name' => 'Poolside Deluxe Twin',
                 'type' => 'Deluxe',
                 'view_type' => 'Pool View',
                 'description' => 'Deluxe twin room with premium bedding and minibar.',
@@ -44,7 +44,7 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 202 - Deluxe King',
+                'name' => 'Garden Deluxe King',
                 'type' => 'Deluxe',
                 'view_type' => 'Garden View',
                 'description' => 'Spacious king room with lounge chair and rainfall shower.',
@@ -54,7 +54,7 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'being_cleaned',
             ],
             [
-                'name' => 'Room 301 - Family Comfort',
+                'name' => 'Courtyard Family Room',
                 'type' => 'Family',
                 'view_type' => 'Courtyard View',
                 'description' => 'Family-friendly room with extra sleeping space and sofa bed.',
@@ -64,7 +64,7 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 302 - Family Plus',
+                'name' => 'Poolside Family Room',
                 'type' => 'Family',
                 'view_type' => 'Pool View',
                 'description' => 'Large family room near elevator with kid-safe fixtures.',
@@ -74,7 +74,7 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'dirty',
             ],
             [
-                'name' => 'Room 401 - Junior Suite',
+                'name' => 'Nature Junior Suite',
                 'type' => 'Suite',
                 'view_type' => 'Nature View',
                 'description' => 'Suite with separate sitting area and premium toiletries.',
@@ -84,7 +84,7 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 402 - Executive Suite',
+                'name' => 'Mountain Executive Suite',
                 'type' => 'Executive',
                 'view_type' => 'Mountain View',
                 'description' => 'Executive suite with workstation, meeting nook, and mountain-facing windows.',
@@ -94,7 +94,7 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 501 - Penthouse East',
+                'name' => 'Panorama Penthouse',
                 'type' => 'Penthouse',
                 'view_type' => 'Mountain View',
                 'description' => 'Top-floor penthouse with private dining and panoramic windows.',
@@ -104,7 +104,7 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'dirty',
             ],
             [
-                'name' => 'Room 502 - Penthouse West',
+                'name' => 'Sunset Penthouse',
                 'type' => 'Penthouse',
                 'view_type' => 'Nature View',
                 'description' => 'Luxury penthouse with sunset-facing balcony and lounge area.',

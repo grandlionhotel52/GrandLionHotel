@@ -93,8 +93,20 @@
         <div class="row g-3 mb-4">
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
-                    <p class="label">Total Sales</p>
+                    <p class="label">Net Sales</p>
                     <p class="value">&#8369;{{ number_format((float) $summary['total_revenue'], 2) }}</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <div class="admin-report-stat">
+                    <p class="label">Gross Sales</p>
+                    <p class="value">&#8369;{{ number_format((float) $summary['gross_revenue'], 2) }}</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <div class="admin-report-stat">
+                    <p class="label">Refunded</p>
+                    <p class="value text-danger">&#8369;{{ number_format((float) $summary['refunded_total'], 2) }}</p>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">

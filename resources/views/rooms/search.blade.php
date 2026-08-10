@@ -4,41 +4,6 @@
 
 @push('head')
     <style>
-        .search-hero {
-            position: relative;
-            overflow: hidden;
-            border-radius: 24px;
-            border: 1px solid var(--line);
-            background:
-                radial-gradient(circle at 8% 10%, rgba(255, 255, 255, 0.24) 0, rgba(255, 255, 255, 0) 38%),
-                radial-gradient(circle at 90% 18%, rgba(255, 220, 160, 0.44) 0, rgba(255, 220, 160, 0) 44%),
-                linear-gradient(130deg, var(--brand-deep) 0%, #a68449 54%, var(--brand) 100%);
-            color: #f8fbff;
-            box-shadow: 0 22px 42px rgba(15, 23, 42, 0.2);
-        }
-        .search-hero::after {
-            content: '';
-            position: absolute;
-            right: -58px;
-            bottom: -80px;
-            width: 230px;
-            height: 230px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.11);
-        }
-        .search-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.28);
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.28rem 0.75rem;
-            font-size: 0.74rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
         .search-filter-shell {
             border-radius: 22px;
             border: 1px solid var(--line);
@@ -196,16 +161,6 @@
         }
     @endphp
 
-    <section class="search-hero p-4 p-lg-5 mb-4">
-        <div class="position-relative">
-            <div>
-                <span class="search-tag"><i class="bi bi-stars"></i> Curated Search</span>
-                <h1 class="h3 mt-2 mb-2">Find Your Best Match</h1>
-                <p class="text-white-50 mb-0">Use focused filters and compare premium room options quickly.</p>
-            </div>
-        </div>
-    </section>
-
     <section class="search-filter-shell p-3 p-lg-4 mb-4">
             <form method="GET" action="{{ route('rooms.index') }}" class="search-filter-grid" id="roomSearchForm">
                 <div class="field-type">
@@ -310,28 +265,33 @@
                             <span class="badge-status {{ $room->is_available ? 'available' : 'unavailable' }}">{{ $room->is_available ? 'Available' : 'Unavailable' }}</span>
                         </div>
                         <p class="text-secondary small mb-3">{{ \Illuminate\Support\Str::limit($room->description ?: 'Comfortable stay with practical in-room amenities.', 85) }}</p>
+                        <ul class="list-unstyled d-flex flex-wrap gap-2 small mb-3" aria-label="Room amenities">
+                            @foreach(array_slice($room->amenities, 0, 3) as $amenity)
+                                <li class="ta-chip"><i class="bi {{ $amenity['icon'] }}" aria-hidden="true"></i>{{ $amenity['label'] }}</li>
+                            @endforeach
+                        </ul>
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 @if($stayPricing)
-                                    <div class="price-tag">&#8369;{{ number_format($stayPricing['average_nightly_rate'], 2) }}</div>
+                                    <div class="price-tag">&#8369;{{ \App\Support\Money::display($stayPricing['average_nightly_rate']) }}</div>
                                     @if($stayPricing['has_date_discount'])
                                         <small class="text-secondary d-block">
-                                            <span class="text-decoration-line-through">&#8369;{{ number_format($stayPricing['base_nightly_rate'], 2) }}</span>
+                                            <span class="text-decoration-line-through">&#8369;{{ \App\Support\Money::display($stayPricing['base_nightly_rate']) }}</span>
                                             base / night
                                         </small>
                                         <small class="text-success d-block">
                                             Date discount on {{ $stayPricing['discounted_nights'] }} night{{ $stayPricing['discounted_nights'] === 1 ? '' : 's' }}
-                                            &middot; Save &#8369;{{ number_format($stayPricing['discount_amount'], 2) }}
+                                            &middot; Save &#8369;{{ \App\Support\Money::display($stayPricing['discount_amount']) }}
                                         </small>
                                     @else
                                         <small class="text-secondary d-block">selected-stay average / night</small>
                                     @endif
                                     <small class="text-secondary d-block">
-                                        &#8369;{{ number_format($stayPricing['total'], 2) }} total for {{ $stayPricing['nights'] }} night{{ $stayPricing['nights'] === 1 ? '' : 's' }}
+                                        &#8369;{{ \App\Support\Money::display($stayPricing['total']) }} total for {{ $stayPricing['nights'] }} night{{ $stayPricing['nights'] === 1 ? '' : 's' }}
                                     </small>
                                 @else
-                                    <div class="price-tag">&#8369;{{ number_format($room->price_per_night, 2) }}</div>
-                                    <small class="text-secondary">per night</small>
+                                    <div class="price-tag">&#8369;{{ \App\Support\Money::display($room->price_per_night) }}</div>
+                                    <small class="text-secondary">/ night</small>
                                 @endif
                             </div>
                             <div class="search-card-actions">

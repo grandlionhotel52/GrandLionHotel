@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title description">
+  <title id="title">The Grand Lion Hotel</title>
+  <desc id="description">Branded image placeholder for hotel photos that are unavailable.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset="0.58" stop-color="#26364a"/>
+      <stop offset="1" stop-color="#80643b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="35%" r="62%">
+      <stop offset="0" stop-color="#d9b979" stop-opacity=".36"/>
+      <stop offset="1" stop-color="#d9b979" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#background)"/>
+  <rect width="1600" height="1000" fill="url(#glow)"/>
+  <path d="M0 790 260 650l210 92 290-205 280 175 230-124 330 184v228H0Z" fill="#0c1420" opacity=".62"/>
+  <g fill="none" stroke="#d5b16e" stroke-width="10" opacity=".9">
+    <path d="M690 515h220v210H690z"/>
+    <path d="m650 515 150-130 150 130"/>
+    <path d="M745 725V585h110v140"/>
+    <path d="M690 555h-70v170h360V555h-70"/>
+  </g>
+  <text x="800" y="820" fill="#fff" font-family="Georgia, 'Times New Roman', serif" font-size="54" text-anchor="middle">THE GRAND LION HOTEL</text>
+  <text x="800" y="875" fill="#e8d6b3" font-family="Arial, sans-serif" font-size="25" letter-spacing="4" text-anchor="middle">PHOTO COMING SOON</text>
+</svg>

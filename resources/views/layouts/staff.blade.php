@@ -528,6 +528,7 @@
         }
     </style>
     @stack('head')
+    @include('layouts.partials.contrast-fixes')
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to content</a>
@@ -650,5 +651,6 @@
     </script>
     @include('layouts.partials.history-refresh')
     @stack('scripts')
+    @include('layouts.partials.image-fallback')
 </body>
 </html>

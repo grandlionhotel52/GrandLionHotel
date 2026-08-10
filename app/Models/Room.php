@@ -22,17 +22,15 @@ class Room extends Model
 
     public const BOOKABLE_ROOM_STATUS_SLUGS = ['clean'];
 
-    private const FALLBACK_IMAGES = [
-        'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1400&q=80',
-        'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1400&q=80',
-        'https://images.unsplash.com/photo-1522798514-97ceb8c4f1c8?auto=format&fit=crop&w=1400&q=80',
+    public const FALLBACK_IMAGE_PATH = 'brand/hotel-placeholder.svg';
+
+    private const DEFAULT_ROOM_IMAGES = [
         'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1400&q=80',
         'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80',
         'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1400&q=80',
-        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1400&q=80',
         'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1400&q=80',
-        'https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1400&q=80',
-        'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1400&q=80',
+        'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1400&q=80',
+        'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=1400&q=80',
     ];
 
     protected $primaryKey = 'room_id';
@@ -93,20 +91,61 @@ class Room extends Model
     public function getImageUrlAttribute(): string
     {
         if (! empty($this->image)) {
-            return Str::startsWith($this->image, ['http://', 'https://'])
-                ? $this->image
-                : Storage::disk('public')->url($this->image);
+            if (Str::startsWith($this->image, ['http://', 'https://'])) {
+                return $this->image;
+            }
+
+            if (Storage::disk('public')->exists($this->image)) {
+                return Storage::disk('public')->url($this->image);
+            }
+
+            return asset(self::FALLBACK_IMAGE_PATH);
         }
 
-        $seed = $this->id ?? crc32((string) $this->name);
-        $index = abs((int) $seed) % count(self::FALLBACK_IMAGES);
+        $seed = $this->getKey() ?? crc32((string) $this->name);
+        $index = abs((int) $seed) % count(self::DEFAULT_ROOM_IMAGES);
 
-        return self::FALLBACK_IMAGES[$index];
+        return self::DEFAULT_ROOM_IMAGES[$index];
     }
 
     public function getPricePerHourAttribute(): float
     {
         return round((float) $this->price_per_night / 12, 2);
+    }
+
+    public function getAmenitiesAttribute(): array
+    {
+        $amenities = [
+            ['label' => 'Free Wi-Fi', 'icon' => 'bi-wifi'],
+            ['label' => 'Air conditioning', 'icon' => 'bi-snow'],
+            ['label' => 'Private bathroom', 'icon' => 'bi-droplet'],
+            ['label' => 'Smart TV', 'icon' => 'bi-tv'],
+        ];
+
+        $typeAmenities = match (strtolower(trim((string) $this->type))) {
+            'family' => [
+                ['label' => 'Family seating area', 'icon' => 'bi-people'],
+                ['label' => 'Extra bed on request', 'icon' => 'bi-plus-square'],
+            ],
+            'suite', 'executive' => [
+                ['label' => 'Separate sitting area', 'icon' => 'bi-lamp'],
+                ['label' => 'Dedicated workspace', 'icon' => 'bi-briefcase'],
+            ],
+            'penthouse' => [
+                ['label' => 'Private lounge', 'icon' => 'bi-stars'],
+                ['label' => 'Premium room amenities', 'icon' => 'bi-gem'],
+            ],
+            'deluxe' => [
+                ['label' => 'Premium bedding', 'icon' => 'bi-moon-stars'],
+                ['label' => 'Rainfall shower', 'icon' => 'bi-cloud-rain'],
+            ],
+            default => [
+                ['label' => 'Work desk', 'icon' => 'bi-laptop'],
+                ['label' => 'Daily housekeeping', 'icon' => 'bi-check2-circle'],
+            ],
+        };
+
+        return array_merge($amenities, $typeAmenities);
     }
 
     public function getIsAvailableAttribute(): bool

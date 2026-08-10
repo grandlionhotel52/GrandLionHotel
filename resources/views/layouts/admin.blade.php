@@ -292,6 +292,35 @@
             border-radius: 999px;
             background: var(--theme-primary);
         }
+        .admin-nav-dropdown .dropdown-menu {
+            min-width: 210px;
+            padding: 0.55rem;
+            border: 1px solid rgba(var(--theme-primary-rgb), 0.28);
+            border-radius: 14px;
+            box-shadow: 0 16px 36px rgba(var(--theme-ink-rgb), 0.15);
+        }
+        .admin-nav-dropdown .dropdown-item {
+            border-radius: 9px;
+            padding: 0.62rem 0.75rem;
+            color: rgba(var(--theme-ink-rgb), 0.86);
+            font-weight: 650;
+        }
+        .admin-nav-dropdown .dropdown-item:hover,
+        .admin-nav-dropdown .dropdown-item:focus {
+            background: rgba(var(--theme-primary-rgb), 0.12);
+            color: var(--theme-ink);
+        }
+        .admin-nav-dropdown .dropdown-item.active {
+            background: rgba(var(--theme-primary-rgb), 0.18);
+            color: var(--theme-ink);
+        }
+        .admin-nav-dropdown .dropdown-header {
+            color: rgba(var(--theme-ink-rgb), 0.58);
+            font-size: 0.66rem;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
         .admin-cta-wrap {
             margin-left: 0.65rem;
             padding-left: 0.9rem;
@@ -535,6 +564,19 @@
         }
     </style>
     @stack('head')
+    @include('layouts.partials.contrast-fixes')
+    <style>
+        .admin-nav-dropdown > .nav-link:focus-visible {
+            outline: 0 !important;
+            border-radius: 9px;
+            box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.28);
+        }
+
+        .admin-nav-dropdown > .nav-link:focus:not(:focus-visible) {
+            outline: 0 !important;
+            box-shadow: none;
+        }
+    </style>
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to content</a>
@@ -551,12 +593,31 @@
             <div class="collapse navbar-collapse" id="adminNav">
                 <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active fw-semibold' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.sales-report') ? 'active fw-semibold' : '' }}" href="{{ route('admin.sales-report') }}">Sales Report</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.occupancy-report') ? 'active fw-semibold' : '' }}" href="{{ route('admin.occupancy-report') }}">Occupancy</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.rooms.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.rooms.index') }}">Rooms</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.bookings.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.bookings.index') }}">Bookings</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.users.index') }}">Customers</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.staff.index') }}">Staff</a></li>
+                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.rooms.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.rooms.index') }}">Rooms</a></li>
+                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.refunds.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.refunds.index') }}">Refunds</a></li>
+                    <li class="nav-item dropdown admin-nav-dropdown">
+                        <button class="nav-link dropdown-toggle border-0 bg-transparent {{ request()->routeIs('admin.sales-report', 'admin.occupancy-report') ? 'active fw-semibold' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Reports
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Hotel performance</h6></li>
+                            <li><a class="dropdown-item {{ request()->routeIs('admin.sales-report') ? 'active' : '' }}" href="{{ route('admin.sales-report') }}"><i class="bi bi-graph-up-arrow me-2"></i>Sales report</a></li>
+                            <li><a class="dropdown-item {{ request()->routeIs('admin.occupancy-report') ? 'active' : '' }}" href="{{ route('admin.occupancy-report') }}"><i class="bi bi-calendar3 me-2"></i>Occupancy report</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown admin-nav-dropdown">
+                        <button class="nav-link dropdown-toggle border-0 bg-transparent {{ request()->routeIs('admin.users.*', 'admin.staff.*', 'admin.activity-logs.*') ? 'active fw-semibold' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Management
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">People & oversight</h6></li>
+                            <li><a class="dropdown-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}"><i class="bi bi-people me-2"></i>Customers</a></li>
+                            <li><a class="dropdown-item {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}" href="{{ route('admin.staff.index') }}"><i class="bi bi-person-badge me-2"></i>Staff</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item {{ request()->routeIs('admin.activity-logs.*') ? 'active' : '' }}" href="{{ route('admin.activity-logs.index') }}"><i class="bi bi-clock-history me-2"></i>Activity log</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item admin-cta-wrap">
                         <div class="admin-cta-group">
                             <span class="admin-pill admin-pill-user">{{ \Illuminate\Support\Str::limit(auth()->user()->name ?? '', 18) }}</span>
@@ -607,7 +668,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         (() => {
-            document.querySelectorAll('.nav-link.active').forEach((link) => {
+            document.querySelectorAll('a.nav-link.active, a.dropdown-item.active').forEach((link) => {
                 link.setAttribute('aria-current', 'page');
             });
 
@@ -661,5 +722,6 @@
     </script>
     @include('layouts.partials.history-refresh')
     @stack('scripts')
+    @include('layouts.partials.image-fallback')
 </body>
 </html>

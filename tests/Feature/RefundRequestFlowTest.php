@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\RefundRequest;
 use App\Models\Room;
 use App\Models\Staff;
+use App\Mail\RefundStatusMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -108,6 +109,86 @@ class RefundRequestFlowTest extends TestCase
 
         $refundRequest = RefundRequest::query()->where('payment_id', $payment->payment_id)->firstOrFail();
         $this->assertStringContainsString('original payment method: Cash', (string) $refundRequest->notes);
+    }
+
+    public function test_admin_can_approve_and_complete_refund(): void
+    {
+        $admin = Admin::factory()->create();
+        $customer = Customer::factory()->create();
+        $booking = $this->createPaidBooking($customer);
+        $payment = $booking->payment;
+        $payment->update(['status' => 'refund_pending']);
+        $refund = RefundRequest::create([
+            'payment_id' => $payment->id,
+            'reason' => 'Customer cancellation.',
+            'status' => RefundRequest::STATUS_PENDING,
+            'requested_at' => now(),
+        ]);
+        $refundAmount = (float) $payment->amount;
+
+        $this->actingAs($admin, 'admin')->patch(route('admin.refunds.approve', $refund), [
+            'amount' => $refundAmount,
+            'refund_method' => 'cash',
+            'notes' => 'Approved after payment review.',
+        ])->assertRedirect(route('admin.refunds.show', $refund));
+
+        $refund->refresh();
+        $this->assertSame(RefundRequest::STATUS_APPROVED, $refund->status);
+        $this->assertSame(number_format($refundAmount, 2, '.', ''), $refund->amount);
+        $this->assertSame($admin->id, $refund->handled_by_admin_id);
+
+        $this->actingAs($admin, 'admin')->patch(route('admin.refunds.process', $refund), [
+            'transaction_reference' => 'RF-2026-0001',
+        ])->assertRedirect(route('admin.refunds.show', $refund));
+
+        $refund->refresh();
+        $this->assertSame(RefundRequest::STATUS_PROCESSED, $refund->status);
+        $this->assertSame('RF-2026-0001', $refund->transaction_reference);
+        $this->assertSame('refunded', $payment->fresh()->status);
+        Mail::assertQueued(RefundStatusMail::class, 2);
+    }
+
+    public function test_admin_can_reject_refund_and_payment_returns_to_paid(): void
+    {
+        $admin = Admin::factory()->create();
+        $booking = $this->createPaidBooking(Customer::factory()->create());
+        $booking->payment->update(['status' => 'refund_pending']);
+        $refund = RefundRequest::create([
+            'payment_id' => $booking->payment->id,
+            'reason' => 'Requested refund.',
+            'status' => RefundRequest::STATUS_PENDING,
+            'requested_at' => now(),
+        ]);
+
+        $this->actingAs($admin, 'admin')->patch(route('admin.refunds.reject', $refund), [
+            'rejection_reason' => 'The booking falls outside the refundable period.',
+        ])->assertRedirect(route('admin.refunds.show', $refund));
+
+        $this->assertSame(RefundRequest::STATUS_REJECTED, $refund->fresh()->status);
+        $this->assertSame('paid', $booking->payment->fresh()->status);
+        Mail::assertQueued(RefundStatusMail::class);
+    }
+
+    public function test_refund_cannot_exceed_original_payment(): void
+    {
+        $admin = Admin::factory()->create();
+        $booking = $this->createPaidBooking(Customer::factory()->create());
+        $booking->payment->update(['status' => 'refund_pending']);
+        $refund = RefundRequest::create([
+            'payment_id' => $booking->payment->id,
+            'status' => RefundRequest::STATUS_PENDING,
+            'requested_at' => now(),
+        ]);
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('admin.refunds.show', $refund))
+            ->patch(route('admin.refunds.approve', $refund), [
+                'amount' => (float) $booking->payment->amount + 1,
+                'refund_method' => 'cash',
+            ])
+            ->assertSessionHasErrors('amount');
+
+        $this->assertSame(RefundRequest::STATUS_PENDING, $refund->fresh()->status);
     }
 
     private function createPaidBooking(Customer $customer): Booking

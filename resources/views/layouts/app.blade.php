@@ -135,8 +135,8 @@
             gap: 0.75rem;
         }
         .brand-logo {
-            width: 70px;
-            height: 70px;
+            width: 62px;
+            height: 62px;
             object-fit: contain;
             flex-shrink: 0;
             filter: drop-shadow(0 1px 2px rgba(17, 24, 39, 0.28)) contrast(1.08) saturate(1.05);
@@ -404,40 +404,61 @@
         .flash-stack {
             display: grid;
             gap: 0.8rem;
-            margin-bottom: 1rem;
+            position: fixed;
+            top: 5.75rem;
+            right: max(1rem, calc((100vw - 1320px) / 2));
+            width: min(430px, calc(100vw - 2rem));
+            z-index: 1080;
+            pointer-events: none;
         }
         .flash-card {
-            border-radius: 16px;
+            border-radius: 18px;
             border: 1px solid #e4d8c8;
             background: #fff;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-            padding: 0.9rem 0.95rem;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+            padding: 1rem 1.05rem;
             display: flex;
             align-items: flex-start;
-            gap: 0.7rem;
+            gap: 0.85rem;
+            overflow: hidden;
+            pointer-events: auto;
+            animation: flash-card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes flash-card-in {
+            from {
+                opacity: 0;
+                transform: translateY(-12px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
         .flash-card .flash-icon {
-            width: 1.75rem;
-            height: 1.75rem;
-            border-radius: 999px;
+            width: 2.35rem;
+            height: 2.35rem;
+            border-radius: 12px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.84rem;
+            font-size: 1rem;
             font-weight: 800;
             flex-shrink: 0;
-            margin-top: 0.1rem;
         }
         .flash-card .flash-title {
-            font-size: 0.74rem;
-            letter-spacing: 0.09em;
+            font-size: 0.7rem;
+            letter-spacing: 0.11em;
             text-transform: uppercase;
             font-weight: 800;
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.3rem;
         }
         .flash-card .flash-body {
             flex: 1;
-            font-size: 0.93rem;
+            min-width: 0;
+            padding-top: 0.05rem;
+            color: #344054;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
         .flash-card.success {
             border-color: rgba(6, 118, 71, 0.32);
@@ -462,11 +483,29 @@
             color: #8f1d14;
         }
         .flash-close {
-            opacity: 0.5;
-            margin-top: 0.1rem;
+            opacity: 0.45;
+            flex-shrink: 0;
+            transform: scale(0.78);
+            margin: -0.15rem -0.15rem 0 0;
         }
         .flash-close:hover {
             opacity: 1;
+        }
+        @media (max-width: 575.98px) {
+            .flash-stack {
+                top: 5rem;
+                right: 0.75rem;
+                width: calc(100vw - 1.5rem);
+            }
+            .flash-card {
+                border-radius: 15px;
+                padding: 0.85rem;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .flash-card {
+                animation: none;
+            }
         }
         @media (max-width: 991.98px) {
             .navbar.home-nav-overlay .navbar-collapse {
@@ -491,8 +530,8 @@
                 padding-bottom: 0.7rem;
             }
             .brand-logo {
-                width: 50px;
-                height: 50px;
+                width: 46px;
+                height: 46px;
                 transform: scale(1.1);
             }
             .brand-wordmark {
@@ -501,6 +540,7 @@
         }
     </style>
     @stack('head')
+    @include('layouts.partials.contrast-fixes')
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to content</a>
@@ -509,7 +549,7 @@
     @endphp
     <div class="site-shell">
         <nav class="navbar navbar-expand-lg navbar-light border-bottom sticky-top {{ $isHomePage ? 'home-nav-overlay' : '' }}">
-            <div class="container-xl py-2">
+            <div class="container-xl py-1">
                 <a class="navbar-brand text-dark" href="{{ route('home') }}">
                     <img src="{{ asset('brand/lion_logo.png') }}" alt="The Grand Lion Hotel" class="brand-logo">
                     <span class="brand-wordmark">THE GRAND LION HOTEL</span>
@@ -529,30 +569,42 @@
                                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('bookings.my') ? 'active' : '' }}" href="{{ route('bookings.my') }}">My Bookings</a></li>
                                 <li class="nav-item dropdown">
                                     @php
-                                        $unreadNotifications = auth()->user()->unreadNotifications()->latest()->take(5)->get();
+                                        $recentNotifications = auth()->user()->notifications()->latest()->take(8)->get();
+                                        $unreadNotificationCount = auth()->user()->unreadNotifications()->count();
                                     @endphp
                                     <button class="nav-link position-relative border-0 bg-transparent" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Booking notifications">
                                         <i class="bi bi-bell"></i>
-                                        @if($unreadNotifications->isNotEmpty())
-                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ min(9, $unreadNotifications->count()) }}</span>
+                                        @if($unreadNotificationCount > 0)
+                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}</span>
                                         @endif
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end p-2 shadow" style="width: min(340px, 92vw)">
                                         <p class="small text-uppercase fw-bold text-secondary px-2 pt-1 mb-2">Booking updates</p>
-                                        @forelse($unreadNotifications as $notification)
+                                        @forelse($recentNotifications as $notification)
                                             @php
                                                 $notificationBooking = \App\Models\Booking::query()->find(data_get($notification->data, 'booking_id'));
                                             @endphp
                                             @if($notificationBooking)
-                                                <a class="dropdown-item rounded text-wrap py-2" href="{{ route('bookings.show', $notificationBooking) }}">
-                                                    <span class="d-block small fw-bold">{{ data_get($notification->data, 'message', 'Booking updated.') }}</span>
-                                                    <span class="d-block text-secondary" style="font-size: .72rem">{{ $notification->created_at->diffForHumans() }}</span>
-                                                </a>
+                                                <div class="d-flex align-items-start gap-1 rounded px-1 py-1 {{ $notification->read_at ? '' : 'bg-light' }}">
+                                                    <a class="dropdown-item rounded text-wrap py-2 flex-grow-1" href="{{ route('bookings.show', ['booking' => $notificationBooking, 'return_to' => request()->getRequestUri()]) }}">
+                                                        <span class="d-flex align-items-center gap-2 small fw-bold">
+                                                            @if(!$notification->read_at)<span class="rounded-circle bg-primary flex-shrink-0" style="width: .45rem; height: .45rem" aria-label="Unread"></span>@endif
+                                                            {{ data_get($notification->data, 'message', 'Booking updated.') }}
+                                                        </span>
+                                                        <span class="d-block text-secondary" style="font-size: .72rem">{{ $notification->created_at->diffForHumans() }}{{ $notification->read_at ? ' · Read' : '' }}</span>
+                                                    </a>
+                                                    @if(!$notification->read_at)
+                                                        <form method="POST" action="{{ route('notifications.read-one', $notification->id) }}" class="pt-2 pe-1">
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-sm btn-link text-secondary p-1" title="Mark as read" aria-label="Mark this notification as read"><i class="bi bi-check2" aria-hidden="true"></i></button>
+                                                        </form>
+                                                    @endif
+                                                </div>
                                             @endif
                                         @empty
-                                            <p class="small text-secondary px-2 py-2 mb-0">No new notifications.</p>
+                                            <p class="small text-secondary px-2 py-2 mb-0">No notifications yet.</p>
                                         @endforelse
-                                        @if($unreadNotifications->isNotEmpty())
+                                        @if($unreadNotificationCount > 0)
                                             <form method="POST" action="{{ route('notifications.read') }}" class="px-2 pt-2">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-ta-outline w-100">Mark all as read</button>
@@ -612,15 +664,13 @@
                     @endif
 
                     @if($showGlobalErrors)
-                        <div class="flash-card error alert alert-dismissible fade show mb-0" role="alert">
-                            <span class="flash-icon" aria-hidden="true">!</span>
+                        <div class="flash-card error alert alert-dismissible fade show mb-0" role="alert" aria-live="assertive">
+                            <span class="flash-icon" aria-hidden="true"><i class="bi bi-exclamation-lg"></i></span>
                             <div class="flash-body">
                                 <p class="flash-title mb-1">Action Needed</p>
-                                <ul class="mb-0 ps-3">
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
+                                @foreach($errors->all() as $error)
+                                    <p class="{{ $loop->last ? 'mb-0' : 'mb-1' }}">{{ $error }}</p>
+                                @endforeach
                             </div>
                             <button type="button" class="btn-close flash-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
@@ -712,5 +762,6 @@
     </script>
     @include('layouts.partials.history-refresh')
     @stack('scripts')
+    @include('layouts.partials.image-fallback')
 </body>
 </html>

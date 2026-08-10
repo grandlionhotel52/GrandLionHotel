@@ -67,11 +67,19 @@ class AdminStaffButtonFlowsTest extends TestCase
         $roomsIndexResponse = $this->get(route('admin.rooms.index'));
         $roomsIndexResponse->assertOk();
         $roomsIndexResponse->assertSee('Room Status');
+        $roomsIndexResponse->assertSee(
+            'data-room-update-url="'.route('admin.rooms.update', $room).'"',
+            false
+        );
         $roomsIndexResponse->assertDontSee('Cleaning Status');
         $roomsIndexResponse->assertDontSee('Needs Attention');
         $roomsIndexResponse->assertDontSee('Needs Cleaning');
-        $this->get(route('admin.staff.index'))->assertOk();
-        $this->get(route('admin.users.index'))->assertOk();
+        $this->get(route('admin.staff.index'))
+            ->assertOk()
+            ->assertSee('data-staff-update-url="'.route('admin.staff.update', $staff).'"', false);
+        $this->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('data-user-update-url="'.route('admin.users.update', $customer).'"', false);
         $this->get(route('admin.bookings.show', $pendingBooking))->assertOk();
 
         $this->post(route('admin.staff.store'), [

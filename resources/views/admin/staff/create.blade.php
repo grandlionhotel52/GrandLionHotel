@@ -3,9 +3,8 @@
 @section('title', 'Create Staff Account')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="mb-3">
         <h1 class="h3 mb-0">Create Staff Account</h1>
-        <a href="{{ route('admin.staff.index') }}" class="btn btn-ta-outline">Back to staff list</a>
     </div>
 
     <section class="soft-card p-4">

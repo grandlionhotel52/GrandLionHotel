@@ -38,6 +38,8 @@ class Payment extends Model
         'discount_rate',
         'discount_amount',
         'transaction_reference',
+        'provider_session_id',
+        'provider_payment_id',
         'paid_at',
         'verified_at',
     ];

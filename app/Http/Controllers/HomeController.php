@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\RoomDateDiscount;
 
 class HomeController extends Controller
 {
@@ -30,6 +31,13 @@ class HomeController extends Controller
             'starting_price' => Room::min('price_per_night'),
         ];
 
-        return view('home', compact('featuredRooms', 'roomCategories', 'platformStats'));
+        $currentPromotion = RoomDateDiscount::query()
+            ->with('room')
+            ->whereDate('discount_date_end', '>=', now()->toDateString())
+            ->orderByDesc('discount_percent')
+            ->orderBy('discount_date_start')
+            ->first();
+
+        return view('home', compact('featuredRooms', 'roomCategories', 'platformStats', 'currentPromotion'));
     }
 }
