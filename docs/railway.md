@@ -19,7 +19,7 @@ Use these variables on the app service:
 ```env
 APP_NAME="The Grand Lion Hotel"
 APP_ENV=production
-APP_KEY=base64:TX8L3SaJDs3zfnFCdQgTWaSwpWhagYM6aandLfNApIo=
+APP_KEY=base64:GENERATE_A_NEW_PRIVATE_KEY
 APP_DEBUG=false
 FORCE_HTTPS=true
 TRUSTED_PROXIES=*

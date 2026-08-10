@@ -19,7 +19,7 @@ Do not use `MYSQLHOST` for Render. That host is for Railway services inside the 
 
 ```env
 APP_URL=https://your-render-url.onrender.com
-APP_KEY=base64:pCBLTThCGjECgSsWl5T1aCQjDdVtYIZ3o3jT1kOhdQo=
+APP_KEY=base64:GENERATE_A_NEW_PRIVATE_KEY
 DB_URL=mysql://user:password@host:port/database
 ```
 
