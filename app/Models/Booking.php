@@ -40,6 +40,7 @@ class Booking extends Model
         'room_transfer_requested_at',
         'status',
         'expired_at',
+        'payment_due_at',
         'check_in_reminder_sent_at',
         'notes',
         'actual_check_in_at',
@@ -60,8 +61,25 @@ class Booking extends Model
             'actual_check_in_at' => 'datetime',
             'actual_check_out_at' => 'datetime',
             'expired_at' => 'datetime',
+            'payment_due_at' => 'datetime',
             'check_in_reminder_sent_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Booking $booking): void {
+            if ($booking->status === 'confirmed'
+                && $booking->getOriginal('status') !== 'confirmed'
+                && is_null($booking->payment_due_at)) {
+                $hours = max(1, (int) config('booking_automation.payment_due_hours', 24));
+                $booking->payment_due_at = now()->addHours($hours);
+            }
+
+            if (in_array($booking->status, ['cancelled', 'completed'], true)) {
+                $booking->payment_due_at = null;
+            }
+        });
     }
 
     public function user(): BelongsTo

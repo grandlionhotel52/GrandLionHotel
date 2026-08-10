@@ -229,6 +229,12 @@
                             <i class="bi bi-credit-card"></i>{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}
                         </span>
                     </div>
+                    @if($booking->status === 'confirmed' && $booking->payment_status === 'unpaid' && $booking->payment_due_at)
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <strong>Payment due:</strong> {{ $booking->payment_due_at->format('M d, Y h:i A') }}.
+                            This reservation will be cancelled automatically if payment is not completed before the deadline.
+                        </div>
+                    @endif
                 </div>
                 <a href="{{ $backUrl }}" class="btn btn-ta-outline">
                     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>{{ $hasReturnLocation ? 'Back' : 'Back to my bookings' }}

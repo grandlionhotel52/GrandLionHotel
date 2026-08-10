@@ -90,6 +90,9 @@
                 <span class="badge {{ $statusBadgeClass }}">{{ ucfirst($booking->status) }}</span>
                 <span class="badge {{ $paymentBadgeClass }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span>
             </div>
+            @if($booking->status === 'confirmed' && $booking->payment_status === 'unpaid' && $booking->payment_due_at)
+                <p class="small text-danger fw-semibold mt-2 mb-0">Payment due {{ $booking->payment_due_at->format('M d, Y h:i A') }} — auto-cancels when overdue.</p>
+            @endif
         </div>
         <a href="{{ route('admin.bookings.index') }}" class="btn btn-ta-outline">Back to bookings</a>
     </div>

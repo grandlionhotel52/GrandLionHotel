@@ -20,7 +20,7 @@
                             <p style="margin:0 0 12px;">Hello {{ $booking->guestName() }},</p>
                             <p style="margin:0 0 16px;line-height:1.6;">
                                 Booking <strong>#{{ $booking->id }}</strong> for {{ $booking->room->name ?? 'your selected room' }}
-                                was automatically cancelled because it remained pending beyond the reservation window.
+                                was automatically cancelled because its confirmation or payment deadline passed.
                             </p>
                             <p style="margin:0 0 18px;line-height:1.6;">The room has been released so it can be reserved again. You are welcome to create a new booking.</p>
                             <a href="{{ route('rooms.index') }}" style="display:inline-block;padding:10px 16px;background:#b89254;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;">Browse rooms</a>

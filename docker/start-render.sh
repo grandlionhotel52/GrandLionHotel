@@ -83,4 +83,7 @@ php artisan view:cache
 # created during web requests (for example, after a failed login attempt).
 chown -R www-data:www-data storage bootstrap/cache
 
+echo "[startup] Starting Laravel scheduler..."
+php artisan schedule:work &
+
 exec apache2-foreground

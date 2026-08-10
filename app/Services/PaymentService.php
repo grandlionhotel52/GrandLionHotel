@@ -85,6 +85,7 @@ class PaymentService
 
             $lockedBooking->update([
                 'status' => $bookingStatus,
+                'payment_due_at' => null,
             ]);
 
             return $payment->fresh();

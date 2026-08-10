@@ -20,9 +20,10 @@ class ProcessBookingAutomation extends Command
     public function handle(): int
     {
         $expired = $this->expirePendingBookings();
+        $paymentExpired = $this->expireUnpaidConfirmedBookings();
         $reminded = $this->sendCheckInReminders();
 
-        $this->info("Expired {$expired} pending booking(s); sent {$reminded} check-in reminder(s).");
+        $this->info("Expired {$expired} pending booking(s); cancelled {$paymentExpired} unpaid confirmed booking(s); sent {$reminded} check-in reminder(s).");
 
         return self::SUCCESS;
     }
@@ -71,6 +72,56 @@ class ProcessBookingAutomation extends Command
 
                     $message = 'Your pending booking expired because it was not confirmed within the reservation window.';
                     $booking->customer?->notify(new BookingAutomationNotification($booking, 'booking_expired', $message));
+                    $this->queueMail($booking, new BookingExpiredMail($booking));
+                    $expired++;
+                }
+            }, 'booking_id');
+
+        return $expired;
+    }
+
+    private function expireUnpaidConfirmedBookings(): int
+    {
+        $expired = 0;
+
+        Booking::query()
+            ->where('status', 'confirmed')
+            ->whereNotNull('payment_due_at')
+            ->where('payment_due_at', '<=', now())
+            ->whereDoesntHave('payment', static function ($query): void {
+                $query->whereIn('status', ['paid', 'pending_verification', 'refund_pending']);
+            })
+            ->select('booking_id')
+            ->chunkById(100, function ($bookings) use (&$expired): void {
+                foreach ($bookings as $candidate) {
+                    $booking = DB::transaction(function () use ($candidate): ?Booking {
+                        $locked = Booking::query()
+                            ->with(['customer', 'room', 'guestDetail', 'payment'])
+                            ->lockForUpdate()
+                            ->find($candidate->getKey());
+
+                        if (! $locked
+                            || $locked->status !== 'confirmed'
+                            || is_null($locked->payment_due_at)
+                            || $locked->payment_due_at->isFuture()
+                            || in_array($locked->payment_status, ['paid', 'pending_verification', 'refund_pending'], true)) {
+                            return null;
+                        }
+
+                        $locked->update([
+                            'status' => 'cancelled',
+                            'expired_at' => now(),
+                        ]);
+
+                        return $locked->fresh(['customer', 'room', 'guestDetail', 'payment']);
+                    }, 3);
+
+                    if (! $booking) {
+                        continue;
+                    }
+
+                    $message = 'Your confirmed booking was automatically cancelled because payment was not completed before the deadline.';
+                    $booking->customer?->notify(new BookingAutomationNotification($booking, 'payment_deadline_expired', $message));
                     $this->queueMail($booking, new BookingExpiredMail($booking));
                     $expired++;
                 }

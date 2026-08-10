@@ -87,4 +87,29 @@ class BookingAutomationTest extends TestCase
             fn (BookingAutomationNotification $notification): bool => data_get($notification->toArray($customer), 'event') === 'check_in_reminder'
         );
     }
+
+    public function test_overdue_unpaid_confirmed_booking_is_cancelled_but_paid_booking_is_preserved(): void
+    {
+        Mail::fake();
+        Notification::fake();
+
+        $overdue = Booking::factory()->create([
+            'status' => 'confirmed',
+            'payment_due_at' => now()->subMinute(),
+        ]);
+        $overdue->payment()->update(['status' => 'unpaid', 'paid_at' => null]);
+
+        $paid = Booking::factory()->create([
+            'status' => 'confirmed',
+            'payment_due_at' => now()->subMinute(),
+        ]);
+        $paid->payment()->update(['status' => 'paid', 'paid_at' => now()]);
+
+        $this->artisan('bookings:process-automation')->assertSuccessful();
+
+        $this->assertSame('cancelled', $overdue->fresh()->status);
+        $this->assertNotNull($overdue->fresh()->expired_at);
+        $this->assertSame('confirmed', $paid->fresh()->status);
+        Mail::assertQueued(BookingExpiredMail::class, fn (BookingExpiredMail $mail): bool => $mail->booking->is($overdue));
+    }
 }

@@ -276,6 +276,9 @@
             <span class="booking-top-chip {{ $paymentChipClass }}">Payment: {{ $paymentStatusLabel }}</span>
             <span class="booking-top-chip">Guest: {{ $displayName }}</span>
         </div>
+        @if($booking->status === 'confirmed' && $booking->payment_status === 'unpaid' && $booking->payment_due_at)
+            <p class="small text-danger fw-semibold mt-2 mb-0">Payment due {{ $booking->payment_due_at->format('M d, Y h:i A') }} — auto-cancels when overdue.</p>
+        @endif
     </section>
 
     <section class="mb-3" aria-label="Booking operational summary">
