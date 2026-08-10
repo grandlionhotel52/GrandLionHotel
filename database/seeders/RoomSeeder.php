@@ -20,7 +20,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Comfortable standard room with garden-side windows and work desk.',
                 'price_per_night' => 2599.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'clean',
             ],
             [
@@ -30,7 +30,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Bright standard room with lush garden-facing windows and fast Wi-Fi.',
                 'price_per_night' => 2699.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'clean',
             ],
             [
@@ -40,7 +40,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Deluxe twin room with premium bedding and minibar.',
                 'price_per_night' => 3499.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'clean',
             ],
             [
@@ -50,7 +50,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Spacious king room with lounge chair and rainfall shower.',
                 'price_per_night' => 3799.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'being_cleaned',
             ],
             [
@@ -60,7 +60,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Family-friendly room with extra sleeping space and sofa bed.',
                 'price_per_night' => 4599.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'clean',
             ],
             [
@@ -70,7 +70,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Large family room near elevator with kid-safe fixtures.',
                 'price_per_night' => 4899.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'dirty',
             ],
             [
@@ -80,7 +80,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Suite with separate sitting area and premium toiletries.',
                 'price_per_night' => 5699.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'clean',
             ],
             [
@@ -90,7 +90,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Executive suite with workstation, meeting nook, and mountain-facing windows.',
                 'price_per_night' => 6999.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'clean',
             ],
             [
@@ -100,7 +100,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Top-floor penthouse with private dining and panoramic windows.',
                 'price_per_night' => 9999.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'dirty',
             ],
             [
@@ -110,7 +110,7 @@ class RoomSeeder extends Seeder
                 'description' => 'Luxury penthouse with sunset-facing balcony and lounge area.',
                 'price_per_night' => 10499.00,
                 'capacity' => 2,
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1400&q=80',
                 'room_status_slug' => 'clean',
             ],
         ];
