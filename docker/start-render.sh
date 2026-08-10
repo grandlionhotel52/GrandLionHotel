@@ -78,4 +78,9 @@ done
 echo "[startup] Refreshing Laravel caches..."
 php artisan view:cache
 
+# Startup commands run as root while Apache handles requests as www-data.
+# Restore ownership so file-backed cache/rate-limit directories can be
+# created during web requests (for example, after a failed login attempt).
+chown -R www-data:www-data storage bootstrap/cache
+
 exec apache2-foreground
