@@ -173,6 +173,54 @@ class QrPaymentMethodsTest extends TestCase
             ->assertUnauthorized();
     }
 
+    public function test_paymongo_return_shows_a_clear_confirmation_page_instead_of_payment_form(): void
+    {
+        $customer = Customer::factory()->create();
+        $booking = Booking::factory()->create(['customer_id' => $customer->id, 'status' => 'confirmed']);
+        $booking->payment()->update([
+            'status' => 'unpaid',
+            'method' => 'credit_debit_card',
+            'source' => 'paymongo_checkout_pending',
+        ]);
+
+        $this->actingAs($customer, 'customer')
+            ->get(route('payments.paymongo.return', $booking))
+            ->assertOk()
+            ->assertSee('We are confirming your payment')
+            ->assertSee('Please do not pay again or upload proof.')
+            ->assertDontSee('Continue to PayMongo');
+    }
+
+    public function test_paymongo_confirmation_status_exposes_receipt_details_after_webhook_payment(): void
+    {
+        $customer = Customer::factory()->create();
+        $booking = Booking::factory()->create(['customer_id' => $customer->id, 'status' => 'confirmed']);
+        $booking->payment()->update([
+            'status' => 'paid',
+            'method' => 'credit_debit_card',
+            'source' => 'paymongo_checkout',
+            'transaction_reference' => 'GLH-TEST-PAID',
+            'provider_payment_id' => 'pay_test_paid',
+            'paid_at' => now(),
+        ]);
+
+        $this->actingAs($customer, 'customer')
+            ->getJson(route('payments.paymongo.status', $booking))
+            ->assertOk()
+            ->assertJson([
+                'paid' => true,
+                'payment_status' => 'paid',
+                'transaction_reference' => 'GLH-TEST-PAID',
+                'provider_payment_id' => 'pay_test_paid',
+            ]);
+
+        $this->get(route('payments.paymongo.return', $booking))
+            ->assertOk()
+            ->assertSee('Your payment was successful')
+            ->assertSee('GLH-TEST-PAID')
+            ->assertSee('Download receipt');
+    }
+
     public function test_online_payment_requires_reference_and_proof(): void
     {
         $user = Customer::factory()->create();

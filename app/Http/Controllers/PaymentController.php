@@ -215,15 +215,25 @@ class PaymentController extends Controller
     public function payMongoReturn(Booking $booking)
     {
         $this->authorizeOwner($booking);
+        $booking->refresh()->loadMissing(['room', 'payment']);
+
+        return view('payments.paymongo-confirmation', compact('booking'));
+    }
+
+    public function payMongoStatus(Booking $booking)
+    {
+        $this->authorizeOwner($booking);
         $booking->refresh()->loadMissing('payment');
 
-        if ($booking->payment_status === 'paid') {
-            return redirect()->route('bookings.success', $booking)
-                ->with('status', 'Your PayMongo card payment was successful.');
-        }
-
-        return redirect()->route('bookings.show', $booking)
-            ->with('status', 'PayMongo is confirming your card payment. This page will show paid after the secure notification arrives.');
+        return response()->json([
+            'payment_status' => $booking->payment_status,
+            'paid' => $booking->payment_status === 'paid',
+            'transaction_reference' => $booking->payment?->transaction_reference,
+            'provider_payment_id' => $booking->payment?->provider_payment_id,
+            'message' => $booking->payment_status === 'paid'
+                ? 'Payment confirmed. Your receipt is ready.'
+                : 'Your payment was submitted and is still being confirmed by PayMongo.',
+        ]);
     }
 
     private function authorizeOwner(Booking $booking): void

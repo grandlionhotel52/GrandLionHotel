@@ -79,6 +79,7 @@ Route::middleware('auth:customer')->group(function () {
     Route::get('/payments/{booking}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
     Route::post('/payments/{booking}/process', [PaymentController::class, 'process'])->name('payments.process');
     Route::get('/payments/{booking}/paymongo/return', [PaymentController::class, 'payMongoReturn'])->name('payments.paymongo.return');
+    Route::get('/payments/{booking}/paymongo/status', [PaymentController::class, 'payMongoStatus'])->name('payments.paymongo.status');
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->group(function () {
