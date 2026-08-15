@@ -65,7 +65,7 @@
                 from {{ $stats['paid_bookings_for_date'] }} paid booking(s)
             </p>
         </div>
-        <a href="{{ route('admin.staff.index') }}" class="btn btn-ta-outline">Back to staff list</a>
+        <x-back-button :href="route('admin.staff.index')" label="Back to staff list" />
     </div>
 
     <div class="row g-3 mb-4">

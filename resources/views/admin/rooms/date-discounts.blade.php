@@ -64,9 +64,7 @@
             <p class="text-secondary mb-0 small">Review and update scheduled room discounts.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('admin.rooms.index') }}" class="btn btn-ta-outline">
-                <i class="bi bi-arrow-left me-1"></i>Back to Rooms
-            </a>
+            <x-back-button :href="route('admin.rooms.index')" label="Back to rooms" />
         </div>
     </div>
 

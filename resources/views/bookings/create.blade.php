@@ -364,7 +364,7 @@
                     </div>
 
                     <div class="col-12 d-flex justify-content-end gap-2">
-                        <a href="{{ route('rooms.show', $room) }}" class="btn btn-ta-outline">Back to room</a>
+                        <x-back-button :href="route('rooms.show', $room)" label="Back to room" />
                         <button type="submit" class="btn btn-ta">Request booking</button>
                     </div>
                 </form>

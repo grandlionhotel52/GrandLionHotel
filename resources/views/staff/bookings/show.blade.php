@@ -265,10 +265,7 @@
 
     <section class="mb-4">
         <div class="mb-2">
-            <a href="{{ $backUrl }}" class="btn btn-staff-outline btn-sm">
-                <i class="bi bi-arrow-left"></i>
-                <span>Back to bookings</span>
-            </a>
+            <x-back-button :href="$backUrl" label="Back to bookings" class="btn-sm" />
         </div>
         <h1 class="h4 mb-1">Booking #{{ $booking->id }}</h1>
         <div class="d-flex flex-wrap gap-2">

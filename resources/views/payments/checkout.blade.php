@@ -248,9 +248,7 @@
                     </div>
 
                     <div class="col-12 d-flex justify-content-end gap-2">
-                        <a href="{{ $backRoute ?? route('bookings.show', $booking) }}" class="btn btn-ta-outline">
-                            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to booking details
-                        </a>
+                        <x-back-button :href="$backRoute ?? route('bookings.show', $booking)" label="Back to booking details" />
                         <button type="submit" class="btn btn-ta" id="payment_submit_button">
                             {{ in_array($selectedMethod, $onlineMethods, true) ? 'Submit for verification' : 'Confirm payment' }}
                         </button>

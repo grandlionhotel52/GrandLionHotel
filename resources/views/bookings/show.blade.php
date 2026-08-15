@@ -236,9 +236,7 @@
                         </div>
                     @endif
                 </div>
-                <a href="{{ $backUrl }}" class="btn btn-ta-outline">
-                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>{{ $hasReturnLocation ? 'Back' : 'Back to my bookings' }}
-                </a>
+                <x-back-button :href="$backUrl" :label="$hasReturnLocation ? 'Back' : 'Back to my bookings'" />
             </div>
         </div>
     </section>

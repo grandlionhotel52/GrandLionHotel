@@ -66,9 +66,7 @@
                         </div>
 
                         <div class="text-center mt-4 pt-3">
-                            <a href="{{ route('login') }}" class="btn btn-ta-outline px-4">
-                                <i class="fas fa-arrow-left me-2"></i>Back to sign in
-                            </a>
+                            <x-back-button :href="route('login')" label="Back to sign in" />
                         </div>
                     </div>
                 </div>

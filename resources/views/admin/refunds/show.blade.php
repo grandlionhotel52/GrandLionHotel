@@ -9,7 +9,7 @@
 @endphp
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
-        <a href="{{ route('admin.refunds.index') }}" class="small text-decoration-none">&larr; Refund queue</a>
+        <x-back-button :href="route('admin.refunds.index')" label="Back to refunds" class="btn-sm mb-2" />
         <h1 class="mt-2 mb-1">Refund Request #{{ $refund->id }}</h1>
         <p class="text-secondary mb-0">Booking #{{ $booking->id }} · {{ $booking->guestName() }}</p>
     </div>

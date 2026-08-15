@@ -525,6 +525,13 @@
                 padding: 0.14rem 0.42rem;
             }
         }
+        .ui-back-button {
+            display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+            min-height: 42px; padding: .55rem 1rem; border: 1px solid #c9b99f;
+            border-radius: 12px; background: #fff; color: #253044; font-weight: 700;
+            box-shadow: 0 3px 10px rgba(16, 24, 40, .06);
+        }
+        .ui-back-button:hover { background: #f8f3eb; border-color: #b89254; color: #172132; }
     </style>
     @stack('head')
     @include('layouts.partials.contrast-fixes')

@@ -94,10 +94,10 @@
 
                         <div class="row g-2 mt-3">
                             <div class="col-md-6">
-                                <a href="{{ route('password.reset', ['email' => $email]) }}" class="btn btn-ta-outline w-100">Back to OTP</a>
+                                <x-back-button :href="route('password.reset', ['email' => $email])" label="Back to verification code" class="w-100" />
                             </div>
                             <div class="col-md-6">
-                                <a href="{{ route('login') }}" class="btn btn-ta-outline w-100">Back to sign in</a>
+                                <x-back-button :href="route('login')" label="Back to sign in" class="w-100" />
                             </div>
                         </div>
                     </div>

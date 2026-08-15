@@ -94,7 +94,7 @@
                 <p class="small text-danger fw-semibold mt-2 mb-0">Payment due {{ $booking->payment_due_at->format('M d, Y h:i A') }} — auto-cancels when overdue.</p>
             @endif
         </div>
-        <a href="{{ route('admin.bookings.index') }}" class="btn btn-ta-outline">Back to bookings</a>
+        <x-back-button :href="route('admin.bookings.index')" label="Back to bookings" />
     </div>
 
     <section class="soft-card p-4 mb-3">

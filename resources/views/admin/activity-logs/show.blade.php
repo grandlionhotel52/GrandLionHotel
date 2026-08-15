@@ -57,7 +57,7 @@
             <h1 class="h3 mb-1">{{ str($activityLog->action)->replace('_', ' ')->title() }} {{ str($activityLog->subject_type)->headline() }}</h1>
             <p class="text-secondary mb-0">{{ $activityLog->created_at?->format('M d, Y \a\t h:i:s A') }}</p>
         </div>
-        <a href="{{ route('admin.activity-logs.index', request()->query()) }}" class="btn btn-ta-outline">Back to activity logs</a>
+        <x-back-button :href="route('admin.activity-logs.index', request()->query())" label="Back to activity logs" />
     </section>
 
     <section class="soft-card p-3 p-lg-4 mb-4">

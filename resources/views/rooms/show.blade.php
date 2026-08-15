@@ -231,7 +231,7 @@
                     <button class="btn btn-secondary w-100" disabled>Unavailable for booking</button>
                 @endif
 
-                <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline w-100 mt-2">Back to rooms</a>
+                <x-back-button :href="route('rooms.index')" label="Back to rooms" class="w-100 mt-2" />
             </aside>
         </div>
     </div>

@@ -84,10 +84,7 @@
 @section('content')
     <div class="article-progress" aria-hidden="true"><div class="article-progress-bar" id="article-progress-bar"></div></div>
     <section class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <a href="{{ route('blog.index') }}" class="ta-chip text-decoration-none">
-            <i class="bi bi-arrow-left-short"></i>
-            Back to blog
-        </a>
+        <x-back-button :href="route('blog.index')" label="Back to blog" class="btn-sm" />
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <span class="ta-chip">{{ $post['category'] }}</span>
             <span class="ta-chip">{{ $post['read_time'] }}</span>
