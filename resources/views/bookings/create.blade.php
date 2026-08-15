@@ -323,7 +323,7 @@
                         <p class="small text-secondary mb-0">Choose your payment method after the hotel confirms your booking.</p>
                     </div>
 
-                    <div class="col-md-4 {{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? '' : 'd-none' }}" id="discount_id_group">
+                    <div class="col-md-4">
                         <label class="form-label">Discount type</label>
                         <select class="form-select" name="discount_type" id="discount_type_select">
                             <option value="none" @selected(old('discount_type', 'none') === 'none')>None</option>
@@ -332,12 +332,12 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4 {{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? '' : 'd-none' }}" id="discount_photo_group">
+                    <div class="col-md-4 {{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? '' : 'd-none' }}" id="discount_id_group">
                         <label class="form-label">Discount ID</label>
                         <input type="text" class="form-control" name="discount_id" id="discount_id_input" maxlength="80" value="{{ old('discount_id') }}" placeholder="PWD/Senior ID number">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-4 {{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? '' : 'd-none' }}" id="discount_photo_group">
                         <label class="form-label">Discount ID photo</label>
                         <input type="file" class="form-control" name="discount_id_photo" id="discount_id_photo_input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
                         <small class="text-secondary">Required for PWD/Senior discount.</small>
