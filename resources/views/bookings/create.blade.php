@@ -319,20 +319,11 @@
                     <div class="col-12" id="nightly_time_policy_note">
                     </div>
                     <div class="col-12 pt-2">
-                        <h2 class="h5 mb-1">Payment and Requests</h2>
-                        <p class="small text-secondary mb-0">{{ $standardGuests }} guests included. Extra beds need approval.</p>
+                        <h2 class="h5 mb-1">Discount and Special Requests</h2>
+                        <p class="small text-secondary mb-0">Choose your payment method after the hotel confirms your booking.</p>
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Payment method (optional)</label>
-                        <select class="form-select" name="payment_preference">
-                            <option value="">Select one (optional)</option>
-                            <option value="cash" @selected(old('payment_preference') === 'cash')>Cash</option>
-                            <option value="credit_debit_card" @selected(old('payment_preference') === 'credit_debit_card')>PayMongo — Card, GCash, or QR Ph</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-4">
+                    <div class="col-md-4 {{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? '' : 'd-none' }}" id="discount_id_group">
                         <label class="form-label">Discount type</label>
                         <select class="form-select" name="discount_type" id="discount_type_select">
                             <option value="none" @selected(old('discount_type', 'none') === 'none')>None</option>
@@ -341,7 +332,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-4 {{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? '' : 'd-none' }}" id="discount_photo_group">
                         <label class="form-label">Discount ID</label>
                         <input type="text" class="form-control" name="discount_id" id="discount_id_input" maxlength="80" value="{{ old('discount_id') }}" placeholder="PWD/Senior ID number">
                     </div>
@@ -387,6 +378,8 @@
             const discountTypeSelect = document.getElementById('discount_type_select');
             const discountIdInput = document.getElementById('discount_id_input');
             const discountIdPhotoInput = document.getElementById('discount_id_photo_input');
+            const discountIdGroup = document.getElementById('discount_id_group');
+            const discountPhotoGroup = document.getElementById('discount_photo_group');
             const standardGuests = {{ $standardGuests }};
             const baseNightlyRate = Number.parseFloat(form?.dataset.baseNightlyRate || '0') || 0;
             const submitButton = form?.querySelector('button[type="submit"]');
@@ -721,6 +714,8 @@
                 const requiresId = discountTypeSelect.value === 'pwd' || discountTypeSelect.value === 'senior';
                 discountIdInput.required = requiresId;
                 discountIdInput.disabled = !requiresId;
+                discountIdGroup?.classList.toggle('d-none', !requiresId);
+                discountPhotoGroup?.classList.toggle('d-none', !requiresId);
                 if (discountIdPhotoInput) {
                     discountIdPhotoInput.required = requiresId;
                     discountIdPhotoInput.disabled = !requiresId;

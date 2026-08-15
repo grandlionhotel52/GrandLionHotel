@@ -111,7 +111,6 @@ class BookingController extends Controller
             'contact_email' => $request->input('contact_email'),
             'adults' => $request->filled('adults') ? $request->integer('adults') : null,
             'kids' => $request->filled('kids') ? $request->integer('kids') : null,
-            'payment_preference' => $request->input('payment_preference'),
             'discount_type' => $request->input('discount_type'),
             'discount_id' => $request->input('discount_id'),
             'discount_id_photo_path' => $discountIdPhotoPath,
@@ -554,7 +553,6 @@ class BookingController extends Controller
             'postal_code' => data_get($reservationMeta, 'postal_code'),
             'adults' => data_get($reservationMeta, 'adults'),
             'kids' => data_get($reservationMeta, 'kids'),
-            'payment_preference' => data_get($reservationMeta, 'payment_preference'),
         ], static fn ($value): bool => !is_null($value) && $value !== '');
     }
 
