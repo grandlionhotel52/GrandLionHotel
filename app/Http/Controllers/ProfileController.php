@@ -26,6 +26,20 @@ class ProfileController extends Controller
         return back()->with('status', 'Notification marked as read.');
     }
 
+    public function deleteNotification(Request $request, string $notification)
+    {
+        $request->user()->notifications()->whereKey($notification)->firstOrFail()->delete();
+
+        return back()->with('status', 'Notification deleted.');
+    }
+
+    public function deleteAllNotifications(Request $request)
+    {
+        $request->user()->notifications()->delete();
+
+        return back()->with('status', 'All notifications deleted.');
+    }
+
     public function edit(Request $request)
     {
         return view('profile.edit', [

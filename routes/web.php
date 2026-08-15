@@ -64,6 +64,8 @@ Route::middleware('auth:admin,staff,customer')->group(function () {
 Route::middleware('auth:customer')->group(function () {
     Route::post('/notifications/read', [ProfileController::class, 'markNotificationsRead'])->name('notifications.read');
     Route::post('/notifications/{notification}/read', [ProfileController::class, 'markNotificationRead'])->name('notifications.read-one');
+    Route::delete('/notifications', [ProfileController::class, 'deleteAllNotifications'])->name('notifications.delete-all');
+    Route::delete('/notifications/{notification}', [ProfileController::class, 'deleteNotification'])->name('notifications.delete-one');
     Route::get('/rooms/{room}/book', [BookingController::class, 'create'])->name('bookings.create');
     Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings/my', [BookingController::class, 'myBookings'])->name('bookings.my');

@@ -599,6 +599,11 @@
                                                                 <button type="submit" class="btn btn-sm btn-link text-secondary p-1" title="Mark as read" aria-label="Mark this notification as read"><i class="bi bi-check2" aria-hidden="true"></i></button>
                                                             </form>
                                                         @endif
+                                                        <form method="POST" action="{{ route('notifications.delete-one', $notification->id) }}" class="pt-2 pe-1">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-link text-danger p-1" title="Delete notification" aria-label="Delete this notification" onclick="return confirm('Delete this notification?')"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                                                        </form>
                                                     </div>
                                                 @endif
                                             @empty
@@ -609,6 +614,13 @@
                                             <form method="POST" action="{{ route('notifications.read') }}" class="px-2 pt-2">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-ta-outline w-100">Mark all as read</button>
+                                            </form>
+                                        @endif
+                                        @if($recentNotifications->isNotEmpty())
+                                            <form method="POST" action="{{ route('notifications.delete-all') }}" class="px-2 pt-2">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Delete all notifications?')">Delete all notifications</button>
                                             </form>
                                         @endif
                                     </div>
