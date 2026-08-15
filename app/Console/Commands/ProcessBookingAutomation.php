@@ -73,7 +73,7 @@ class ProcessBookingAutomation extends Command
                         continue;
                     }
 
-                    $message = 'Your pending booking expired because it was not confirmed within the reservation window.';
+                    $message = 'Booking #'.$booking->id.' was cancelled because it was not confirmed in time.';
                     $booking->customer?->notify(new BookingAutomationNotification($booking, 'booking_expired', $message));
                     $this->queueMail($booking, new BookingExpiredMail($booking));
                     $expired++;
@@ -123,7 +123,7 @@ class ProcessBookingAutomation extends Command
                         continue;
                     }
 
-                    $message = 'Your confirmed booking was automatically cancelled because payment was not completed before the deadline.';
+                    $message = 'Booking #'.$booking->id.' was cancelled because payment was not completed before the deadline.';
                     $booking->customer?->notify(new BookingAutomationNotification($booking, 'payment_deadline_expired', $message));
                     $this->queueMail($booking, new BookingExpiredMail($booking));
                     $expired++;
@@ -146,7 +146,7 @@ class ProcessBookingAutomation extends Command
             ->with(['customer', 'room', 'guestDetail', 'payment'])
             ->each(function (Booking $booking) use (&$reminded): void {
                 $booking->update(['payment_reminder_sent_at' => now()]);
-                $message = 'Payment for booking #'.$booking->id.' is due '.$booking->payment_due_at->diffForHumans().'. Complete payment to keep the reservation.';
+                $message = 'Payment for booking #'.$booking->id.' is due '.$booking->payment_due_at->format('M d, Y g:i A').'. Pay before this time to keep your reservation.';
                 $booking->customer?->notify(new BookingAutomationNotification($booking, 'payment_due_reminder', $message));
                 $this->queueMail($booking, new PaymentDueReminderMail($booking));
                 $reminded++;
@@ -173,7 +173,7 @@ class ProcessBookingAutomation extends Command
                     'no_show_at' => now(),
                     'cancellation_reason' => 'Automatically marked as no-show after the check-in grace period.',
                 ]);
-                $message = 'Booking #'.$booking->id.' was marked as a no-show because check-in was not recorded within the grace period.';
+                $message = 'Booking #'.$booking->id.' was cancelled as a no-show because check-in was not completed on time.';
                 $booking->customer?->notify(new BookingAutomationNotification($booking, 'booking_no_show', $message));
                 $count++;
             });
@@ -213,7 +213,7 @@ class ProcessBookingAutomation extends Command
                         continue;
                     }
 
-                    $message = 'Reminder: your stay at The Grand Lion Hotel begins on '.$booking->check_in->format('M d, Y').'.';
+                    $message = 'Check-in reminder for booking #'.$booking->id.': your stay starts on '.$booking->check_in->format('M d, Y').'.';
                     $booking->customer?->notify(new BookingAutomationNotification($booking, 'check_in_reminder', $message));
                     $this->queueMail($booking, new BookingCheckInReminderMail($booking));
                     $reminded++;
