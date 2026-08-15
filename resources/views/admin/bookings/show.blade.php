@@ -251,6 +251,32 @@
                     <strong>Refund Rule:</strong> Refund should be returned using the original payment method: {{ $refundMethodLabel }}.
                 </div>
             @endif
+
+            @if($booking->status === 'cancelled' && $booking->payment_status === 'paid' && (!$booking->latestRefundRequest || $booking->latestRefundRequest->status === 'rejected'))
+                <div class="booking-admin-note mt-3">
+                    <h3 class="h6">Optional refund for cancelled/no-show booking</h3>
+                    <p class="small text-secondary">Use this only when management decides to make an exception. Creating the request does not send money yet.</p>
+                    <form method="POST" action="{{ route('admin.bookings.create-refund-request', $booking) }}" class="row g-3" data-confirm="Create this refund request for admin review?">
+                        @csrf
+                        <div class="col-md-4">
+                            <label class="form-label">Refund amount</label>
+                            <input type="number" name="refund_amount" class="form-control" min="0.01" max="{{ $booking->payment->amount }}" step="0.01" value="{{ old('refund_amount', $booking->payment->amount) }}" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Reason for exception</label>
+                            <input name="refund_reason" class="form-control" maxlength="1000" placeholder="Example: Approved medical emergency" value="{{ old('refund_reason') }}" required>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-warning">Create refund request</button>
+                        </div>
+                    </form>
+                </div>
+            @elseif($booking->latestRefundRequest && $booking->latestRefundRequest->status !== 'rejected')
+                <div class="booking-admin-note mt-3">
+                    <strong>Refund:</strong> This booking already has a {{ $booking->latestRefundRequest->status }} refund request.
+                    <a href="{{ route('admin.refunds.show', $booking->latestRefundRequest) }}">Open refund request</a>
+                </div>
+            @endif
         </section>
     @endif
 @endsection

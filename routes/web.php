@@ -106,6 +106,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::patch('/bookings/{booking}/assign-staff', [AdminBookingController::class, 'assignStaff'])->name('bookings.assign-staff');
     Route::patch('/bookings/{booking}/approve-online-payment', [AdminBookingController::class, 'approveOnlinePayment'])->name('bookings.approve-online-payment');
     Route::patch('/bookings/{booking}/reject-online-payment', [AdminBookingController::class, 'rejectOnlinePayment'])->name('bookings.reject-online-payment');
+    Route::post('/bookings/{booking}/refund-request', [AdminBookingController::class, 'createRefundRequest'])->name('bookings.create-refund-request');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');

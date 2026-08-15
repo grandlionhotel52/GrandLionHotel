@@ -189,6 +189,47 @@ class RefundRequestFlowTest extends TestCase
         );
     }
 
+    public function test_admin_can_create_an_exception_refund_for_a_paid_no_show(): void
+    {
+        $admin = Admin::factory()->create();
+        $booking = $this->createPaidBooking(Customer::factory()->create());
+        $booking->update([
+            'status' => 'cancelled',
+            'no_show_at' => now(),
+            'cancellation_reason' => 'Automatically marked as no-show.',
+        ]);
+
+        $response = $this->actingAs($admin, 'admin')->post(
+            route('admin.bookings.create-refund-request', $booking),
+            [
+                'refund_amount' => 100,
+                'refund_reason' => 'Management approved a medical emergency exception.',
+            ]
+        );
+        $response->assertSessionHasNoErrors();
+
+        $refund = RefundRequest::query()->where('payment_id', $booking->payment->id)->firstOrFail();
+        $response->assertRedirect(route('admin.refunds.show', $refund));
+        $this->assertSame(RefundRequest::STATUS_PENDING, $refund->status);
+        $this->assertSame('100.00', $refund->amount);
+        $this->assertSame($booking->payment->method, $refund->refund_method);
+        $this->assertSame('refund_pending', $booking->payment->fresh()->status);
+    }
+
+    public function test_admin_cannot_create_exception_refund_for_an_active_booking(): void
+    {
+        $admin = Admin::factory()->create();
+        $booking = $this->createPaidBooking(Customer::factory()->create());
+
+        $this->actingAs($admin, 'admin')->post(
+            route('admin.bookings.create-refund-request', $booking),
+            ['refund_amount' => 500, 'refund_reason' => 'Not eligible.']
+        )->assertSessionHasErrors('refund');
+
+        $this->assertDatabaseCount('refund_requests', 0);
+        $this->assertSame('paid', $booking->payment->fresh()->status);
+    }
+
     public function test_admin_can_reject_refund_and_payment_returns_to_paid(): void
     {
         $admin = Admin::factory()->create();
