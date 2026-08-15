@@ -194,9 +194,11 @@ class BookingController extends Controller
             return back()->withErrors(['status' => 'Payment must be marked as paid before checkout completion.']);
         }
 
-        $updatePayload = $this->withAssignedStaff($booking, [
-            'status' => $newStatus,
-        ]);
+        if ($newStatus === 'completed') {
+            return back()->withErrors(['status' => 'Use the Save check-out action to complete a stay.']);
+        }
+
+        $updatePayload = $this->withAssignedStaff($booking, ['status' => $newStatus]);
 
         if ($newStatus === 'completed') {
             $updatePayload['actual_check_out_at'] = now();
@@ -306,6 +308,14 @@ class BookingController extends Controller
 
     public function checkIn(Request $request, Booking $booking)
     {
+        if (! $booking->staff_id) {
+            return back()->withErrors(['booking' => 'An admin must assign a staff member before check-in.']);
+        }
+
+        if ((int) $booking->staff_id !== (int) auth('staff')->id()) {
+            return back()->withErrors(['booking' => 'Only the assigned staff member can check in this guest.']);
+        }
+
         if ($booking->payment_status !== 'paid') {
             return back()->withErrors(['booking' => 'Payment must be recorded as paid before the guest can check in.']);
         }
@@ -344,6 +354,14 @@ class BookingController extends Controller
 
     public function checkOut(Request $request, Booking $booking)
     {
+        if (! $booking->staff_id) {
+            return back()->withErrors(['booking' => 'An admin must assign a staff member before check-out.']);
+        }
+
+        if ((int) $booking->staff_id !== (int) auth('staff')->id()) {
+            return back()->withErrors(['booking' => 'Only the assigned staff member can check out this guest.']);
+        }
+
         if (!$booking->canBeCheckedOutByStaff()) {
             return back()->withErrors(['booking' => 'Only checked-in confirmed bookings can be checked out.']);
         }
@@ -387,6 +405,30 @@ class BookingController extends Controller
         }
 
         return $this->redirectAfterBookingAction($request, $booking, 'Guest checked out, booking completed, and room marked for cleaning.');
+    }
+
+    public function markRoomClean(Request $request, Booking $booking)
+    {
+        if ($booking->status !== 'completed' || (int) $booking->staff_id !== (int) auth('staff')->id()) {
+            return back()->withErrors(['room' => 'Only the assigned staff member can finish room cleaning for a completed stay.']);
+        }
+
+        $booking->loadMissing('room.roomStatus');
+        if ($booking->room?->roomStatus?->slug !== 'dirty') {
+            return back()->withErrors(['room' => 'This room is not currently marked as dirty.']);
+        }
+
+        $cleanStatusId = RoomStatus::query()->where('slug', 'clean')->value('room_status_id');
+        if (! $cleanStatusId) {
+            return back()->withErrors(['room' => 'The clean room status is not configured.']);
+        }
+
+        $booking->room->update([
+            'room_status_id' => $cleanStatusId,
+            'status_updated_at' => now(),
+        ]);
+
+        return $this->redirectAfterBookingAction($request, $booking, 'Room marked clean and ready for the next guest.');
     }
 
     public function arrivals()
@@ -882,9 +924,7 @@ class BookingController extends Controller
 
     private function withAssignedStaff(Booking $booking, array $attributes = []): array
     {
-        return array_merge($attributes, [
-            'staff_id' => $booking->staff_id ?? auth()->id(),
-        ]);
+        return $attributes;
     }
 
     private function resolveBookingBillableBaseTotal(Booking $booking): float

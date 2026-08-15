@@ -241,6 +241,7 @@
         $currentKids = max(0, (int) old('kids', $booking->guestDetail?->kids ?? 0));
         $currentOccupancyTotal = $currentAdults + $currentKids;
         $currentExtraBedding = max(0, $currentOccupancyTotal - $standardGuests);
+        $isAssignedStaff = (int) $booking->staff_id === (int) auth('staff')->id();
         $bookingChipClass = match ($booking->status) {
             'confirmed', 'completed' => 'success',
             'cancelled' => 'danger',
@@ -363,7 +364,7 @@
                 <p class="booking-info-label">Actual Check-In</p>
                 <p class="booking-log-time">{{ optional($booking->actual_check_in_at)->format('M d, Y h:i A') ?? 'Not logged yet' }}</p>
 
-                @if($booking->canBeCheckedInByStaff())
+                @if($booking->canBeCheckedInByStaff() && $isAssignedStaff)
                     <form method="POST" action="{{ route('staff.bookings.check-in', $booking) }}" class="row g-3 align-items-end" data-confirm="Save this guest check-in time?">
                         @csrf
                         @method('PATCH')
@@ -393,6 +394,10 @@
                             </button>
                         </div>
                     </form>
+                @elseif(!$booking->staff_id)
+                    <div class="alert alert-warning small mb-0">Admin assignment is required before check-in.</div>
+                @elseif(!$isAssignedStaff)
+                    <div class="alert alert-info small mb-0">Only {{ $booking->assignedStaff?->name ?? 'the assigned staff member' }} can record this check-in.</div>
                 @elseif($booking->payment_status !== 'paid')
                     <div class="alert alert-warning small mb-0">
                         <i class="bi bi-credit-card me-1" aria-hidden="true"></i>
@@ -410,7 +415,7 @@
                 <p class="booking-info-label">Actual Check-Out</p>
                 <p class="booking-log-time">{{ optional($booking->actual_check_out_at)->format('M d, Y h:i A') ?? 'Not logged yet' }}</p>
 
-                @if($booking->canBeCheckedOutByStaff() && $booking->payment_status === 'paid')
+                @if($booking->canBeCheckedOutByStaff() && $booking->payment_status === 'paid' && $isAssignedStaff)
                     <form method="POST" action="{{ route('staff.bookings.check-out', $booking) }}" class="row g-3 align-items-end" data-confirm="Save this guest check-out time and complete the booking?">
                         @csrf
                         @method('PATCH')
@@ -442,6 +447,8 @@
                     </form>
                 @elseif($booking->actual_check_out_at)
                     <p class="booking-note mb-0">This is the staff-recorded departure time for the guest.</p>
+                @elseif($booking->canBeCheckedOutByStaff() && !$isAssignedStaff)
+                    <p class="booking-note mb-0">Only the assigned staff member can record this check-out.</p>
                 @elseif($booking->canBeCheckedOutByStaff())
                     <p class="booking-note mb-0">Mark the booking payment as paid first before recording the guest check-out.</p>
                 @else
@@ -450,6 +457,18 @@
             </article>
         </div>
     </section>
+
+    @if($booking->status === 'completed' && $isAssignedStaff && $booking->room?->roomStatus?->slug === 'dirty')
+        <section class="booking-shell p-3 p-lg-4 mb-4">
+            <h2 class="h5 mb-2">Room cleaning</h2>
+            <p class="booking-note">After housekeeping finishes, mark the room clean so it can be offered to the next guest.</p>
+            <form method="POST" action="{{ route('staff.bookings.room-clean', $booking) }}" data-confirm="Confirm that this room has been cleaned and inspected?">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="btn btn-staff"><i class="bi bi-check-circle"></i> Mark room clean</button>
+            </form>
+        </section>
+    @endif
 
     <div id="schedule-management"></div>
 

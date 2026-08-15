@@ -134,6 +134,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth:staff', 'staff'])->gro
     Route::patch('/bookings/{booking}/cancel', [StaffBookingController::class, 'cancel'])->name('bookings.cancel');
     Route::patch('/bookings/{booking}/check-in', [StaffBookingController::class, 'checkIn'])->name('bookings.check-in');
     Route::patch('/bookings/{booking}/check-out', [StaffBookingController::class, 'checkOut'])->name('bookings.check-out');
+    Route::patch('/bookings/{booking}/room-clean', [StaffBookingController::class, 'markRoomClean'])->name('bookings.room-clean');
     Route::patch('/bookings/{booking}/record-payment', [StaffBookingController::class, 'recordPayment'])->name('bookings.record-payment');
     Route::patch('/bookings/{booking}/approve-online-payment', [StaffBookingController::class, 'approveOnlinePayment'])->name('bookings.approve-online-payment');
     Route::patch('/bookings/{booking}/reject-online-payment', [StaffBookingController::class, 'rejectOnlinePayment'])->name('bookings.reject-online-payment');

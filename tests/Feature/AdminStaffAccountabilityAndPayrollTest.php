@@ -13,7 +13,7 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_staff_confirmation_auto_sets_assigned_staff_for_accountability(): void
+    public function test_staff_can_confirm_without_changing_admin_assignment(): void
     {
         Mail::fake();
 
@@ -35,7 +35,7 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
         $response->assertRedirect(route('staff.bookings.show', $booking));
 
         $booking->refresh();
-        $this->assertSame($staff->id, $booking->staff_id);
+        $this->assertNull($booking->staff_id);
     }
 
     public function test_admin_can_assign_staff_owner_to_booking(): void
