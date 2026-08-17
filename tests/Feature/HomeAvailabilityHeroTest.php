@@ -15,8 +15,8 @@ class HomeAvailabilityHeroTest extends TestCase
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('Find your perfect stay')
-            ->assertSee('Choose your dates and check available rooms.')
+            ->assertSee('A first look at your next stay')
+            ->assertSee('Preview our rooms, compare rates, and check your preferred dates.')
             ->assertSee('id="homeAvailabilitySearch"', false)
             ->assertSee('action="'.route('rooms.index').'"', false)
             ->assertSee('name="available_only" value="1"', false)
@@ -51,9 +51,11 @@ class HomeAvailabilityHeroTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk()
-            ->assertSee('Guest Preview')
-            ->assertSee('Explore first, sign in when you are ready to reserve')
-            ->assertSee('Sign in to access the full reservation system')
+            ->assertSee('Three Rooms Worth Discovering')
+            ->assertSee('Ready to turn your preview into a stay?')
+            ->assertSee('Sign in to continue')
+            ->assertDontSee('Browse by Room Type')
+            ->assertDontSee('Frequently Asked Questions')
             ->assertSee('action="'.route('rooms.index').'"', false);
 
         $this->assertSame(3, substr_count($response->getContent(), 'data-featured-room'));
@@ -72,8 +74,11 @@ class HomeAvailabilityHeroTest extends TestCase
         $response = $this->actingAs($customer, 'customer')->get(route('home'));
 
         $response->assertOk()
-            ->assertDontSee('Guest Preview')
-            ->assertDontSee('Sign in to access the full reservation system')
+            ->assertDontSee('Three Rooms Worth Discovering')
+            ->assertDontSee('Ready to turn your preview into a stay?')
+            ->assertSee('Find your perfect stay')
+            ->assertSee('Browse by Room Type')
+            ->assertSee('Frequently Asked Questions')
             ->assertSee('Starting rate');
 
         $this->assertGreaterThan(3, substr_count($response->getContent(), 'data-featured-room'));

@@ -178,24 +178,31 @@
         .home-section-heading {
             max-width: 660px;
         }
-        .home-teaser-gate {
-            border: 1px solid rgba(184, 146, 84, 0.4);
-            border-radius: 20px;
-            background: #fffaf1;
-            box-shadow: 0 14px 30px rgba(16, 24, 40, 0.08);
+        .guest-proof-strip {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 12px 26px rgba(16, 24, 40, 0.07);
         }
-        .home-teaser-icon {
-            display: inline-flex;
+        .guest-proof-item {
+            display: flex;
             align-items: center;
             justify-content: center;
-            width: 3rem;
-            height: 3rem;
-            flex: 0 0 3rem;
-            border-radius: 50%;
-            background: #b89254;
-            color: #fff;
-            font-size: 1.2rem;
+            gap: .55rem;
+            min-height: 3.2rem;
+            color: #344054;
+            font-size: .86rem;
+            font-weight: 800;
         }
+        .guest-proof-item i { color: #92713c; font-size: 1.05rem; }
+        .guest-final-cta {
+            border-radius: 24px;
+            background: #172132;
+            color: #fff;
+            box-shadow: 0 22px 45px rgba(16, 24, 40, .2);
+        }
+        .guest-final-cta h2,
+        .guest-final-cta p { color: #fff; }
         .home-gallery-grid {
             display: grid;
             grid-template-columns: 1.35fr 1fr 1fr;
@@ -454,6 +461,13 @@
 @endpush
 
 @section('content')
+    @php
+        $hasSignedInAccess = auth('customer')->check()
+            || auth('admin')->check()
+            || auth('staff')->check();
+        $roomsForDisplay = $hasSignedInAccess ? $featuredRooms : $featuredRooms->take(3);
+    @endphp
+
     @if(session('account_created_name'))
         <div class="d-flex justify-content-end mb-3">
             <div class="home-welcome-note">
@@ -486,8 +500,8 @@
             <div class="hero-fixed-content">
                 <div class="hero-fixed-copy">
                     <p class="ta-eyebrow text-light mb-2">Welcome to The Grand Lion Hotel</p>
-                    <h1 class="display-5 text-white mb-2">Find your perfect stay</h1>
-                    <p class="text-light mb-0">Choose your dates and check available rooms.</p>
+                    <h1 class="display-5 text-white mb-2">{{ $hasSignedInAccess ? 'Find your perfect stay' : 'A first look at your next stay' }}</h1>
+                    <p class="text-light mb-0">{{ $hasSignedInAccess ? 'Choose your dates and check available rooms.' : 'Preview our rooms, compare rates, and check your preferred dates.' }}</p>
 
                     <form id="homeAvailabilitySearch" method="GET" action="{{ route('rooms.index') }}" class="hero-search">
                         <input type="hidden" name="available_only" value="1">
@@ -543,32 +557,17 @@
         </div>
     </section>
 
-    @php
-        $hasSignedInAccess = auth('customer')->check()
-            || auth('admin')->check()
-            || auth('staff')->check();
-        $roomsForDisplay = $hasSignedInAccess ? $featuredRooms : $featuredRooms->take(3);
-    @endphp
-
     @unless($hasSignedInAccess)
-        <section class="home-teaser-gate p-3 p-lg-4 mb-4" aria-labelledby="guestTeaserTitle">
-            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-                <div class="d-flex align-items-start gap-3">
-                    <span class="home-teaser-icon" aria-hidden="true"><i class="bi bi-key"></i></span>
-                    <div>
-                        <p class="ta-eyebrow mb-1">Guest Preview</p>
-                        <h2 id="guestTeaserTitle" class="h4 mb-1">Explore first, sign in when you are ready to reserve</h2>
-                        <p class="text-secondary mb-0">Check dates, compare rooms, prices, and amenities. Your complete booking and payment tools unlock after sign-in.</p>
-                    </div>
-                </div>
-                <div class="d-flex flex-wrap gap-2 flex-shrink-0">
-                    <a href="{{ route('login') }}" class="btn btn-ta">Sign in</a>
-                    <a href="{{ route('register') }}" class="btn btn-ta-outline">Create account</a>
-                </div>
+        <section class="guest-proof-strip px-3 py-2 mb-5" aria-label="Reservation highlights">
+            <div class="row g-0">
+                <div class="col-12 col-md-4"><div class="guest-proof-item"><i class="bi bi-calendar-check"></i> Live availability</div></div>
+                <div class="col-12 col-md-4 border-md-start border-md-end"><div class="guest-proof-item"><i class="bi bi-tag"></i> Clear nightly rates</div></div>
+                <div class="col-12 col-md-4"><div class="guest-proof-item"><i class="bi bi-shield-check"></i> Secure reservation</div></div>
             </div>
         </section>
     @endunless
 
+    @if($hasSignedInAccess)
         <section class="mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
@@ -600,11 +599,12 @@
                 @endforelse
             </div>
         </section>
+    @endif
 
     <section class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <p class="ta-eyebrow mb-1">Featured</p>
-            <h2 class="mb-0">Top Room Picks</h2>
+            <p class="ta-eyebrow mb-1">{{ $hasSignedInAccess ? 'Featured' : 'A Taste of Grand Lion' }}</p>
+            <h2 class="mb-0">{{ $hasSignedInAccess ? 'Top Room Picks' : 'Three Rooms Worth Discovering' }}</h2>
         </div>
         <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline home-filter-link">
             View all rooms<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
@@ -649,13 +649,6 @@
             </div>
         @endforelse
     </section>
-
-    @unless($hasSignedInAccess)
-        <section class="text-center mt-4" aria-label="Unlock the complete reservation system">
-            <p class="text-secondary mb-2">You are viewing a selection of featured rooms.</p>
-            <a href="{{ route('login') }}" class="btn btn-ta">Sign in to access the full reservation system</a>
-        </section>
-    @endunless
 
     @if($hasSignedInAccess)
         <section class="home-stat-strip mt-4">
@@ -702,6 +695,7 @@
         </div>
     </section>
 
+    @if($hasSignedInAccess)
     <section class="mt-5" aria-labelledby="homeReviewsTitle">
         <div class="home-section-heading mb-3">
             <p class="ta-eyebrow mb-1">Guest Experience</p>
@@ -847,6 +841,17 @@
             </div>
         </div>
     </section>
+    @else
+        <section class="guest-final-cta p-4 p-lg-5 mt-5 text-center" aria-labelledby="guestFinalCtaTitle">
+            <p class="ta-eyebrow text-light mb-2">The Complete Experience</p>
+            <h2 id="guestFinalCtaTitle" class="display-6 mb-3">Ready to turn your preview into a stay?</h2>
+            <p class="mx-auto mb-4" style="max-width: 650px;">Sign in to unlock the full room collection, complete reservation tools, secure payment options, and your personal booking history.</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a href="{{ route('login') }}" class="btn btn-light btn-lg">Sign in to continue</a>
+                <a href="{{ route('register') }}" class="btn btn-outline-light btn-lg">Create an account</a>
+            </div>
+        </section>
+    @endif
 @endsection
 
 @push('scripts')
