@@ -571,6 +571,7 @@
     </style>
     @stack('head')
     @include('layouts.partials.contrast-fixes')
+    @include('layouts.partials.responsive-fixes')
     <style>
         .admin-nav-dropdown > .nav-link:focus-visible {
             outline: 0 !important;

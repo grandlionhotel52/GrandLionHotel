@@ -547,6 +547,7 @@
     </style>
     @stack('head')
     @include('layouts.partials.contrast-fixes')
+    @include('layouts.partials.responsive-fixes')
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to content</a>
