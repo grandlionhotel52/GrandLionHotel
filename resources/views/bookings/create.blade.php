@@ -38,13 +38,13 @@
         }
         .booking-step.active {
             border-color: rgba(184, 146, 84, 0.55);
-            background: linear-gradient(135deg, rgba(184, 146, 84, 0.13) 0%, rgba(255, 255, 255, 0.96) 100%);
+            background: rgba(255, 255, 255, 0.96);
             color: #2f3d53;
         }
         .booking-estimate {
             border-radius: 16px;
             border: 1px solid #e7dccb;
-            background: linear-gradient(180deg, #fff 0%, #fbf5ea 100%);
+            background: #fbf5ea;
             padding: 0.85rem 0.9rem;
             margin-top: 0.9rem;
         }

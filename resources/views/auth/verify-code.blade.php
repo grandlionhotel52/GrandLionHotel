@@ -7,7 +7,7 @@
     <style>
         .auth-inline-message {
             border: 1px solid rgba(6, 118, 71, 0.25);
-            background: linear-gradient(180deg, rgba(244, 251, 247, 0.98) 0%, rgba(237, 248, 242, 0.98) 100%);
+            background: rgba(237, 248, 242, 0.98);
             color: #075f3c;
             border-radius: 12px;
             padding: 0.75rem 0.9rem;
@@ -17,7 +17,7 @@
 
         .otp-summary-shell {
             border: 1px solid #e2d8ca;
-            background: linear-gradient(180deg, #fbf8f3 0%, #f7f1e8 100%);
+            background: #f7f1e8;
             border-radius: 14px;
             padding: 0.8rem 0.95rem;
         }

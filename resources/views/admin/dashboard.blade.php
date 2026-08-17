@@ -7,7 +7,7 @@
         .admin-focus-card {
             border: 1px solid var(--admin-line);
             border-radius: 14px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            background: #ffffff;
             box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
             padding: 0.86rem 0.92rem;
             height: 100%;

@@ -91,7 +91,7 @@
         .hero-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(8, 15, 25, 0.34) 0%, rgba(8, 15, 25, 0.62) 58%, rgba(8, 15, 25, 0.72) 100%);
+            background: rgba(8, 15, 25, 0.58);
             pointer-events: none;
             z-index: 1;
         }
@@ -209,7 +209,7 @@
             padding: 2.4rem 1rem 0.85rem;
             color: #fff;
             font-weight: 700;
-            background: linear-gradient(transparent, rgba(10, 18, 28, 0.78));
+            background: rgba(10, 18, 28, 0.72);
         }
         .home-gallery-caption small {
             display: block;
@@ -243,7 +243,7 @@
         .home-promo {
             overflow: hidden;
             border-radius: 22px;
-            background: linear-gradient(125deg, #243446 0%, #354c62 55%, #b89254 150%);
+            background: #2f4358;
             color: #fff;
             box-shadow: 0 20px 42px rgba(25, 37, 51, 0.18);
         }
@@ -262,7 +262,7 @@
         .home-location-panel {
             border-radius: 22px;
             border: 1px solid var(--line);
-            background: linear-gradient(145deg, #f7efe2, #fff);
+            background: #f7efe2;
         }
         .home-location-icon {
             width: 3rem;

@@ -33,10 +33,7 @@
             letter-spacing: 0.003em;
             color: var(--ink);
             background-color: var(--bg);
-            background-image:
-                radial-gradient(circle at 7% 0%, rgba(184, 146, 84, 0.22), transparent 36%),
-                radial-gradient(circle at 95% 18%, rgba(16, 24, 40, 0.08), transparent 32%),
-                linear-gradient(180deg, #fdfbf7 0%, #f7f2e8 58%, #f2ebdf 100%);
+            background-image: none;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -120,7 +117,7 @@
             left: 0;
             right: 0;
             z-index: 1080;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.84) 100%) !important;
+            background: rgba(255, 255, 255, 0.94) !important;
             border-bottom-color: rgba(255, 255, 255, 0.4) !important;
             box-shadow: 0 16px 30px rgba(16, 24, 40, 0.12);
         }
@@ -151,14 +148,6 @@
             text-transform: uppercase;
             white-space: nowrap;
             color: #1e2a3b;
-        }
-        @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-            .brand-wordmark {
-                background: linear-gradient(115deg, #162033 0%, #b18a4d 48%, #162033 100%);
-                -webkit-background-clip: text;
-                background-clip: text;
-                color: transparent;
-            }
         }
         .nav-link {
             font-weight: 700;
@@ -217,13 +206,13 @@
         .auth-link-register {
             border: 1px solid var(--brand);
             color: #fff;
-            background: linear-gradient(140deg, #c8a364 0%, #ad8344 100%);
+            background: #b89254;
             box-shadow: 0 12px 24px rgba(160, 119, 51, 0.25);
         }
         .auth-link-register:hover,
         .auth-link-register.active {
             border-color: var(--brand-deep);
-            background: linear-gradient(140deg, #b99153 0%, #966f39 100%);
+            background: #966f39;
             color: #fff;
             box-shadow: 0 14px 28px rgba(134, 98, 43, 0.3);
         }
@@ -234,7 +223,7 @@
             right: 0.5rem;
             bottom: 0.15rem;
             height: 2px;
-            background: linear-gradient(90deg, #d0ae76, #a68449);
+            background: #b89254;
             border-radius: 999px;
         }
         .ta-eyebrow {
@@ -280,7 +269,7 @@
         .btn-ta {
             border-radius: 10px;
             border: 1px solid var(--brand);
-            background: linear-gradient(135deg, #c8a364 0%, #b18a4d 100%);
+            background: #b89254;
             color: #fff;
             font-weight: 700;
             min-height: 42px;
@@ -290,7 +279,7 @@
         }
         .btn-ta:hover {
             border-color: var(--brand-deep);
-            background: linear-gradient(135deg, #bb9658 0%, #9a753f 100%);
+            background: #9a753f;
             color: #fff;
             transform: translateY(-1px);
             box-shadow: 0 9px 20px rgba(134, 98, 43, 0.25);
@@ -387,7 +376,7 @@
             border-color: #efe9dd;
         }
         .footer-shell {
-            background: linear-gradient(135deg, #111a2d 0%, #0f1728 100%);
+            background: #111a2d;
         }
         .footer-link {
             text-decoration: none;
@@ -461,7 +450,7 @@
         }
         .flash-card.success {
             border-color: rgba(6, 118, 71, 0.32);
-            background: linear-gradient(180deg, rgba(244, 251, 247, 0.98) 0%, rgba(237, 248, 242, 0.98) 100%);
+            background: rgba(237, 248, 242, 0.98);
         }
         .flash-card.success .flash-icon {
             background: rgba(6, 118, 71, 0.14);
@@ -472,7 +461,7 @@
         }
         .flash-card.error {
             border-color: rgba(180, 35, 24, 0.32);
-            background: linear-gradient(180deg, rgba(254, 245, 245, 0.98) 0%, rgba(252, 237, 237, 0.98) 100%);
+            background: rgba(252, 237, 237, 0.98);
         }
         .flash-card.error .flash-icon {
             background: rgba(180, 35, 24, 0.14);

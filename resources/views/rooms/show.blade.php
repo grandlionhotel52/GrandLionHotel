@@ -40,7 +40,7 @@
         .room-booking-panel {
             border-radius: 20px;
             border: 1px solid var(--line);
-            background: linear-gradient(180deg, #fff 0%, #fbf6ed 100%);
+            background: #fbf6ed;
             box-shadow: 0 16px 32px rgba(15, 23, 42, 0.1);
             position: static;
             z-index: 1;

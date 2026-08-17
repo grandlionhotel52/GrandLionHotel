@@ -8,7 +8,7 @@
             border-radius: 14px;
             border: 1px solid var(--admin-line);
             box-shadow: var(--admin-shadow);
-            background: linear-gradient(180deg, var(--admin-surface) 0%, #f8fbff 100%);
+            background: var(--admin-surface);
             padding: 0.78rem 0.88rem;
             height: 100%;
         }
@@ -69,7 +69,7 @@
         .admin-discount-shell {
             border-radius: 14px;
             border: 1px solid #ddcfba;
-            background: linear-gradient(180deg, #fffaf1 0%, #fff 100%);
+            background: #fffaf1;
             box-shadow: var(--admin-shadow);
         }
         .admin-discount-shell .label {

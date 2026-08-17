@@ -83,7 +83,7 @@
             bottom: 0;
             color: #fff;
             padding: 0.9rem 1rem;
-            background: linear-gradient(180deg, rgba(16, 24, 40, 0.04) 0%, rgba(16, 24, 40, 0.9) 100%);
+            background: rgba(16, 24, 40, 0.7);
         }
         .gallery-room-name {
             margin: 0;

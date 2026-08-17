@@ -38,15 +38,15 @@
         }
         .booking-flow-step.is-complete {
             border-color: rgba(6, 118, 71, 0.35);
-            background: linear-gradient(180deg, rgba(241, 250, 245, 0.96) 0%, rgba(236, 247, 240, 0.96) 100%);
+            background: rgba(236, 247, 240, 0.96);
         }
         .booking-flow-step.is-current {
             border-color: rgba(184, 146, 84, 0.45);
-            background: linear-gradient(180deg, rgba(250, 245, 235, 0.96) 0%, rgba(255, 255, 255, 0.98) 100%);
+            background: rgba(250, 245, 235, 0.96);
         }
         .booking-flow-step.is-cancelled {
             border-color: rgba(180, 35, 24, 0.35);
-            background: linear-gradient(180deg, rgba(254, 244, 244, 0.96) 0%, rgba(255, 249, 249, 0.98) 100%);
+            background: rgba(254, 244, 244, 0.96);
         }
         .booking-hero {
             display: grid;

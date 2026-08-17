@@ -40,7 +40,7 @@
         .search-selected-stay {
             border-radius: 14px;
             border: 1px solid rgba(184, 146, 84, 0.3);
-            background: linear-gradient(135deg, rgba(184, 146, 84, 0.11) 0%, rgba(255, 255, 255, 0.96) 100%);
+            background: rgba(255, 255, 255, 0.96);
             padding: 0.75rem 0.86rem;
         }
         .search-selected-stay .meta {

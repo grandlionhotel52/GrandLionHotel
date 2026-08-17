@@ -8,7 +8,7 @@
             border-radius: 14px;
             border: 1px solid #d7deec;
             box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            background: #ffffff;
             padding: 0.78rem 0.88rem;
             height: 100%;
         }
@@ -86,7 +86,7 @@
             background: #d9dde3;
         }
         .gcash-top {
-            background: linear-gradient(180deg, #0b58d1 0%, #0a4fbf 100%);
+            background: #0b58d1;
             min-height: 170px;
             padding: 1.4rem 1.5rem 2.2rem;
             display: flex;
@@ -112,7 +112,7 @@
         .gcash-open-btn {
             border-radius: 10px;
             border: 0;
-            background: linear-gradient(90deg, #0d69ec 0%, #0b58d1 100%);
+            background: #0b58d1;
             color: #fff;
             display: inline-flex;
             align-items: center;

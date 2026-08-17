@@ -7,7 +7,7 @@
         .admin-report-stat {
             border-radius: 14px;
             border: 1px solid var(--admin-line);
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            background: #ffffff;
             box-shadow: var(--admin-shadow);
             padding: 0.82rem 0.9rem;
             height: 100%;

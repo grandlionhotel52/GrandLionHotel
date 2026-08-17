@@ -16,9 +16,7 @@
     .auth-premium-overlay {
         position: absolute;
         inset: 0;
-        background:
-            linear-gradient(175deg, rgba(12, 20, 34, 0.2) 0%, rgba(12, 20, 34, 0.78) 66%, rgba(12, 20, 34, 0.9) 100%),
-            radial-gradient(circle at 14% 18%, rgba(184, 146, 84, 0.48), transparent 35%);
+        background: rgba(12, 20, 34, 0.72);
     }
     .auth-premium-copy {
         position: absolute;
@@ -80,14 +78,14 @@
     .auth-premium-card {
         border: 1px solid #e8ddcd;
         border-radius: 20px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(252, 248, 241, 0.95) 100%);
+        background: rgba(252, 248, 241, 0.98);
         padding: 1.3rem;
     }
     .auth-oauth-btn {
         width: 100%;
         border-radius: 12px;
         border: 1px solid #d8cbb7;
-        background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+        background: #fff;
         color: #1f2937;
         font-weight: 700;
         display: inline-flex;

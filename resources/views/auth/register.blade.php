@@ -7,7 +7,7 @@
     <style>
         .auth-inline-message {
             border: 1px solid rgba(6, 118, 71, 0.25);
-            background: linear-gradient(180deg, rgba(244, 251, 247, 0.98) 0%, rgba(237, 248, 242, 0.98) 100%);
+            background: rgba(237, 248, 242, 0.98);
             color: #075f3c;
             border-radius: 12px;
             padding: 0.75rem 0.9rem;

@@ -8,7 +8,7 @@
             border-radius: 14px;
             border: 1px solid #d7deec;
             box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            background: #ffffff;
             padding: 0.78rem 0.88rem;
             height: 100%;
         }

@@ -50,10 +50,7 @@
         body {
             font-family: 'Manrope', sans-serif;
             background-color: var(--admin-bg);
-            background-image:
-                radial-gradient(circle at 8% -2%, rgba(var(--theme-primary-rgb), 0.24), transparent 34%),
-                radial-gradient(circle at 96% 0%, rgba(var(--theme-ink-rgb), 0.09), transparent 30%),
-                linear-gradient(180deg, #fdfbf7 0%, #f7f3ec 100%);
+            background-image: none;
             color: var(--admin-ink);
             min-height: 100vh;
         }
