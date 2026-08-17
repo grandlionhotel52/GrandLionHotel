@@ -178,6 +178,24 @@
         .home-section-heading {
             max-width: 660px;
         }
+        .home-teaser-gate {
+            border: 1px solid rgba(184, 146, 84, 0.4);
+            border-radius: 20px;
+            background: #fffaf1;
+            box-shadow: 0 14px 30px rgba(16, 24, 40, 0.08);
+        }
+        .home-teaser-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            flex: 0 0 3rem;
+            border-radius: 50%;
+            background: #b89254;
+            color: #fff;
+            font-size: 1.2rem;
+        }
         .home-gallery-grid {
             display: grid;
             grid-template-columns: 1.35fr 1fr 1fr;
@@ -529,7 +547,27 @@
         $hasSignedInAccess = auth('customer')->check()
             || auth('admin')->check()
             || auth('staff')->check();
+        $roomsForDisplay = $hasSignedInAccess ? $featuredRooms : $featuredRooms->take(3);
     @endphp
+
+    @unless($hasSignedInAccess)
+        <section class="home-teaser-gate p-3 p-lg-4 mb-4" aria-labelledby="guestTeaserTitle">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-start gap-3">
+                    <span class="home-teaser-icon" aria-hidden="true"><i class="bi bi-key"></i></span>
+                    <div>
+                        <p class="ta-eyebrow mb-1">Guest Preview</p>
+                        <h2 id="guestTeaserTitle" class="h4 mb-1">Explore first, sign in when you are ready to reserve</h2>
+                        <p class="text-secondary mb-0">Check dates, compare rooms, prices, and amenities. Your complete booking and payment tools unlock after sign-in.</p>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 flex-shrink-0">
+                    <a href="{{ route('login') }}" class="btn btn-ta">Sign in</a>
+                    <a href="{{ route('register') }}" class="btn btn-ta-outline">Create account</a>
+                </div>
+            </div>
+        </section>
+    @endunless
 
         <section class="mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -574,9 +612,9 @@
     </section>
 
     <section class="row g-4">
-        @forelse($featuredRooms as $room)
+        @forelse($roomsForDisplay as $room)
             <div class="col-md-6 col-xl-4">
-                <article class="soft-card h-100 result-card overflow-hidden">
+                <article class="soft-card h-100 result-card overflow-hidden" data-featured-room>
                     <img src="{{ $room->image_url }}" alt="{{ $room->name }}" class="w-100 object-cover" style="height: 220px;">
                     <div class="p-3 p-lg-4">
                         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -612,6 +650,13 @@
         @endforelse
     </section>
 
+    @unless($hasSignedInAccess)
+        <section class="text-center mt-4" aria-label="Unlock the complete reservation system">
+            <p class="text-secondary mb-2">You are viewing a selection of featured rooms.</p>
+            <a href="{{ route('login') }}" class="btn btn-ta">Sign in to access the full reservation system</a>
+        </section>
+    @endunless
+
     @if($hasSignedInAccess)
         <section class="home-stat-strip mt-4">
             <div class="row g-3 text-center">
@@ -643,7 +688,7 @@
             <a href="{{ route('gallery') }}" class="btn btn-ta-outline">View full gallery</a>
         </div>
         <div class="home-gallery-grid">
-            @forelse($featuredRooms->take(5) as $room)
+            @forelse($roomsForDisplay->take(5) as $room)
                 <a href="{{ route('rooms.show', $room) }}" class="home-gallery-item">
                     <img src="{{ $room->image_url }}" alt="{{ $room->name }} hotel room" loading="lazy">
                     <span class="home-gallery-caption">

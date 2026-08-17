@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
+use App\Models\Room;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -35,5 +37,45 @@ class HomeAvailabilityHeroTest extends TestCase
             ->assertOk()
             ->assertDontSee('id="homeQuickSearch"', false)
             ->assertDontSee('Quick Search');
+    }
+
+    public function test_guest_home_is_a_teaser_that_keeps_room_discovery_public(): void
+    {
+        Room::factory()->count(4)->sequence(
+            ['name' => 'Preview Room One'],
+            ['name' => 'Preview Room Two'],
+            ['name' => 'Preview Room Three'],
+            ['name' => 'Full Access Room Four'],
+        )->create(['is_available' => true]);
+
+        $response = $this->get(route('home'));
+
+        $response->assertOk()
+            ->assertSee('Guest Preview')
+            ->assertSee('Explore first, sign in when you are ready to reserve')
+            ->assertSee('Sign in to access the full reservation system')
+            ->assertSee('action="'.route('rooms.index').'"', false);
+
+        $this->assertSame(3, substr_count($response->getContent(), 'data-featured-room'));
+    }
+
+    public function test_signed_in_customer_sees_the_full_home_experience(): void
+    {
+        $customer = Customer::factory()->create();
+        Room::factory()->count(4)->sequence(
+            ['name' => 'Customer Room One'],
+            ['name' => 'Customer Room Two'],
+            ['name' => 'Customer Room Three'],
+            ['name' => 'Customer Room Four'],
+        )->create(['is_available' => true]);
+
+        $response = $this->actingAs($customer, 'customer')->get(route('home'));
+
+        $response->assertOk()
+            ->assertDontSee('Guest Preview')
+            ->assertDontSee('Sign in to access the full reservation system')
+            ->assertSee('Starting rate');
+
+        $this->assertGreaterThan(3, substr_count($response->getContent(), 'data-featured-room'));
     }
 }
