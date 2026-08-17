@@ -29,8 +29,19 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html
 COPY docker/start-render.sh /usr/local/bin/start-render.sh
 
-RUN composer install --no-dev --optimize-autoloader \
-    && npm install \
+RUN set -eu; \
+    attempt=1; \
+    max_attempts=4; \
+    until composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction --no-progress; do \
+        if [ "$attempt" -ge "$max_attempts" ]; then \
+            echo "Composer install failed after ${max_attempts} attempts."; \
+            exit 1; \
+        fi; \
+        echo "Composer download failed. Retrying in 8 seconds (attempt $((attempt + 1))/${max_attempts})..."; \
+        attempt=$((attempt + 1)); \
+        sleep 8; \
+    done; \
+    npm install \
     && npm run build \
     && chmod +x /usr/local/bin/start-render.sh \
     && chown -R www-data:www-data storage bootstrap/cache
