@@ -93,7 +93,7 @@
 
                                     <div class="auth-oauth-divider mb-3">or continue with Google</div>
                                     <div class="mb-3">
-                                        <a href="{{ route('auth.google.redirect.login') }}" class="auth-oauth-btn" data-no-ajax>
+                                        <a href="{{ route('auth.google.redirect.login') }}" class="auth-oauth-btn">
                                             <span class="auth-oauth-icon"></span>
                                             Continue with Google
                                         </a>

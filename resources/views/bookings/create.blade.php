@@ -787,21 +787,21 @@
 
                     if (response.ok) {
                         if (payload && payload.redirect) {
-                            window.GrandLionAjaxNavigation?.visit(payload.redirect) ?? window.location.assign(payload.redirect);
+                            window.location.href = payload.redirect;
                             return;
                         }
 
                         if (response.redirected) {
-                            window.GrandLionAjaxNavigation?.visit(response.url) ?? window.location.assign(response.url);
+                            window.location.href = response.url;
                             return;
                         }
 
-                        window.GrandLionAjaxNavigation?.visit(window.location.href) ?? window.location.reload();
+                        window.location.reload();
                         return;
                     }
 
                     if (payload && payload.redirect && response.status === 422) {
-                        window.GrandLionAjaxNavigation?.visit(payload.redirect) ?? window.location.assign(payload.redirect);
+                        window.location.href = payload.redirect;
                         return;
                     }
 

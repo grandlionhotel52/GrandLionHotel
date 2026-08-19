@@ -18,10 +18,6 @@
             };
 
             window.addEventListener('pageshow', (event) => {
-                if (window.GrandLionAjaxNavigation) {
-                    return;
-                }
-
                 if (!cameFromBackForwardCache(event)) {
                     return;
                 }

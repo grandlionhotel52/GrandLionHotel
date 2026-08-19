@@ -130,7 +130,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('payments.process', $booking) }}" class="row g-3" id="payment_checkout_form" enctype="multipart/form-data" data-no-ajax>
+                <form method="POST" action="{{ route('payments.process', $booking) }}" class="row g-3" id="payment_checkout_form" enctype="multipart/form-data">
                     @csrf
                     <div class="col-12">
                         <label class="form-label">Payment method</label>

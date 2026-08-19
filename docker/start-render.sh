@@ -75,8 +75,8 @@ until php artisan migrate --force; do
   sleep 5
 done
 
-echo "[startup] Refreshing Laravel caches..."
-php artisan view:cache
+echo "[startup] Optimizing Laravel for production..."
+php artisan optimize
 
 # Startup commands run as root while Apache handles requests as www-data.
 # Restore ownership so file-backed cache/rate-limit directories can be

@@ -320,8 +320,17 @@
             }
 
             if (verifyForm) {
-                verifyForm.addEventListener('submit', function () {
+                verifyForm.addEventListener('submit', function (event) {
+                    if (verifyForm.dataset.submitting === '1') {
+                        event.preventDefault();
+                        return;
+                    }
+
                     syncHiddenCode();
+                    verifyForm.dataset.submitting = '1';
+                    verifyForm.querySelectorAll('button[type="submit"]').forEach(function (button) {
+                        button.disabled = true;
+                    });
                 });
             }
 
