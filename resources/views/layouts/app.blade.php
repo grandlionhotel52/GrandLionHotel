@@ -773,5 +773,6 @@
     @include('layouts.partials.history-refresh')
     @stack('scripts')
     @include('layouts.partials.image-fallback')
+    @include('layouts.partials.ajax-navigation')
 </body>
 </html>

@@ -63,7 +63,7 @@
                     const response = await fetch(card.dataset.statusUrl, { headers: { Accept: 'application/json' }, cache: 'no-store' });
                     const data = await response.json();
                     if (response.ok && data.paid) {
-                        window.location.reload();
+                        window.GrandLionAjaxNavigation?.visit(window.location.href) ?? window.location.reload();
                         return;
                     }
                 } catch (_) {}
