@@ -725,6 +725,7 @@
         })();
     </script>
     @include('layouts.partials.history-refresh')
+    @include('layouts.partials.unsaved-changes')
     @stack('scripts')
     @include('layouts.partials.image-fallback')
 </body>
