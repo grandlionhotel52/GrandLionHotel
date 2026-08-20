@@ -97,6 +97,10 @@
             'discount_start',
             'discount_end',
         ]);
+        $hasCreateRoomErrors = old('_form_context') === 'create_room' && $errors->hasAny([
+            'name', 'type', 'view_type', 'description', 'price_per_night',
+            'room_status_id', 'image', 'image_upload',
+        ]);
     @endphp
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -104,9 +108,9 @@
             <h1 class="h4 mb-1">Room Management</h1>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('admin.rooms.create') }}" class="btn btn-ta">
+            <button type="button" class="btn btn-ta" data-bs-toggle="modal" data-bs-target="#createRoomModal">
                 <i class="bi bi-plus-circle me-1"></i>Add Room
-            </a>
+            </button>
             <button
                 type="button"
                 class="btn btn-ta-outline"
@@ -281,6 +285,98 @@
 
     <div class="mt-3">
         {{ $rooms->links() }}
+    </div>
+
+    <div class="modal fade" id="createRoomModal" tabindex="-1" aria-labelledby="createRoomModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('admin.rooms.store') }}" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="_form_context" value="create_room">
+
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title mb-1" id="createRoomModalLabel">Add Room</h5>
+                            <p class="text-secondary small mb-0">Enter the room details, nightly price, status, and optional photo.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control {{ $hasCreateRoomErrors && $errors->has('name') ? 'is-invalid' : '' }}" name="name" value="{{ $hasCreateRoomErrors ? old('name') : '' }}" placeholder="Room 101" required autofocus>
+                                @if($hasCreateRoomErrors) @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Room Type</label>
+                                <input type="text" class="form-control {{ $hasCreateRoomErrors && $errors->has('type') ? 'is-invalid' : '' }}" name="type" value="{{ $hasCreateRoomErrors ? old('type') : '' }}" list="create_room_type_options" placeholder="Standard, Deluxe, Suite..." required>
+                                <datalist id="create_room_type_options">
+                                    @foreach(['Standard', 'Deluxe', 'Family', 'Suite', 'Executive', 'Penthouse'] as $type)
+                                        <option value="{{ $type }}"></option>
+                                    @endforeach
+                                </datalist>
+                                @if($hasCreateRoomErrors) @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">View Type</label>
+                                <input type="text" class="form-control {{ $hasCreateRoomErrors && $errors->has('view_type') ? 'is-invalid' : '' }}" name="view_type" value="{{ $hasCreateRoomErrors ? old('view_type') : '' }}" list="create_room_view_options" placeholder="Garden View, Pool View...">
+                                <datalist id="create_room_view_options">
+                                    @foreach(['Nature View', 'Garden View', 'Pool View', 'Mountain View', 'Courtyard View'] as $view)
+                                        <option value="{{ $view }}"></option>
+                                    @endforeach
+                                </datalist>
+                                @if($hasCreateRoomErrors) @error('view_type') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control {{ $hasCreateRoomErrors && $errors->has('description') ? 'is-invalid' : '' }}" name="description" rows="3" maxlength="2000">{{ $hasCreateRoomErrors ? old('description') : '' }}</textarea>
+                                @if($hasCreateRoomErrors) @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Price per Night</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">PHP</span>
+                                    <input type="number" step="0.01" min="0" class="form-control {{ $hasCreateRoomErrors && $errors->has('price_per_night') ? 'is-invalid' : '' }}" name="price_per_night" value="{{ $hasCreateRoomErrors ? old('price_per_night') : '' }}" required>
+                                    @if($hasCreateRoomErrors) @error('price_per_night') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Room Status</label>
+                                <select class="form-select {{ $hasCreateRoomErrors && $errors->has('room_status_id') ? 'is-invalid' : '' }}" name="room_status_id">
+                                    <option value="">Default: Clean</option>
+                                    @foreach($roomStatuses as $status)
+                                        <option value="{{ $status->room_status_id }}" @selected($hasCreateRoomErrors && (string) old('room_status_id') === (string) $status->room_status_id)>{{ $status->name }}</option>
+                                    @endforeach
+                                </select>
+                                @if($hasCreateRoomErrors) @error('room_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Standard Occupancy</label>
+                                <input type="text" class="form-control" value="2 guests" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Image URL <span class="text-secondary">(optional)</span></label>
+                                <input type="url" class="form-control {{ $hasCreateRoomErrors && $errors->has('image') ? 'is-invalid' : '' }}" name="image" value="{{ $hasCreateRoomErrors ? old('image') : '' }}" placeholder="https://example.com/room.jpg">
+                                @if($hasCreateRoomErrors) @error('image') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Upload Image <span class="text-secondary">(optional)</span></label>
+                                <input type="file" class="form-control {{ $hasCreateRoomErrors && $errors->has('image_upload') ? 'is-invalid' : '' }}" name="image_upload" accept="image/jpeg,image/png,image/webp">
+                                <small class="text-secondary">JPG, PNG, or WebP up to 5 MB. Upload takes priority over URL.</small>
+                                @if($hasCreateRoomErrors) @error('image_upload') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-ta-outline" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-ta">Create Room</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div class="modal fade" id="editRoomModal" tabindex="-1" aria-labelledby="editRoomModalLabel" aria-hidden="true">
@@ -681,6 +777,11 @@
             if (bulkDateDiscountModalEl && typeof bootstrap !== 'undefined' && (@json($hasBulkDiscountErrors) || shouldOpenBulkFromQuery)) {
                 const bulkModal = bootstrap.Modal.getOrCreateInstance(bulkDateDiscountModalEl);
                 bulkModal.show();
+            }
+
+            const createRoomModalEl = document.getElementById('createRoomModal');
+            if (createRoomModalEl && typeof bootstrap !== 'undefined' && @json($hasCreateRoomErrors)) {
+                bootstrap.Modal.getOrCreateInstance(createRoomModalEl).show();
             }
 
             const editRoomModalEl = document.getElementById('editRoomModal');
