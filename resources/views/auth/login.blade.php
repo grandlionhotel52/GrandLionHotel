@@ -44,7 +44,11 @@
                             </div>
 
                             <div class="auth-premium-card">
-                                <form method="POST" action="{{ route('login.perform') }}" class="row g-3">
+                                @error('session')
+                                    <div class="alert alert-warning" role="alert">{{ $message }}</div>
+                                @enderror
+
+                                <form method="POST" action="{{ route('login.perform') }}" class="row g-3" id="loginForm">
                                     @csrf
                                     <div class="col-12">
                                         <label class="auth-premium-label">Email address</label>
@@ -88,7 +92,7 @@
                                         <a href="{{ route('password.request') }}" class="small text-decoration-none fw-medium text-ta-gold">Forgot password?</a>
                                     </div>
                                     <div class="col-12">
-                                        <button type="submit" class="btn btn-ta auth-premium-action">Sign in</button>
+                                        <button type="submit" class="btn btn-ta auth-premium-action" id="loginSubmitButton">Sign in</button>
                                         </div>
 
                                     <div class="auth-oauth-divider mb-3">or continue with Google</div>
@@ -117,6 +121,8 @@
     <script>
         (() => {
             const toggles = document.querySelectorAll('[data-password-toggle]');
+            const loginForm = document.getElementById('loginForm');
+            const submitButton = document.getElementById('loginSubmitButton');
 
             toggles.forEach((toggleButton) => {
                 toggleButton.addEventListener('click', () => {
@@ -131,6 +137,19 @@
                     toggleButton.textContent = showPassword ? 'Hide' : 'Show';
                     toggleButton.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
                 });
+            });
+
+            loginForm?.addEventListener('submit', (event) => {
+                if (loginForm.dataset.submitting === '1') {
+                    event.preventDefault();
+                    return;
+                }
+
+                loginForm.dataset.submitting = '1';
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Signing in…';
+                }
             });
         })();
     </script>

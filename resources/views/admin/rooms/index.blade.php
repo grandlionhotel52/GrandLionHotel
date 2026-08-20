@@ -342,7 +342,7 @@
     <div class="modal fade" id="bulkDateDiscountModal" tabindex="-1" aria-labelledby="bulkDateDiscountModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content admin-discount-shell">
-                <form method="POST" action="{{ route('admin.rooms.date-discounts.bulk') }}">
+                <form method="POST" action="{{ route('admin.rooms.date-discounts.bulk') }}" id="bulkDateDiscountForm">
                     @csrf
 
                     <div class="modal-header">
@@ -388,6 +388,7 @@
                                     min="1"
                                     max="100"
                                     name="discount_percent"
+                                    id="discount_percent"
                                     value="{{ old('discount_percent', '10') }}"
                                     class="form-control @error('discount_percent') is-invalid @enderror"
                                     required
@@ -402,7 +403,9 @@
                                 <input
                                     type="date"
                                     name="discount_start"
+                                    id="discount_start"
                                     value="{{ old('discount_start', now()->toDateString()) }}"
+                                    min="{{ now()->toDateString() }}"
                                     class="form-control @error('discount_start') is-invalid @enderror"
                                     required
                                 >
@@ -416,7 +419,9 @@
                                 <input
                                     type="date"
                                     name="discount_end"
+                                    id="discount_end"
                                     value="{{ old('discount_end', now()->addDays(6)->toDateString()) }}"
+                                    min="{{ old('discount_start', now()->toDateString()) }}"
                                     class="form-control @error('discount_end') is-invalid @enderror"
                                     required
                                 >
@@ -433,6 +438,13 @@
                                     class="form-control mb-2"
                                     placeholder="Search room by ID, name, or room type"
                                 >
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                    <span class="small fw-semibold" id="discount_selected_count">0 rooms selected</span>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-ta-outline" id="discount_select_visible">Select visible</button>
+                                        <button type="button" class="btn btn-sm btn-ta-outline" id="discount_clear_rooms">Clear</button>
+                                    </div>
+                                </div>
                                 <select
                                     name="room_ids[]"
                                     id="discount_room_ids"
@@ -446,7 +458,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <small class="text-secondary d-block mt-1">Hold Ctrl (Windows) or Command (Mac) to select multiple rooms.</small>
+                                <small class="text-secondary d-block mt-1">Click rooms to select them. Use the buttons above to manage search results quickly.</small>
                                 @error('room_ids')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -454,12 +466,17 @@
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
+
+                            <div class="col-12">
+                                <div class="alert alert-light border mb-0" id="discount_impact_summary" role="status" aria-live="polite"></div>
+                                <small class="text-secondary d-block mt-2">Any existing discount that overlaps this room and date range will be replaced.</small>
+                            </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-ta-outline" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-ta">Apply Discount</button>
+                        <button type="submit" class="btn btn-ta" id="bulkDateDiscountSubmit">Apply Discount</button>
                     </div>
                 </form>
             </div>
@@ -512,6 +529,17 @@
             const discountRoomSelectWrap = document.getElementById('discount_room_select_wrap');
             const discountRoomSelectField = document.getElementById('discount_room_ids');
             const discountRoomSearchField = document.getElementById('discount_room_search');
+            const discountSelectVisibleButton = document.getElementById('discount_select_visible');
+            const discountClearRoomsButton = document.getElementById('discount_clear_rooms');
+            const discountSelectedCount = document.getElementById('discount_selected_count');
+            const discountPercentField = document.getElementById('discount_percent');
+            const discountStartField = document.getElementById('discount_start');
+            const discountEndField = document.getElementById('discount_end');
+            const discountImpactSummary = document.getElementById('discount_impact_summary');
+            const bulkDiscountForm = document.getElementById('bulkDateDiscountForm');
+            const bulkDiscountSubmit = document.getElementById('bulkDateDiscountSubmit');
+            const totalRoomCount = @json($discountRoomOptions->count());
+            const roomTypeCounts = @json($discountRoomOptions->groupBy('type')->map->count());
 
             const normalizeDiscountSearchValue = function (value) {
                 return (value || '').toString().trim().toLowerCase();
@@ -529,6 +557,39 @@
                     const optionText = normalizeDiscountSearchValue(optionEl.textContent);
                     optionEl.hidden = query !== '' && !optionText.includes(query);
                 });
+            };
+
+            const selectedRoomCount = function () {
+                return discountRoomSelectField
+                    ? Array.from(discountRoomSelectField.options).filter((option) => option.selected).length
+                    : 0;
+            };
+
+            const updateDiscountImpactSummary = function () {
+                const scope = discountScopeSelect?.value || 'all';
+                const percent = discountPercentField?.value || '0';
+                let rooms = totalRoomCount;
+
+                if (scope === 'roomtype') {
+                    rooms = roomTypeCounts[discountRoomTypeField?.value || ''] || 0;
+                } else if (scope === 'selected') {
+                    rooms = selectedRoomCount();
+                }
+
+                let days = 0;
+                if (discountStartField?.value && discountEndField?.value) {
+                    const start = new Date(discountStartField.value + 'T00:00:00');
+                    const end = new Date(discountEndField.value + 'T00:00:00');
+                    days = Math.max(0, Math.round((end - start) / 86400000) + 1);
+                }
+
+                if (discountSelectedCount) {
+                    const selected = selectedRoomCount();
+                    discountSelectedCount.textContent = `${selected} room${selected === 1 ? '' : 's'} selected`;
+                }
+                if (discountImpactSummary) {
+                    discountImpactSummary.textContent = `${percent}% discount · ${rooms} room${rooms === 1 ? '' : 's'} · ${days} day${days === 1 ? '' : 's'}`;
+                }
             };
 
             const updateDiscountScopeUi = function () {
@@ -561,10 +622,58 @@
                 }
 
                 updateDiscountRoomSearchUi();
+                updateDiscountImpactSummary();
             };
 
             discountScopeSelect?.addEventListener('change', updateDiscountScopeUi);
+            discountRoomTypeField?.addEventListener('change', updateDiscountImpactSummary);
+            discountRoomSelectField?.addEventListener('change', updateDiscountImpactSummary);
+            discountRoomSelectField?.addEventListener('mousedown', function (event) {
+                const option = event.target;
+                if (!(option instanceof HTMLOptionElement)) {
+                    return;
+                }
+
+                event.preventDefault();
+                option.selected = !option.selected;
+                discountRoomSelectField.focus();
+                updateDiscountImpactSummary();
+            });
+            discountPercentField?.addEventListener('input', updateDiscountImpactSummary);
             discountRoomSearchField?.addEventListener('input', updateDiscountRoomSearchUi);
+            discountStartField?.addEventListener('change', function () {
+                if (discountEndField) {
+                    discountEndField.min = discountStartField.value;
+                    if (discountEndField.value < discountStartField.value) {
+                        discountEndField.value = discountStartField.value;
+                    }
+                }
+                updateDiscountImpactSummary();
+            });
+            discountEndField?.addEventListener('change', updateDiscountImpactSummary);
+            discountSelectVisibleButton?.addEventListener('click', function () {
+                Array.from(discountRoomSelectField?.options || []).forEach(function (option) {
+                    if (!option.hidden) option.selected = true;
+                });
+                updateDiscountImpactSummary();
+            });
+            discountClearRoomsButton?.addEventListener('click', function () {
+                Array.from(discountRoomSelectField?.options || []).forEach(function (option) {
+                    option.selected = false;
+                });
+                updateDiscountImpactSummary();
+            });
+            bulkDiscountForm?.addEventListener('submit', function (event) {
+                if (bulkDiscountForm.dataset.submitting === '1') {
+                    event.preventDefault();
+                    return;
+                }
+                bulkDiscountForm.dataset.submitting = '1';
+                if (bulkDiscountSubmit) {
+                    bulkDiscountSubmit.disabled = true;
+                    bulkDiscountSubmit.textContent = 'Applying…';
+                }
+            });
             updateDiscountScopeUi();
 
             const bulkDateDiscountModalEl = document.getElementById('bulkDateDiscountModal');
