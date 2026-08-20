@@ -162,6 +162,7 @@ class QrPaymentMethodsTest extends TestCase
         $this->assertSame('paid', $booking->payment_status);
         $this->assertSame('paymongo_checkout', $booking->payment->source);
         $this->assertSame('pay_test_paid', $booking->payment->provider_payment_id);
+        $this->assertNotNull($booking->payment->verified_at);
     }
 
     public function test_paymongo_webhook_rejects_an_invalid_signature(): void

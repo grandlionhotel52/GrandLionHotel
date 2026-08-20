@@ -1046,6 +1046,15 @@
                             <span class="booking-meta-label">Verified At</span>
                             <span class="booking-meta-value">{{ optional($booking->payment->verified_at)->format('M d, Y h:i A') ?? '-' }}</span>
                         </div>
+                        <div class="booking-meta-line">
+                            <span class="booking-meta-label">Verified By</span>
+                            <span class="booking-meta-value">{{ $booking->payment->source === 'paymongo_checkout' ? 'PayMongo' : 'Hotel staff' }}</span>
+                        </div>
+                    @else
+                        <div class="booking-meta-line">
+                            <span class="booking-meta-label">Verification</span>
+                            <span class="booking-meta-value">Pending verification</span>
+                        </div>
                     @endif
                     <div class="booking-meta-line">
                         <span class="booking-meta-label">Transaction Ref</span>

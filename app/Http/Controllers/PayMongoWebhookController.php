@@ -103,7 +103,11 @@ class PayMongoWebhookController extends Controller
         $paidPayment = $payments->charge($booking, $paymentMethod, [
             'source' => 'paymongo_checkout',
         ]);
-        $paidPayment->forceFill(['provider_payment_id' => $providerPaymentId ?: null])->save();
+        $paidPayment->forceFill([
+            'provider_payment_id' => $providerPaymentId ?: null,
+            'source' => 'paymongo_checkout',
+            'verified_at' => $paidPayment->verified_at ?? now(),
+        ])->save();
         $checkoutSession?->update(['status' => 'paid']);
 
         $booking->refresh();
