@@ -215,8 +215,15 @@ class RoomController extends Controller
             'room_count' => $discountRawRows->pluck('room_id')->unique()->count(),
         ];
 
+        $discountRoomOptions = Room::query()
+            ->select(['room_id', 'name', 'type'])
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
+
         return view('admin.rooms.date-discounts', compact(
             'discountOverviewRanges',
+            'discountRoomOptions',
             'from',
             'to',
             'search',
@@ -229,6 +236,8 @@ class RoomController extends Controller
         $validated = $request->validate([
             'original_start_date' => ['required', 'date'],
             'original_end_date' => ['required', 'date', 'after_or_equal:original_start_date'],
+            'original_room_ids' => ['nullable', 'array', 'min:1'],
+            'original_room_ids.*' => ['integer', 'exists:rooms,room_id'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'room_ids' => ['required', 'array', 'min:1'],
@@ -259,6 +268,11 @@ class RoomController extends Controller
             ->unique()
             ->values()
             ->all();
+        $originalRoomIds = collect((array) ($validated['original_room_ids'] ?? $validated['room_ids']))
+            ->map(static fn ($id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
 
         $discountPercent = round((float) $validated['discount_percent'], 2);
         $now = now();
@@ -275,11 +289,17 @@ class RoomController extends Controller
             ];
         }
 
-        DB::transaction(function () use ($roomIds, $originalStart, $originalEnd, $rows): void {
+        DB::transaction(function () use ($originalRoomIds, $roomIds, $originalStart, $originalEnd, $start, $end, $rows): void {
+            RoomDateDiscount::query()
+                ->whereIn('room_id', $originalRoomIds)
+                ->whereDate('discount_date_start', $originalStart->toDateString())
+                ->whereDate('discount_date_end', $originalEnd->toDateString())
+                ->delete();
+
             RoomDateDiscount::query()
                 ->whereIn('room_id', $roomIds)
-                ->whereDate('discount_date_start', '<=', $originalEnd->toDateString())
-                ->whereDate('discount_date_end', '>=', $originalStart->toDateString())
+                ->whereDate('discount_date_start', '<=', $end->toDateString())
+                ->whereDate('discount_date_end', '>=', $start->toDateString())
                 ->delete();
 
             RoomDateDiscount::query()->upsert(

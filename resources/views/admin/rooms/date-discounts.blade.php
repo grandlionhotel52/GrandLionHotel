@@ -46,6 +46,16 @@
             padding: 0.58rem 0.72rem;
             font-size: 0.9rem;
         }
+        .date-discount-detail {
+            border: 1px solid var(--admin-line);
+            border-radius: 12px;
+            background: #fffaf1;
+            padding: 0.8rem;
+        }
+        .date-discount-detail .value {
+            font-weight: 700;
+            margin: 0;
+        }
     </style>
 @endpush
 
@@ -235,14 +245,14 @@
 
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-sm-6">
+                        <div class="col-sm-6"><div class="date-discount-detail">
                             <label class="form-label">Date Range</label>
-                            <input type="text" id="view_discount_date_label" class="form-control" value="-" readonly>
-                        </div>
-                        <div class="col-sm-6">
+                            <p id="view_discount_date_label" class="value">-</p>
+                        </div></div>
+                        <div class="col-sm-6"><div class="date-discount-detail">
                             <label class="form-label">Discount</label>
-                            <input type="text" id="view_discount_label" class="form-control" value="-" readonly>
-                        </div>
+                            <p id="view_discount_label" class="value text-success">-</p>
+                        </div></div>
                         <div class="col-sm-6">
                             <label class="form-label">Room Types</label>
                             <input type="text" id="view_discount_room_types" class="form-control" value="-" readonly>
@@ -285,7 +295,7 @@
                     <input type="hidden" name="q" value="{{ $search }}">
                     <input type="hidden" name="original_start_date" id="edit_discount_original_start_date" value="{{ old('original_start_date') }}">
                     <input type="hidden" name="original_end_date" id="edit_discount_original_end_date" value="{{ old('original_end_date') }}">
-                    <div id="edit_discount_room_ids_container"></div>
+                    <div id="edit_discount_original_room_ids_container"></div>
 
                     <div class="modal-header">
                         <h5 class="modal-title" id="editDateDiscountModalLabel">Edit Date Discount</h5>
@@ -321,13 +331,26 @@
                                 @enderror
                             </div>
                             <div class="col-sm-6">
-                                <label class="form-label">Affected Rooms</label>
-                                <input type="text" id="edit_discount_room_count" class="form-control" value="-" readonly>
-                            </div>
-                            <div class="col-sm-6">
                                 <label class="form-label">Current Discount</label>
                                 <input type="text" id="edit_discount_current_label" class="form-control" value="-" readonly>
                                 <small id="edit_discount_mixed_help" class="text-secondary d-none">This entry has mixed discounts. Saving will unify them.</small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="edit_discount_room_search">Affected Rooms</label>
+                                <input type="search" id="edit_discount_room_search" class="form-control mb-2" placeholder="Search by room ID, name, or type">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                    <span class="small fw-semibold" id="edit_discount_room_count">0 rooms selected</span>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-ta-outline" id="edit_discount_select_visible">Select visible</button>
+                                        <button type="button" class="btn btn-sm btn-ta-outline" id="edit_discount_clear_rooms">Clear</button>
+                                    </div>
+                                </div>
+                                <select name="room_ids[]" id="edit_discount_room_ids" class="form-select @error('room_ids') is-invalid @enderror @error('room_ids.*') is-invalid @enderror" multiple size="8" required>
+                                    @foreach($discountRoomOptions as $optionRoom)
+                                        <option value="{{ $optionRoom->id }}">#{{ $optionRoom->id }} - {{ $optionRoom->name }} ({{ $optionRoom->type }})</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-secondary">Click a room to toggle it. Removing a room removes this discount from that room.</small>
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label">New Discount (%)</label>
@@ -442,7 +465,11 @@
             const fieldCurrentLabel = document.getElementById('edit_discount_current_label');
             const fieldNewPercent = document.getElementById('edit_discount_percent');
             const fieldMixedHelp = document.getElementById('edit_discount_mixed_help');
-            const roomIdsContainer = document.getElementById('edit_discount_room_ids_container');
+            const originalRoomIdsContainer = document.getElementById('edit_discount_original_room_ids_container');
+            const editRoomSelect = document.getElementById('edit_discount_room_ids');
+            const editRoomSearch = document.getElementById('edit_discount_room_search');
+            const editSelectVisible = document.getElementById('edit_discount_select_visible');
+            const editClearRooms = document.getElementById('edit_discount_clear_rooms');
             const deleteFieldOriginalStartDate = document.getElementById('delete_discount_original_start_date');
             const deleteFieldOriginalEndDate = document.getElementById('delete_discount_original_end_date');
             const deleteFieldDateLabel = document.getElementById('delete_discount_date_label');
@@ -459,9 +486,31 @@
                 roomIds.forEach(function (roomId) {
                     const inputEl = document.createElement('input');
                     inputEl.type = 'hidden';
-                    inputEl.name = 'room_ids[]';
+                    inputEl.name = 'original_room_ids[]';
                     inputEl.value = String(roomId).trim();
                     container.appendChild(inputEl);
+                });
+            };
+
+            const setSelectedRooms = function (roomIds) {
+                const selectedIds = new Set(roomIds.map(String));
+                Array.from(editRoomSelect?.options || []).forEach(function (option) {
+                    option.selected = selectedIds.has(option.value);
+                });
+                updateEditRoomCount();
+            };
+
+            const updateEditRoomCount = function () {
+                const count = Array.from(editRoomSelect?.options || []).filter((option) => option.selected).length;
+                if (fieldRoomCount) {
+                    fieldRoomCount.textContent = `${count} room${count === 1 ? '' : 's'} selected`;
+                }
+            };
+
+            const filterEditRooms = function () {
+                const query = String(editRoomSearch?.value || '').trim().toLowerCase();
+                Array.from(editRoomSelect?.options || []).forEach(function (option) {
+                    option.hidden = query !== '' && !String(option.textContent || '').toLowerCase().includes(query);
                 });
             };
 
@@ -490,8 +539,8 @@
 
                 const roomLabels = parseJsonArray(trigger.getAttribute('data-room-labels'));
 
-                viewDateLabel.value = trigger.getAttribute('data-date-label') || '-';
-                viewDiscountLabel.value = trigger.getAttribute('data-discount-label') || '-';
+                viewDateLabel.textContent = trigger.getAttribute('data-date-label') || '-';
+                viewDiscountLabel.textContent = trigger.getAttribute('data-discount-label') || '-';
                 viewRoomTypes.value = trigger.getAttribute('data-room-types') || '-';
                 viewRoomCount.value = (trigger.getAttribute('data-room-count') || '0') + ' room(s)';
                 viewRegularPrice.value = trigger.getAttribute('data-regular-price-label') || '-';
@@ -538,13 +587,15 @@
                 if (fieldOriginalEndDate) {
                     fieldOriginalEndDate.value = endDate;
                 }
-                fieldRoomCount.value = roomCount + ' room(s)';
                 fieldCurrentLabel.value = currentDiscountLabel;
                 if (fieldMixedHelp) {
                     fieldMixedHelp.classList.toggle('d-none', !mixedDiscountFlag);
                 }
                 fieldNewPercent.value = defaultDiscount;
-                setRoomIds(roomIdsContainer, roomIds);
+                setRoomIds(originalRoomIdsContainer, roomIds);
+                setSelectedRooms(roomIds);
+                if (editRoomSearch) editRoomSearch.value = '';
+                filterEditRooms();
             });
 
             deleteModalEl.addEventListener('show.bs.modal', function (event) {
@@ -587,16 +638,37 @@
                 if (fieldOriginalEndDate) {
                     fieldOriginalEndDate.value = oldOriginalEndDate || oldEndDate || '';
                 }
-                fieldRoomCount.value = Array.isArray(oldRoomIds) ? oldRoomIds.length + ' room(s)' : '0 room(s)';
                 fieldCurrentLabel.value = 'Previously submitted value';
                 if (fieldMixedHelp) {
                     fieldMixedHelp.classList.add('d-none');
                 }
                 fieldNewPercent.value = oldPercent || '';
-                setRoomIds(roomIdsContainer, Array.isArray(oldRoomIds) ? oldRoomIds : []);
+                const restoredRoomIds = Array.isArray(oldRoomIds) ? oldRoomIds : [];
+                setRoomIds(originalRoomIdsContainer, Array.isArray(@json(old('original_room_ids'))) ? @json(old('original_room_ids')) : restoredRoomIds);
+                setSelectedRooms(restoredRoomIds);
 
                 bootstrap.Modal.getOrCreateInstance(editModalEl).show();
             }
+
+            editRoomSearch?.addEventListener('input', filterEditRooms);
+            editRoomSelect?.addEventListener('mousedown', function (event) {
+                const option = event.target;
+                if (!(option instanceof HTMLOptionElement)) return;
+                event.preventDefault();
+                option.selected = !option.selected;
+                editRoomSelect.focus();
+                updateEditRoomCount();
+            });
+            editSelectVisible?.addEventListener('click', function () {
+                Array.from(editRoomSelect?.options || []).forEach(function (option) {
+                    if (!option.hidden) option.selected = true;
+                });
+                updateEditRoomCount();
+            });
+            editClearRooms?.addEventListener('click', function () {
+                Array.from(editRoomSelect?.options || []).forEach(function (option) { option.selected = false; });
+                updateEditRoomCount();
+            });
         });
     </script>
 @endpush

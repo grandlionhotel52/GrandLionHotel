@@ -156,6 +156,47 @@ class AdminRoomDateDiscountsTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_change_rooms_when_editing_a_discount_range(): void
+    {
+        $admin = Admin::factory()->create();
+        $removedRoom = Room::factory()->create(['name' => 'Room 410']);
+        $keptRoom = Room::factory()->create(['name' => 'Room 411']);
+        $addedRoom = Room::factory()->create(['name' => 'Room 412']);
+
+        foreach ([$removedRoom, $keptRoom] as $room) {
+            RoomDateDiscount::query()->create([
+                'room_id' => $room->id,
+                'discount_date_start' => '2026-12-19',
+                'discount_date_end' => '2026-12-25',
+                'discount_percent' => 10,
+            ]);
+        }
+
+        $response = $this->actingAs($admin, 'admin')->patch(
+            route('admin.rooms.date-discounts.range.update'),
+            [
+                'original_start_date' => '2026-12-19',
+                'original_end_date' => '2026-12-25',
+                'original_room_ids' => [$removedRoom->id, $keptRoom->id],
+                'start_date' => '2026-12-19',
+                'end_date' => '2026-12-25',
+                'room_ids' => [$keptRoom->id, $addedRoom->id],
+                'discount_percent' => 20,
+            ]
+        );
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('room_date_discounts', ['room_id' => $removedRoom->id]);
+        $this->assertDatabaseHas('room_date_discounts', [
+            'room_id' => $keptRoom->id,
+            'discount_percent' => 20,
+        ]);
+        $this->assertDatabaseHas('room_date_discounts', [
+            'room_id' => $addedRoom->id,
+            'discount_percent' => 20,
+        ]);
+    }
+
     public function test_bulk_date_discount_keeps_existing_discounted_dates_unchanged(): void
     {
         $admin = Admin::factory()->create();
