@@ -191,9 +191,23 @@
         $readinessText = $isCustomerProfile
             ? ($profileCompletion === 100 ? 'Ready for booking' : 'Needs attention')
             : ($profileCompletion === 100 ? 'Profile ready' : 'Needs attention');
+        $profileBackRoute = match (true) {
+            $user->isAdmin() => route('admin.dashboard'),
+            $user->isStaff() => route('staff.dashboard'),
+            default => route('bookings.my'),
+        };
+        $profileBackLabel = $isCustomerProfile ? 'Back to my bookings' : 'Back to dashboard';
     @endphp
 
     <div class="profile-page">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <p class="ta-eyebrow mb-1">Account</p>
+                <h1 class="h3 mb-0">My Profile</h1>
+            </div>
+            <x-back-button :href="$profileBackRoute" :label="$profileBackLabel" />
+        </div>
+
         <div class="row g-4">
             <div class="col-xl-8">
                 <section class="profile-panel profile-appear delay-1">
