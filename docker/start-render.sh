@@ -75,6 +75,16 @@ until php artisan migrate --force; do
   sleep 5
 done
 
+if [ "${SEED_ADMIN_ON_DEPLOY:-false}" = "true" ]; then
+  if [ -z "${SEED_ADMIN_EMAIL:-}" ] || [ -z "${SEED_ADMIN_PASSWORD:-}" ]; then
+    echo "[startup] SEED_ADMIN_ON_DEPLOY is enabled, but SEED_ADMIN_EMAIL or SEED_ADMIN_PASSWORD is missing."
+    exit 1
+  fi
+
+  echo "[startup] Creating or updating the configured administrator..."
+  php artisan db:seed --class='Database\Seeders\UserSeeder' --force
+fi
+
 echo "[startup] Optimizing Laravel for production..."
 php artisan optimize
 

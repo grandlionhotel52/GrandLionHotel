@@ -25,6 +25,19 @@ DB_URL=mysql://user:password@host:port/database
 
 Use the value from Railway's `MYSQL_PUBLIC_URL` for `DB_URL`.
 
+To create or update the initial administrator during the next deployment, add:
+
+```env
+SEED_ADMIN_ON_DEPLOY=true
+SEED_ADMIN_EMAIL=admin@example.com
+SEED_ADMIN_PASSWORD=use-a-strong-private-password
+SEED_ADMIN_NAME=Administrator
+SEED_ADMIN_PHONE=09170000001
+```
+
+After the administrator can sign in, remove `SEED_ADMIN_ON_DEPLOY` (or set it to
+`false`) so later deployments do not reset the account password.
+
 ## Notes
 
 - `DB_CONNECTION` is already set to `mysql` in `render.yaml`.
