@@ -166,6 +166,81 @@ class AdminStaffButtonFlowsTest extends TestCase
         $this->assertDatabaseMissing('staff', ['staff_id' => $createdStaff->id]);
     }
 
+    public function test_admin_can_create_customer_and_duplicate_emails_are_validation_errors(): void
+    {
+        $admin = Admin::factory()->create(['email' => 'admin@example.com']);
+        $staff = Staff::factory()->create(['email' => 'staff@example.com']);
+
+        $this->actingAs($admin, 'admin')
+            ->post(route('admin.users.store'), [
+                '_user_modal_mode' => 'create',
+                'first_name' => 'New',
+                'last_name' => 'Customer',
+                'email' => '  CUSTOMER@EXAMPLE.COM ',
+                'phone' => '09171234567',
+                'address_line' => 'Sample Street',
+                'city' => 'Calamba',
+                'province' => 'Laguna',
+                'country' => 'Philippines',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ])
+            ->assertRedirect(route('admin.users.index'));
+
+        $customer = Customer::query()->where('email', 'customer@example.com')->firstOrFail();
+        $this->assertSame('New Customer', $customer->name);
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('admin.users.index'))
+            ->post(route('admin.users.store'), [
+                '_user_modal_mode' => 'create',
+                'first_name' => 'Duplicate',
+                'last_name' => 'Customer',
+                'email' => 'Customer@Example.com',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHasErrors('email');
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('admin.staff.index'))
+            ->post(route('admin.staff.store'), [
+                '_staff_modal_mode' => 'create',
+                'first_name' => 'Duplicate',
+                'last_name' => 'Staff',
+                'email' => ' CUSTOMER@EXAMPLE.COM ',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ])
+            ->assertRedirect(route('admin.staff.index'))
+            ->assertSessionHasErrors('email');
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('admin.users.index'))
+            ->put(route('admin.users.update', $customer), [
+                '_user_modal_mode' => 'edit',
+                '_user_modal_id' => $customer->id,
+                'first_name' => 'New',
+                'last_name' => 'Customer',
+                'email' => strtoupper($customer->email),
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionDoesntHaveErrors();
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('admin.users.index'))
+            ->put(route('admin.users.update', $customer), [
+                '_user_modal_mode' => 'edit',
+                '_user_modal_id' => $customer->id,
+                'first_name' => 'New',
+                'last_name' => 'Customer',
+                'email' => strtoupper($staff->email),
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHasErrors('email');
+    }
+
     public function test_staff_pages_and_operational_actions_work(): void
     {
         Mail::fake();

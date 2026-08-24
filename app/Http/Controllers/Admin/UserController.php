@@ -70,6 +70,47 @@ class UserController extends Controller
         return view('admin.users.index', compact('customers', 'stats', 'profile', 'bookings'));
     }
 
+    public function store(Request $request)
+    {
+        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'max:120'],
+            'last_name' => ['required', 'string', 'max:120'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (AccountDirectory::emailExists((string) $value)) {
+                        $fail('This email is already registered.');
+                    }
+                },
+            ],
+            'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\\-\\s]{7,30}$/'],
+            'address_line' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:120'],
+            'province' => ['nullable', 'string', 'max:120'],
+            'country' => ['nullable', 'string', 'max:120'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
+
+        Customer::create([
+            'name' => PersonName::combine($validated['first_name'], $validated['last_name']),
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'address_line' => $validated['address_line'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'province' => $validated['province'] ?? null,
+            'country' => $validated['country'] ?? null,
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('status', 'Customer account created successfully.');
+    }
+
     public function edit(Customer $user)
     {
         $user->loadCount('bookings');
@@ -79,6 +120,8 @@ class UserController extends Controller
 
     public function update(Request $request, Customer $user)
     {
+        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:120'],
             'last_name' => ['required', 'string', 'max:120'],
@@ -103,11 +146,11 @@ class UserController extends Controller
         $data = [
             'name' => PersonName::combine($validated['first_name'], $validated['last_name']),
             'email' => $validated['email'],
-            'phone' => $validated['phone'] ?: null,
-            'address_line' => $validated['address_line'] ?: null,
-            'city' => $validated['city'] ?: null,
-            'province' => $validated['province'] ?: null,
-            'country' => $validated['country'] ?: null,
+            'phone' => $validated['phone'] ?? null,
+            'address_line' => $validated['address_line'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'province' => $validated['province'] ?? null,
+            'country' => $validated['country'] ?? null,
         ];
 
         if (!empty($validated['password'])) {

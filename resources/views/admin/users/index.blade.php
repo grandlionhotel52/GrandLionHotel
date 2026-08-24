@@ -100,6 +100,9 @@
         <div>
             <h1 class="h4 mb-1">Customer Accounts</h1>
         </div>
+        <button type="button" class="btn btn-ta" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <i class="bi bi-person-plus me-1"></i>Add Customer
+        </button>
     </div>
 
     <div class="row g-3 mb-4">
@@ -251,12 +254,43 @@
         {{ $customers->links() }}
     </div>
 
+    <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('admin.users.store') }}">
+                    @csrf
+                    <input type="hidden" name="_user_modal_mode" value="create">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createUserModalLabel">Add Customer Account</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label">First name</label><input type="text" name="first_name" class="form-control @error('first_name') is-invalid @enderror" value="{{ old('_user_modal_mode') === 'create' ? old('first_name') : '' }}" required>@error('first_name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                            <div class="col-md-6"><label class="form-label">Last name</label><input type="text" name="last_name" class="form-control @error('last_name') is-invalid @enderror" value="{{ old('_user_modal_mode') === 'create' ? old('last_name') : '' }}" required>@error('last_name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                            <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('_user_modal_mode') === 'create' ? old('email') : '' }}" required>@error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                            <div class="col-md-6"><label class="form-label">Phone (optional)</label><input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('_user_modal_mode') === 'create' ? old('phone') : '' }}" placeholder="+63...">@error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                            <div class="col-md-6"><label class="form-label">Address line (optional)</label><input type="text" name="address_line" class="form-control" value="{{ old('_user_modal_mode') === 'create' ? old('address_line') : '' }}"></div>
+                            <div class="col-md-6"><label class="form-label">City (optional)</label><input type="text" name="city" class="form-control" value="{{ old('_user_modal_mode') === 'create' ? old('city') : '' }}"></div>
+                            <div class="col-md-6"><label class="form-label">Province (optional)</label><input type="text" name="province" class="form-control" value="{{ old('_user_modal_mode') === 'create' ? old('province') : '' }}"></div>
+                            <div class="col-md-6"><label class="form-label">Country (optional)</label><input type="text" name="country" class="form-control" value="{{ old('_user_modal_mode') === 'create' ? old('country', 'Philippines') : 'Philippines' }}"></div>
+                            <div class="col-md-6"><label class="form-label">Temporary password</label><input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required>@error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                            <div class="col-md-6"><label class="form-label">Confirm password</label><input type="password" name="password_confirmation" class="form-control" required></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-ta-outline" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-ta">Create account</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <form id="editUserForm" method="POST" action="{{ route('admin.users.update', ['user' => '__USER__']) }}">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="_user_modal_mode" value="edit">
                     <input type="hidden" name="_user_modal_id" id="edit_user_modal_id">
 
                     <div class="modal-header">
@@ -350,8 +384,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modalEl = document.getElementById('editUserModal');
+            const createModalEl = document.getElementById('createUserModal');
             const formEl = document.getElementById('editUserForm');
-            if (!modalEl || !formEl || typeof bootstrap === 'undefined') {
+            if (!modalEl || !createModalEl || !formEl || typeof bootstrap === 'undefined') {
                 return;
             }
 
@@ -404,8 +439,12 @@
                 fieldPasswordConfirmation.value = '';
             });
 
+            const oldMode = @json(old('_user_modal_mode'));
             const oldModalUserId = @json(old('_user_modal_id'));
-            if (oldModalUserId) {
+            if (oldMode === 'create') {
+                bootstrap.Modal.getOrCreateInstance(createModalEl).show();
+            }
+            if (oldMode === 'edit' && oldModalUserId) {
                 const oldButton = document.querySelector(`.js-edit-user-btn[data-user-id="${oldModalUserId}"]`);
                 if (oldButton) {
                     bootstrap.Modal.getOrCreateInstance(modalEl).show();

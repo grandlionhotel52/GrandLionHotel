@@ -88,6 +88,8 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:120'],
             'last_name' => ['required', 'string', 'max:120'],
@@ -108,7 +110,7 @@ class StaffController extends Controller
         Staff::create([
             'name' => PersonName::combine($validated['first_name'], $validated['last_name']),
             'email' => $validated['email'],
-            'phone' => $validated['phone'] ?: null,
+            'phone' => $validated['phone'] ?? null,
             'password' => Hash::make($validated['password']),
             'admin_id' => $request->user()->id,
         ]);
@@ -203,6 +205,8 @@ class StaffController extends Controller
 
     public function update(Request $request, Staff $staff)
     {
+        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:120'],
             'last_name' => ['required', 'string', 'max:120'],
@@ -223,7 +227,7 @@ class StaffController extends Controller
         $data = [
             'name' => PersonName::combine($validated['first_name'], $validated['last_name']),
             'email' => $validated['email'],
-            'phone' => $validated['phone'] ?: null,
+            'phone' => $validated['phone'] ?? null,
             'admin_id' => $staff->admin_id ?? $request->user()->id,
         ];
 

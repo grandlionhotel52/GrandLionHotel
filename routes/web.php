@@ -110,6 +110,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::post('/bookings/{booking}/refund-request', [AdminBookingController::class, 'createRefundRequest'])->name('bookings.create-refund-request');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
