@@ -225,7 +225,7 @@
                                         <i class="bi bi-pencil-square"></i>
                                         <span>Edit</span>
                                     </button>
-                                    <form method="POST" action="{{ route('admin.users.destroy', $customer) }}" onsubmit="return confirm('Delete this customer account? This cannot be undone.');">
+                                    <form method="POST" action="{{ route('admin.users.destroy', $customer) }}" data-submit-lock onsubmit="return confirm('Delete this customer account? This cannot be undone.');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-delete">
@@ -257,7 +257,7 @@
     <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <form method="POST" action="{{ route('admin.users.store') }}">
+                <form method="POST" action="{{ route('admin.users.store') }}" data-submit-lock>
                     @csrf
                     <input type="hidden" name="_user_modal_mode" value="create">
                     <div class="modal-header">
@@ -278,7 +278,7 @@
                             <div class="col-md-6"><label class="form-label">Confirm password</label><input type="password" name="password_confirmation" class="form-control" required></div>
                         </div>
                     </div>
-                    <div class="modal-footer"><button type="button" class="btn btn-ta-outline" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-ta">Create account</button></div>
+                    <div class="modal-footer"><button type="button" class="btn btn-ta-outline" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-ta" data-submitting-text="Creating account...">Create account</button></div>
                 </form>
             </div>
         </div>
@@ -287,7 +287,7 @@
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <form id="editUserForm" method="POST" action="{{ route('admin.users.update', ['user' => '__USER__']) }}">
+                <form id="editUserForm" method="POST" action="{{ route('admin.users.update', ['user' => '__USER__']) }}" data-submit-lock>
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="_user_modal_mode" value="edit">
@@ -372,7 +372,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-ta-outline" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-ta">Save changes</button>
+                        <button type="submit" class="btn btn-ta" data-submitting-text="Saving changes...">Save changes</button>
                     </div>
                 </form>
             </div>

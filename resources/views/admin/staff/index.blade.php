@@ -208,7 +208,7 @@
                                         <i class="bi bi-pencil-square"></i>
                                         <span>Edit</span>
                                     </button>
-                                    <form method="POST" action="{{ route('admin.staff.destroy', $staff) }}" onsubmit="return confirm('Delete this staff account?');">
+                                    <form method="POST" action="{{ route('admin.staff.destroy', $staff) }}" data-submit-lock onsubmit="return confirm('Delete this staff account?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-delete">
@@ -240,7 +240,7 @@
     <div class="modal fade" id="createStaffModal" tabindex="-1" aria-labelledby="createStaffModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <form method="POST" action="{{ route('admin.staff.store') }}">
+                <form method="POST" action="{{ route('admin.staff.store') }}" data-submit-lock>
                     @csrf
                     <input type="hidden" name="_staff_modal_mode" value="create">
 
@@ -295,7 +295,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-ta-outline" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-ta">Create account</button>
+                        <button type="submit" class="btn btn-ta" data-submitting-text="Creating account...">Create account</button>
                     </div>
                 </form>
             </div>
@@ -305,7 +305,7 @@
     <div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <form id="editStaffForm" method="POST" action="{{ route('admin.staff.update', ['staff' => '__STAFF__']) }}">
+                <form id="editStaffForm" method="POST" action="{{ route('admin.staff.update', ['staff' => '__STAFF__']) }}" data-submit-lock>
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="_staff_modal_mode" value="edit">
@@ -362,7 +362,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-ta-outline" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-ta">Save changes</button>
+                        <button type="submit" class="btn btn-ta" data-submitting-text="Saving changes...">Save changes</button>
                     </div>
                 </form>
             </div>

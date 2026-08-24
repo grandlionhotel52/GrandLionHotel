@@ -76,9 +76,13 @@ class AdminStaffButtonFlowsTest extends TestCase
         $roomsIndexResponse->assertDontSee('Needs Cleaning');
         $this->get(route('admin.staff.index'))
             ->assertOk()
+            ->assertSee('data-submit-lock', false)
+            ->assertSee('data-submitting-text="Creating account..."', false)
             ->assertSee('data-staff-update-url="'.route('admin.staff.update', $staff).'"', false);
         $this->get(route('admin.users.index'))
             ->assertOk()
+            ->assertSee('data-submit-lock', false)
+            ->assertSee('data-submitting-text="Creating account..."', false)
             ->assertSee('data-user-update-url="'.route('admin.users.update', $customer).'"', false);
         $this->get(route('admin.bookings.show', $pendingBooking))->assertOk();
 

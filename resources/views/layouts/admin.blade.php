@@ -722,6 +722,30 @@
 
                 form.dataset.confirmed = '1';
             });
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-submit-lock')) {
+                    return;
+                }
+
+                if (form.dataset.submitting === '1') {
+                    event.preventDefault();
+                    return;
+                }
+
+                form.dataset.submitting = '1';
+                const submitButton = event.submitter instanceof HTMLButtonElement
+                    ? event.submitter
+                    : form.querySelector('button[type="submit"], input[type="submit"]');
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.setAttribute('aria-disabled', 'true');
+                    submitButton.dataset.originalText = submitButton.textContent || '';
+                    submitButton.textContent = submitButton.dataset.submittingText || 'Processing...';
+                }
+            });
         })();
     </script>
     @include('layouts.partials.history-refresh')
