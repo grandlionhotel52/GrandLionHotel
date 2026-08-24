@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ActivityLog;
 use App\Models\Admin;
+use App\Models\Customer;
 use App\Models\Room;
 use App\Models\Staff;
 use App\Services\AuditLogger;
@@ -98,5 +99,40 @@ class ActivityLogExperienceTest extends TestCase
         $this->actingAs($staff, 'staff')
             ->get(route('admin.activity-logs.index'))
             ->assertRedirect(route('login'));
+    }
+
+    public function test_admin_staff_and_customer_account_changes_are_recorded(): void
+    {
+        $admin = Admin::factory()->create();
+        $this->actingAs($admin, 'admin');
+
+        $staff = Staff::factory()->create(['name' => 'Original Staff']);
+        $customer = Customer::factory()->create(['name' => 'Original Customer']);
+
+        $staff->update(['name' => 'Updated Staff']);
+        $customer->update(['name' => 'Updated Customer']);
+
+        $staffId = $staff->getKey();
+        $customerId = $customer->getKey();
+        $staff->delete();
+        $customer->delete();
+
+        foreach ([
+            ['subject_type' => 'Staff', 'subject_id' => $staffId],
+            ['subject_type' => 'Customer', 'subject_id' => $customerId],
+        ] as $subject) {
+            foreach (['created', 'updated', 'deleted'] as $action) {
+                $this->assertDatabaseHas('activity_logs', $subject + [
+                    'actor_type' => 'Admin',
+                    'actor_id' => $admin->getKey(),
+                    'action' => $action,
+                ]);
+            }
+        }
+
+        $this->get(route('admin.activity-logs.index'))
+            ->assertOk()
+            ->assertSee('Staff')
+            ->assertSee('Customer');
     }
 }

@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Admin;
 use App\Models\Booking;
+use App\Models\Customer;
 use App\Models\Room;
 use App\Models\Payment;
 use App\Models\RefundRequest;
+use App\Models\Staff;
 use App\Observers\OperationalAuditObserver;
 use App\Services\AuditLogger;
 use Illuminate\Auth\Events\Login;
@@ -37,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
         Payment::observe(OperationalAuditObserver::class);
         RefundRequest::observe(OperationalAuditObserver::class);
         Room::observe(OperationalAuditObserver::class);
+        Admin::observe(OperationalAuditObserver::class);
+        Staff::observe(OperationalAuditObserver::class);
+        Customer::observe(OperationalAuditObserver::class);
 
         Event::listen(Login::class, function (Login $event): void {
             if ($event->user instanceof Model) {
