@@ -129,7 +129,7 @@
                 <p class="booking-admin-value">PHP {{ number_format((float) ($pricingQuote['chargeable_subtotal'] ?? 0), 2) }}</p>
             </div>
             <div class="booking-admin-item">
-                <p class="booking-admin-label">Service Fee (8%)</p>
+                <p class="booking-admin-label">Service Charge (8%, Breakfast Only)</p>
                 <p class="booking-admin-value">PHP {{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }}</p>
             </div>
             <div class="booking-admin-item">

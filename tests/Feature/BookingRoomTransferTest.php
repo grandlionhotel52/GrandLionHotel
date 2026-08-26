@@ -53,7 +53,7 @@ class BookingRoomTransferTest extends TestCase
 
         $this->assertSame($newRoom->id, $booking->room_id);
         $this->assertSame($staff->id, $booking->staff_id);
-        $this->assertSame('7500.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('7020.00', number_format((float) $booking->payment->amount, 2, '.', ''));
     }
 
     public function test_staff_cannot_transfer_paid_booking_to_room_with_different_total(): void

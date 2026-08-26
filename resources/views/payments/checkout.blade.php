@@ -138,7 +138,7 @@
                         <span class="checkout-summary-value">&#8369;{{ number_format($chargeableSubtotal, 2) }}</span>
                     </div>
                     <div class="checkout-summary-item">
-                        <span class="checkout-summary-label">Service fee (8%)</span>
+                        <span class="checkout-summary-label">Service charge (8%, with breakfast only)</span>
                         <span class="checkout-summary-value">&#8369;{{ number_format($serviceFee, 2) }}</span>
                     </div>
                     <div class="checkout-summary-item">

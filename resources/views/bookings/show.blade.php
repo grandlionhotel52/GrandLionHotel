@@ -617,7 +617,7 @@
                 @if(($pricingQuote['extra_bedding_total'] ?? 0) > 0)
                     <p class="mb-1"><small class="text-secondary">Extra bedding total</small><br><strong>&#8369;{{ number_format((float) $pricingQuote['extra_bedding_total'], 2) }}</strong></p>
                 @endif
-                <p class="mb-1"><small class="text-secondary">Service fee (8%)</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }}</strong></p>
+                <p class="mb-1"><small class="text-secondary">Service charge (8%, with breakfast only)</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }}</strong></p>
                 <p class="mb-1"><small class="text-secondary">Local tax (5%)</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['local_tax'] ?? 0), 2) }}</strong></p>
                 <p class="mb-1"><small class="text-secondary">VAT (12%, exclusive)</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['vat'] ?? 0), 2) }}</strong></p>
                 @if((float) ($booking->payment?->discount_amount ?? 0) > 0)

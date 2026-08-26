@@ -90,7 +90,13 @@ class RoomController extends Controller
             && $this->availabilityService->isRoomAvailable($room, $stay['check_in'], $stay['check_out']);
 
         return response()->json([
-            'pricing' => $this->pricingService->quoteStay($room, $stay['check_in'], $stay['check_out'], $requestedGuests),
+            'pricing' => $this->pricingService->quoteStay(
+                $room,
+                $stay['check_in'],
+                $stay['check_out'],
+                $requestedGuests,
+                $request->input('meal_plan') === 'breakfast_included'
+            ),
             'availability' => [
                 'room_status_available' => $room->is_available,
                 'stay_available' => $stayAvailable,

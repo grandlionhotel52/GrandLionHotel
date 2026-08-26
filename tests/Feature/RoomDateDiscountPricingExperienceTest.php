@@ -34,13 +34,25 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('pricing.average_nightly_rate', 1750);
         $response->assertJsonPath('pricing.chargeable_subtotal', 3500);
-        $response->assertJsonPath('pricing.service_fee', 280);
+        $response->assertJsonPath('pricing.service_fee', 0);
         $response->assertJsonPath('pricing.local_tax', 175);
         $response->assertJsonPath('pricing.vat', 420);
-        $response->assertJsonPath('pricing.total', 4375);
+        $response->assertJsonPath('pricing.total', 4095);
         $response->assertJsonPath('pricing.discount_amount', 500);
         $response->assertJsonPath('pricing.discounted_nights', 1);
         $response->assertJsonPath('availability.stay_available', true);
+
+        $withBreakfast = $this->getJson(route('rooms.pricing-preview', [
+            'room' => $room,
+            'check_in' => now()->addDay()->toDateString(),
+            'check_out' => now()->addDays(3)->toDateString(),
+            'meal_plan' => 'breakfast_included',
+        ]));
+
+        $withBreakfast->assertOk();
+        $withBreakfast->assertJsonPath('pricing.service_fee_applies', true);
+        $withBreakfast->assertJsonPath('pricing.service_fee', 280);
+        $withBreakfast->assertJsonPath('pricing.total', 4375);
     }
 
     public function test_room_search_displays_selected_stay_discounted_pricing(): void
@@ -65,8 +77,8 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $response->assertOk();
         $response->assertSee('Date Discount Room');
         $response->assertSee('1,750');
-        $response->assertSee('4,375 total for 2 nights');
-        $response->assertSee('Includes 8% service fee, 5% local tax, and 12% VAT.');
+        $response->assertSee('4,095 total for 2 nights');
+        $response->assertSee('Includes 5% local tax and 12% VAT. An 8% service charge applies only with breakfast.');
         $response->assertSee('Date discount on 1 night');
     }
 
@@ -98,8 +110,8 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('1,750');
-        $response->assertSee('4,375');
-        $response->assertSee('Service fee (8%)');
+        $response->assertSee('4,095');
+        $response->assertSee('Service charge (8%, with breakfast only)');
         $response->assertSee('Local tax (5%)');
         $response->assertSee('VAT (12%, exclusive)');
         $response->assertSee('Date discount on 1 night');

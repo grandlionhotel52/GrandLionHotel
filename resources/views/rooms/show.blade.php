@@ -163,7 +163,7 @@
                         </strong>
                     </li>
                     <li class="mb-2">Accommodation subtotal: <strong class="text-dark" id="room_chargeable_subtotal">&#8369;{{ \App\Support\Money::display($pricingPreview['chargeable_subtotal'] ?? 0) }}</strong></li>
-                    <li class="mb-2">Service fee (8%): <strong class="text-dark" id="room_service_fee">&#8369;{{ \App\Support\Money::display($pricingPreview['service_fee'] ?? 0) }}</strong></li>
+                    <li class="mb-2">Service charge (8%, with breakfast only): <strong class="text-dark" id="room_service_fee">&#8369;{{ \App\Support\Money::display($pricingPreview['service_fee'] ?? 0) }}</strong></li>
                     <li class="mb-2">Local tax (5%): <strong class="text-dark" id="room_local_tax">&#8369;{{ \App\Support\Money::display($pricingPreview['local_tax'] ?? 0) }}</strong></li>
                     <li class="mb-2">VAT (12%, exclusive): <strong class="text-dark" id="room_vat">&#8369;{{ \App\Support\Money::display($pricingPreview['vat'] ?? 0) }}</strong></li>
                     <li class="mb-2">

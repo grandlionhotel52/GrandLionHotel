@@ -512,7 +512,8 @@ class BookingController extends Controller
             $booking->room,
             $booking->check_in->toDateString(),
             $booking->check_out->toDateString(),
-            $guestTotal
+            $guestTotal,
+            $this->bookingHasBreakfast($booking)
         );
         $currentBillableBaseTotal = $this->resolveBookingBillableBaseTotal($booking);
         $amountChanged = !$this->amountsMatch($recalculatedTotal, $currentBillableBaseTotal);
@@ -601,7 +602,8 @@ class BookingController extends Controller
                     $targetRoom,
                     $checkIn,
                     $checkOut,
-                    $lockedBooking->guests
+                    $lockedBooking->guests,
+                    $this->bookingHasBreakfast($lockedBooking)
                 );
 
                 if ($this->transferNeedsMatchingTotal($lockedBooking) && !$this->amountsMatch($currentStayTotal, $newStayTotal)) {
@@ -816,7 +818,8 @@ class BookingController extends Controller
             $booking->room,
             $validated['check_in'],
             $validated['check_out'],
-            $booking->guests
+            $booking->guests,
+            $this->bookingHasBreakfast($booking)
         );
 
         $booking->update($this->withAssignedStaff($booking, [
@@ -870,7 +873,8 @@ class BookingController extends Controller
             $booking->room,
             $requestedCheckIn,
             $requestedCheckOut,
-            $booking->guests
+            $booking->guests,
+            $this->bookingHasBreakfast($booking)
         );
 
         $booking->update($this->withAssignedStaff($booking, [
@@ -1105,7 +1109,13 @@ class BookingController extends Controller
             ->orderBy('name')
             ->get()
             ->map(function (Room $room) use ($booking, $checkIn, $checkOut): Room {
-                $stayTotal = $this->pricingService->calculateTotal($room, $checkIn, $checkOut, $booking->guests);
+                $stayTotal = $this->pricingService->calculateTotal(
+                    $room,
+                    $checkIn,
+                    $checkOut,
+                    $booking->guests,
+                    $this->bookingHasBreakfast($booking)
+                );
                 $room->setAttribute('transfer_stay_total', $stayTotal);
                 $room->setAttribute(
                     'transfer_is_available',
@@ -1139,8 +1149,14 @@ class BookingController extends Controller
             $booking->room,
             $booking->check_in->toDateString(),
             $booking->check_out->toDateString(),
-            $booking->guests
+            $booking->guests,
+            $this->bookingHasBreakfast($booking)
         );
+    }
+
+    private function bookingHasBreakfast(Booking $booking): bool
+    {
+        return ($booking->reservation_meta['meal_plan'] ?? 'room_only') === 'breakfast_included';
     }
 
     private function amountsMatch(float $left, float $right): bool

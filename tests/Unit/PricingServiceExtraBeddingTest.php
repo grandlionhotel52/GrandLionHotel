@@ -41,7 +41,8 @@ class PricingServiceExtraBeddingTest extends TestCase
             $room,
             now()->addDay()->toDateString(),
             now()->addDays(3)->toDateString(),
-            3
+            3,
+            true
         );
 
         $this->assertSame(1, $quote['extra_bedding_count']);
@@ -71,13 +72,31 @@ class PricingServiceExtraBeddingTest extends TestCase
             $room,
             now()->addDay()->toDateString(),
             now()->addDays(3)->toDateString(),
-            3
+            3,
+            true
         );
 
         $this->assertSame(3500.0, $quote['room_total']);
         $this->assertSame(500.0, $quote['discount_amount']);
         $this->assertSame(1000.0, $quote['extra_bedding_total']);
         $this->assertSame(5625.0, $quote['total']);
+    }
+
+    public function test_service_charge_only_applies_when_breakfast_is_selected(): void
+    {
+        $room = $this->createRoom(['price_per_night' => 2000]);
+        $checkIn = now()->addDay()->toDateString();
+        $checkOut = now()->addDays(2)->toDateString();
+
+        $roomOnly = app(PricingService::class)->quoteStay($room, $checkIn, $checkOut, 2);
+        $withBreakfast = app(PricingService::class)->quoteStay($room, $checkIn, $checkOut, 2, true);
+
+        $this->assertFalse($roomOnly['service_fee_applies']);
+        $this->assertSame(0.0, $roomOnly['service_fee']);
+        $this->assertSame(2340.0, $roomOnly['total']);
+        $this->assertTrue($withBreakfast['service_fee_applies']);
+        $this->assertSame(160.0, $withBreakfast['service_fee']);
+        $this->assertSame(2500.0, $withBreakfast['total']);
     }
 
     private function createRoom(array $overrides = []): Room

@@ -168,7 +168,8 @@ class BookingController extends Controller
                     $lockedRoom,
                     $checkIn,
                     $checkOut,
-                    $request->integer('guests')
+                    $request->integer('guests'),
+                    $request->input('meal_plan') === 'breakfast_included'
                 );
                 $discountType = strtolower((string) $request->input('discount_type', 'none'));
                 $discountRate = match ($discountType) {

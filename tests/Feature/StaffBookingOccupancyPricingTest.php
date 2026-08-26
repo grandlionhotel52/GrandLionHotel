@@ -49,7 +49,7 @@ class StaffBookingOccupancyPricingTest extends TestCase
         $booking->refresh()->load('payment', 'guestDetail');
 
         $this->assertSame(3, $booking->guests);
-        $this->assertSame('6250.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('5850.00', number_format((float) $booking->payment->amount, 2, '.', ''));
         $this->assertSame(3, (int) $booking->guestDetail->adults);
     }
 

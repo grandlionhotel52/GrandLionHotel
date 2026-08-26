@@ -313,7 +313,7 @@
                         <div class="booking-estimate-row"><span>Rate</span><strong id="summary_rate">{{ $initialSummaryRate }}</strong></div>
                         <div class="booking-estimate-row"><span>Standard occupancy</span><strong id="summary_guests">{{ $initialGuests }} guests</strong></div>
                         <div class="booking-estimate-row"><span>Accommodation subtotal</span><strong id="summary_chargeable_subtotal">&#8369;{{ number_format((float) ($pricingPreview['chargeable_subtotal'] ?? $room->price_per_night), 2) }}</strong></div>
-                        <div class="booking-estimate-row"><span>Service fee (8%)</span><strong id="summary_service_fee">&#8369;{{ number_format((float) ($pricingPreview['service_fee'] ?? 0), 2) }}</strong></div>
+                        <div class="booking-estimate-row"><span>Service charge (8%, with breakfast only)</span><strong id="summary_service_fee">&#8369;{{ number_format((float) ($pricingPreview['service_fee'] ?? 0), 2) }}</strong></div>
                         <div class="booking-estimate-row"><span>Local tax (5%)</span><strong id="summary_local_tax">&#8369;{{ number_format((float) ($pricingPreview['local_tax'] ?? 0), 2) }}</strong></div>
                         <div class="booking-estimate-row"><span>VAT (12%, exclusive)</span><strong id="summary_vat">&#8369;{{ number_format((float) ($pricingPreview['vat'] ?? 0), 2) }}</strong></div>
                         <div class="booking-estimate-row"><span>Discount</span><strong id="summary_discount">{{ $initialSummaryDiscount }}</strong></div>
@@ -571,6 +571,7 @@
             const summaryServiceFee = document.getElementById('summary_service_fee');
             const summaryLocalTax = document.getElementById('summary_local_tax');
             const summaryVat = document.getElementById('summary_vat');
+            const mealPlanSelect = document.getElementById('meal_plan_select');
             const summaryDiscount = document.getElementById('summary_discount');
             const summaryDiscountNote = document.getElementById('summary_discount_note');
             const summaryAvailability = document.getElementById('summary_availability');
@@ -883,6 +884,7 @@
                     const previewUrl = new URL(form.dataset.previewUrl, window.location.origin);
                     previewUrl.searchParams.set('check_in', checkInInput.value);
                     previewUrl.searchParams.set('check_out', checkOutInput.value);
+                    previewUrl.searchParams.set('meal_plan', mealPlanSelect?.value || 'room_only');
 
                     const response = await fetch(previewUrl, {
                         headers: {
@@ -1027,6 +1029,7 @@
                 refreshPricingPreview();
             });
             checkOutInput.addEventListener('change', refreshPricingPreview);
+            mealPlanSelect?.addEventListener('change', refreshPricingPreview);
             contactPhoneInput?.addEventListener('input', validateContactPhone);
             contactPhoneInput?.addEventListener('blur', () => {
                 validateContactPhone();

@@ -299,7 +299,7 @@
                 <div class="booking-command-value">PHP {{ number_format((float) ($pricingQuote['chargeable_subtotal'] ?? 0), 2) }}</div>
             </div>
             <div class="booking-command-item">
-                <p class="booking-info-label">Service / Local / VAT</p>
+                <p class="booking-info-label">Service (Breakfast Only) / Local / VAT</p>
                 <div class="booking-command-value">PHP {{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }} / PHP {{ number_format((float) ($pricingQuote['local_tax'] ?? 0), 2) }} / PHP {{ number_format((float) ($pricingQuote['vat'] ?? 0), 2) }}</div>
             </div>
             <div class="booking-command-item">

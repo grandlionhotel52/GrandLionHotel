@@ -189,7 +189,7 @@
             </tr>
         @endif
         <tr><th>Accommodation Subtotal</th><td>&#8369;{{ number_format($chargeableSubtotal, 2) }}</td></tr>
-        <tr><th>Service Fee (8%)</th><td>&#8369;{{ number_format($serviceFee, 2) }}</td></tr>
+        <tr><th>Service Charge (8%, Breakfast Only)</th><td>&#8369;{{ number_format($serviceFee, 2) }}</td></tr>
         <tr><th>Local Tax (5%)</th><td>&#8369;{{ number_format($localTax, 2) }}</td></tr>
         <tr><th>VAT (12%, Exclusive)</th><td>&#8369;{{ number_format($vat, 2) }}</td></tr>
         @if($hasDiscount)
