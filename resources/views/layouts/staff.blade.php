@@ -656,6 +656,7 @@
     @include('layouts.partials.history-refresh')
     @include('layouts.partials.unsaved-changes')
     @include('layouts.partials.submit-guard')
+    @include('layouts.partials.realtime-validation')
     @stack('scripts')
     @include('layouts.partials.image-fallback')
 </body>

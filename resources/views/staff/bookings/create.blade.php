@@ -88,7 +88,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Phone</label>
-                                <input type="tel" name="customer_phone" class="form-control @error('customer_phone') is-invalid @enderror" value="{{ old('customer_phone') }}" maxlength="30" placeholder="+63..." pattern="[0-9+()\-\s]{7,30}">
+                                <input type="tel" name="customer_phone" class="form-control @error('customer_phone') is-invalid @enderror" value="{{ old('customer_phone') }}" maxlength="20" inputmode="tel" placeholder="09XXXXXXXXX" pattern="(?:09[0-9]{9}|\+639[0-9]{9})" data-live-ph-phone>
                                 @error('customer_phone')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

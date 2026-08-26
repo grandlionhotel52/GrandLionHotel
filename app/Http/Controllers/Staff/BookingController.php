@@ -1219,7 +1219,7 @@ class BookingController extends Controller
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_email' => ['nullable', 'email'],
-            'customer_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\\-\\s]{7,30}$/'],
+            'customer_phone' => ['nullable', 'string', 'max:20', 'regex:/^(?:09\\d{9}|\\+639\\d{9})$/'],
             'room_id' => ['required', 'exists:rooms,room_id'],
             'check_in' => ['required', 'date', 'after_or_equal:today'],
             'check_out' => ['required', 'date', 'after_or_equal:check_in'],
@@ -1228,7 +1228,7 @@ class BookingController extends Controller
             'payment_preference' => ['nullable', Rule::in(Payment::allowedMethods())],
             'extra_bedding_confirmed' => ['nullable', 'accepted'],
         ], [
-            'customer_phone.regex' => 'Phone must contain only digits, spaces, +, (), or -.',
+            'customer_phone.regex' => 'Phone number must be 11 digits starting with 09, or +639 followed by 9 digits.',
         ]);
 
         $room = Room::findOrFail($validated['room_id']);
