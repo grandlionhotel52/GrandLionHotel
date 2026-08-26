@@ -92,7 +92,7 @@
                                         <a href="{{ route('password.request') }}" class="small text-decoration-none fw-medium text-ta-gold">Forgot password?</a>
                                     </div>
                                     <div class="col-12">
-                                        <button type="submit" class="btn btn-ta auth-premium-action" id="loginSubmitButton">Sign in</button>
+                                        <button type="submit" class="btn btn-ta auth-premium-action" data-submitting-text="Signing in...">Sign in</button>
                                         </div>
 
                                     <div class="auth-oauth-divider mb-3">or continue with Google</div>
@@ -121,8 +121,6 @@
     <script>
         (() => {
             const toggles = document.querySelectorAll('[data-password-toggle]');
-            const loginForm = document.getElementById('loginForm');
-            const submitButton = document.getElementById('loginSubmitButton');
 
             toggles.forEach((toggleButton) => {
                 toggleButton.addEventListener('click', () => {
@@ -139,18 +137,6 @@
                 });
             });
 
-            loginForm?.addEventListener('submit', (event) => {
-                if (loginForm.dataset.submitting === '1') {
-                    event.preventDefault();
-                    return;
-                }
-
-                loginForm.dataset.submitting = '1';
-                if (submitButton) {
-                    submitButton.disabled = true;
-                    submitButton.textContent = 'Signing in…';
-                }
-            });
         })();
     </script>
 @endpush
