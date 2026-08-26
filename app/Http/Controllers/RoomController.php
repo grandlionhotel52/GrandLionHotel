@@ -29,7 +29,7 @@ class RoomController extends Controller
         }
 
         $stay = $this->resolveStayFilters($request);
-        $roomsQuery = Room::query();
+        $roomsQuery = Room::query()->availableForBooking();
 
         $this->applyFilters($roomsQuery, $request, $stay);
 
@@ -43,6 +43,8 @@ class RoomController extends Controller
 
     public function show(Request $request, Room $room)
     {
+        abort_unless($room->is_available, 404);
+
         if ($normalizedStay = $this->normalizeStayDates($request)) {
             return redirect()->route('rooms.show', array_merge(
                 ['room' => $room],
@@ -69,6 +71,8 @@ class RoomController extends Controller
 
     public function pricingPreview(Request $request, Room $room): JsonResponse
     {
+        abort_unless($room->is_available, 404);
+
         if ($normalizedStay = $this->normalizeStayDates($request)) {
             $stay = $this->resolveStayFilters(new Request($normalizedStay));
         } else {
@@ -152,7 +156,6 @@ class RoomController extends Controller
 
         if ($stay['is_valid']) {
             $roomsQuery
-                ->availableForBooking()
                 ->whereDoesntHave('bookings', function (Builder $bookingQuery) use ($stay): void {
                     $bookingQuery
                         ->whereIn('status', ['pending', 'confirmed'])
@@ -163,9 +166,7 @@ class RoomController extends Controller
             return;
         }
 
-        if ($request->boolean('available_only')) {
-            $roomsQuery->availableForBooking();
-        }
+        // Operationally unavailable rooms are always excluded from customer results.
     }
 
     private function resolveStayFilters(Request $request): array

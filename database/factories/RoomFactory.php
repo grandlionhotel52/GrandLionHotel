@@ -27,7 +27,7 @@ class RoomFactory extends Factory
             'price_per_night' => $nightlyPrice,
             'capacity' => Room::standardGuestCapacity(),
             'image' => null,
-            'room_status_id' => RoomStatus::query()->inRandomOrder()->value('room_status_id'),
+            'room_status_id' => RoomStatus::query()->where('slug', 'clean')->value('room_status_id'),
         ];
     }
 }

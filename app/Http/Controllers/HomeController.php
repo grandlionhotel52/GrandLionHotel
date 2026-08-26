@@ -25,6 +25,7 @@ class HomeController extends Controller
             ->take(8)
             ->get();
         $roomSearchSuggestions = Room::query()
+            ->availableForBooking()
             ->get(['type', 'view_type'])
             ->flatMap(static fn (Room $room): array => [$room->type, $room->view_type])
             ->filter(static fn (mixed $value): bool => filled($value))
@@ -36,11 +37,12 @@ class HomeController extends Controller
         $platformStats = [
             'total_rooms' => Room::count(),
             'available_rooms' => Room::query()->availableForBooking()->count(),
-            'starting_price' => Room::min('price_per_night'),
+            'starting_price' => Room::query()->availableForBooking()->min('price_per_night'),
         ];
 
         $currentPromotion = RoomDateDiscount::query()
             ->with('room')
+            ->whereHas('room', fn ($query) => $query->availableForBooking())
             ->whereDate('discount_date_end', '>=', now()->toDateString())
             ->orderByDesc('discount_percent')
             ->orderBy('discount_date_start')

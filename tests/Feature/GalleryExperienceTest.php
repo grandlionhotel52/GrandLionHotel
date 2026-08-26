@@ -59,4 +59,27 @@ class GalleryExperienceTest extends TestCase
             ->assertOk()
             ->assertDontSee('Room Awaiting Cleaning');
     }
+
+    public function test_customer_room_pages_hide_dirty_and_makeup_rooms(): void
+    {
+        $dirtyStatus = RoomStatus::query()->where('slug', 'dirty')->firstOrFail();
+        $makeupStatus = RoomStatus::query()->where('slug', 'being_cleaned')->firstOrFail();
+
+        $dirtyRoom = Room::factory()->create([
+            'name' => 'Hidden Dirty Room',
+            'room_status_id' => $dirtyStatus->room_status_id,
+        ]);
+        $makeupRoom = Room::factory()->create([
+            'name' => 'Hidden Makeup Room',
+            'room_status_id' => $makeupStatus->room_status_id,
+        ]);
+
+        $this->get(route('rooms.index'))
+            ->assertOk()
+            ->assertDontSee('Hidden Dirty Room')
+            ->assertDontSee('Hidden Makeup Room');
+
+        $this->get(route('rooms.show', $dirtyRoom))->assertNotFound();
+        $this->get(route('rooms.show', $makeupRoom))->assertNotFound();
+    }
 }
