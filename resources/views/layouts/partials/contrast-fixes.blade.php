@@ -30,10 +30,57 @@
     }
 
     .form-control:disabled,
+    .form-control[readonly],
     .form-select:disabled {
-        color: #4b5563;
-        background-color: #edf0f3;
+        color: #596273;
+        background-color: #f3f4f6;
+        border-color: #98a2b3;
+        border-style: dashed;
+        box-shadow: none !important;
+        cursor: not-allowed;
         opacity: 1;
+    }
+
+    .form-check-input:disabled {
+        background-color: #d0d5dd;
+        border-color: #98a2b3;
+        box-shadow: none;
+        cursor: not-allowed;
+        opacity: .65;
+    }
+
+    .form-check-input:disabled + .form-check-label {
+        color: #667085;
+        cursor: not-allowed;
+    }
+
+    .btn:disabled,
+    .btn.disabled,
+    [aria-disabled="true"].btn {
+        filter: grayscale(1);
+        cursor: not-allowed;
+        opacity: .55;
+        box-shadow: none !important;
+    }
+
+    .static-field {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .65rem .85rem;
+        color: #475467;
+        background: #f3f4f6;
+        border: 1px dashed #98a2b3;
+        border-radius: .7rem;
+        font-weight: 700;
+    }
+
+    .static-field::before {
+        content: "\f47b";
+        font-family: "bootstrap-icons";
+        color: #667085;
+        font-size: .95rem;
     }
 
     .btn-ta,

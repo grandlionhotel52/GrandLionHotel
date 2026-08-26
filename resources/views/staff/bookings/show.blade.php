@@ -817,7 +817,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Current Total Guests</label>
-                        <input type="text" class="form-control" value="{{ $currentOccupancyTotal }}" disabled>
+                        <div class="static-field" aria-label="Calculated current total guests">{{ $currentOccupancyTotal }} guest{{ $currentOccupancyTotal === 1 ? '' : 's' }} &middot; Calculated automatically</div>
                     </div>
                     <div class="col-12 {{ $currentOccupancyTotal >= 3 ? '' : 'd-none' }}" id="occupancy_extra_bedding_group">
                         <div class="form-check">

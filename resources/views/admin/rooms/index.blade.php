@@ -354,7 +354,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Standard Occupancy</label>
-                                <input type="text" class="form-control" value="2 guests" disabled>
+                                <div class="static-field" aria-label="Fixed standard occupancy">2 guests &middot; Fixed</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Image URL <span class="text-secondary">(optional)</span></label>
@@ -416,7 +416,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Standard occupancy</label>
-                                <input type="text" class="form-control" value="2 guests" disabled>
+                                <div class="static-field" aria-label="Fixed standard occupancy">2 guests &middot; Fixed</div>
                                 <small class="text-secondary">Extra bedding requests are handled separately.</small>
                             </div>
                             <div class="col-md-3">
