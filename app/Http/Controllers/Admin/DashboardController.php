@@ -21,6 +21,8 @@ class DashboardController extends Controller
         $today = Carbon::today()->toDateString();
         $monthStart = Carbon::today()->startOfMonth();
         $monthEnd = Carbon::today()->endOfMonth();
+        $yearStart = Carbon::today()->startOfYear();
+        $yearEnd = Carbon::today()->endOfYear();
 
         $stats = [
             'users' => Admin::count() + Staff::count() + Customer::count(),
@@ -31,8 +33,13 @@ class DashboardController extends Controller
             'bookings' => Booking::count(),
             'pending_bookings' => Booking::where('status', 'pending')->count(),
             'confirmed_bookings' => Booking::where('status', 'confirmed')->count(),
-            'paid_revenue' => Payment::query()
+            'daily_paid_revenue' => Payment::query()
                 ->where('status', 'paid')
+                ->whereDate('paid_at', $today)
+                ->sum('amount'),
+            'yearly_paid_revenue' => Payment::query()
+                ->where('status', 'paid')
+                ->whereBetween('paid_at', [$yearStart, $yearEnd])
                 ->sum('amount'),
             'unpaid_confirmed' => Booking::where('status', 'confirmed')
                 ->wherePaymentStatus('unpaid')
@@ -47,10 +54,9 @@ class DashboardController extends Controller
                 ->whereNull('actual_check_out_at')
                 ->count(),
             'monthly_paid_revenue' => Payment::query()
-                ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
-                ->where('payments.status', 'paid')
-                ->whereBetween('bookings.created_at', [$monthStart, $monthEnd])
-                ->sum('payments.amount'),
+                ->where('status', 'paid')
+                ->whereBetween('paid_at', [$monthStart, $monthEnd])
+                ->sum('amount'),
             'rooms_needing_attention' => Room::where(function ($query): void {
                 $query->unavailableForBooking()
                     ->orWhereHas('roomStatus', fn ($roomStatusQuery) => $roomStatusQuery->where('slug', 'dirty'));

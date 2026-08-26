@@ -167,8 +167,14 @@
             </div>
             <div class="col-sm-6 col-xl-3">
                 <a href="{{ route('admin.bookings.index', ['payment_status' => 'paid']) }}" class="admin-focus-card">
+                    <p class="admin-focus-label">Daily</p>
+                    <p class="admin-focus-value">&#8369;{{ number_format((float) $stats['daily_paid_revenue'], 2) }}</p>
+                </a>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <a href="{{ route('admin.bookings.index', ['payment_status' => 'paid']) }}" class="admin-focus-card">
                     <p class="admin-focus-label">Year to date</p>
-                    <p class="admin-focus-value">&#8369;{{ number_format((float) $stats['paid_revenue'], 2) }}</p>
+                    <p class="admin-focus-value">&#8369;{{ number_format((float) $stats['yearly_paid_revenue'], 2) }}</p>
                 </a>
             </div>
             <div class="col-sm-6 col-xl-3">
