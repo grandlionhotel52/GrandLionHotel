@@ -73,7 +73,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertNull($booking->reschedule_request_notes);
         $this->assertNull($booking->reschedule_requested_at);
         $this->assertSame($staff->id, $booking->staff_id);
-        $this->assertSame('6000.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('7500.00', number_format((float) $booking->payment->amount, 2, '.', ''));
     }
 
     public function test_staff_can_directly_reschedule_confirmed_unpaid_booking_without_customer_request(): void
@@ -111,7 +111,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertNull($booking->reschedule_request_notes);
         $this->assertNull($booking->reschedule_requested_at);
         $this->assertSame($staff->id, $booking->staff_id);
-        $this->assertSame('7500.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('9375.00', number_format((float) $booking->payment->amount, 2, '.', ''));
     }
 
     public function test_staff_can_apply_requested_schedule_for_confirmed_booking_with_pending_verification_payment(): void
@@ -149,7 +149,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertNull($booking->reschedule_request_notes);
         $this->assertNull($booking->reschedule_requested_at);
         $this->assertSame($staff->id, $booking->staff_id);
-        $this->assertSame('5400.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('6750.00', number_format((float) $booking->payment->amount, 2, '.', ''));
     }
 
     public function test_staff_can_directly_reschedule_confirmed_booking_with_paid_payment(): void

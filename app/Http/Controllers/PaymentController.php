@@ -54,6 +54,11 @@ class PaymentController extends Controller
     public function process(Request $request, Booking $booking)
     {
         $this->authorizeOwner($booking);
+        $booking->loadMissing('payment');
+        $amountDue = (float) ($booking->payment?->amount ?? $booking->total_price);
+        if ($amountDue <= 0) {
+            $amountDue = (float) $booking->total_price;
+        }
 
         if ($booking->payment_status === 'paid') {
             return redirect()->route('bookings.success', $booking)
@@ -104,7 +109,7 @@ class PaymentController extends Controller
             Payment::METHOD_GCASH,
             Payment::METHOD_QRPH,
         ], true)) {
-            $amountCentavos = (int) round((float) $booking->total_price * 100);
+            $amountCentavos = (int) round($amountDue * 100);
             $existingSession = PayMongoCheckoutSession::query()
                 ->where('booking_id', $booking->id)
                 ->where('amount_centavos', $amountCentavos)
@@ -130,7 +135,7 @@ class PaymentController extends Controller
             $booking->payment()->updateOrCreate(
                 ['booking_id' => $booking->id],
                 [
-                    'amount' => $booking->total_price,
+                    'amount' => $amountDue,
                     'method' => Payment::METHOD_CREDIT_DEBIT_CARD,
                     'status' => 'unpaid',
                     'source' => 'paymongo_checkout_pending',
@@ -160,7 +165,7 @@ class PaymentController extends Controller
             $booking->payment()->updateOrCreate(
                 ['booking_id' => $booking->id],
                 [
-                    'amount' => $booking->total_price,
+                    'amount' => $amountDue,
                     'method' => Payment::METHOD_CASH,
                     'status' => 'unpaid',
                     'source' => 'cash_pending',
@@ -192,7 +197,7 @@ class PaymentController extends Controller
             $booking->payment()->updateOrCreate(
                 ['booking_id' => $booking->id],
                 [
-                    'amount' => $booking->total_price,
+                    'amount' => $amountDue,
                     'method' => $validated['method'],
                     'status' => 'pending_verification',
                     'source' => 'online_submitted',

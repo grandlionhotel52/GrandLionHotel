@@ -289,9 +289,10 @@
                                     <small class="text-secondary d-block">
                                         &#8369;{{ \App\Support\Money::display($stayPricing['total']) }} total for {{ $stayPricing['nights'] }} night{{ $stayPricing['nights'] === 1 ? '' : 's' }}
                                     </small>
+                                    <small class="text-secondary d-block">Includes 8% service fee, 5% local tax, and 12% VAT.</small>
                                 @else
                                     <div class="price-tag">&#8369;{{ \App\Support\Money::display($room->price_per_night) }}</div>
-                                    <small class="text-secondary">/ night</small>
+                                    <small class="text-secondary">/ night &middot; taxes and fees excluded</small>
                                 @endif
                             </div>
                             <div class="search-card-actions">

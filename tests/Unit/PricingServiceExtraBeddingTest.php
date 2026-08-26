@@ -46,7 +46,11 @@ class PricingServiceExtraBeddingTest extends TestCase
 
         $this->assertSame(1, $quote['extra_bedding_count']);
         $this->assertSame(1000.0, $quote['extra_bedding_total']);
-        $this->assertSame(5000.0, $quote['total']);
+        $this->assertSame(5000.0, $quote['chargeable_subtotal']);
+        $this->assertSame(400.0, $quote['service_fee']);
+        $this->assertSame(250.0, $quote['local_tax']);
+        $this->assertSame(600.0, $quote['vat']);
+        $this->assertSame(6250.0, $quote['total']);
         $this->assertSame(2500.0, $quote['average_nightly_rate']);
     }
 
@@ -73,7 +77,7 @@ class PricingServiceExtraBeddingTest extends TestCase
         $this->assertSame(3500.0, $quote['room_total']);
         $this->assertSame(500.0, $quote['discount_amount']);
         $this->assertSame(1000.0, $quote['extra_bedding_total']);
-        $this->assertSame(4500.0, $quote['total']);
+        $this->assertSame(5625.0, $quote['total']);
     }
 
     private function createRoom(array $overrides = []): Room

@@ -82,6 +82,10 @@
         $extraBeddingCount = (int) ($pricingQuote['extra_bedding_count'] ?? 0);
         $extraBeddingFeePerNight = (float) ($pricingQuote['extra_bedding_fee_per_night'] ?? 0);
         $extraBeddingTotal = (float) ($pricingQuote['extra_bedding_total'] ?? 0);
+        $chargeableSubtotal = (float) ($pricingQuote['chargeable_subtotal'] ?? ($roomSubtotal + $extraBeddingTotal));
+        $serviceFee = (float) ($pricingQuote['service_fee'] ?? 0);
+        $localTax = (float) ($pricingQuote['local_tax'] ?? 0);
+        $vat = (float) ($pricingQuote['vat'] ?? 0);
         $hasDiscount = $discountType !== '' && $discountAmount > 0;
         $bookedSubtotal = $hasDiscount ? $originalAmount : (float) ($pricingQuote['total'] ?? $booking->total_price);
         $transactionReference = strtoupper(trim((string) ($booking->payment?->transaction_reference ?? '')));
@@ -184,10 +188,10 @@
                 <td>{{ $extraBeddingCount }} x &#8369;{{ number_format($extraBeddingFeePerNight, 2) }} x {{ $billedUnits }} {{ $unitLabel }}{{ $billedUnits === 1 ? '' : 's' }} = &#8369;{{ number_format($extraBeddingTotal, 2) }}</td>
             </tr>
         @endif
-        <tr>
-            <th>Subtotal Calculation</th>
-            <td>&#8369;{{ number_format($roomSubtotal, 2) }} + &#8369;{{ number_format($extraBeddingTotal, 2) }} = &#8369;{{ number_format($bookedSubtotal, 2) }}</td>
-        </tr>
+        <tr><th>Accommodation Subtotal</th><td>&#8369;{{ number_format($chargeableSubtotal, 2) }}</td></tr>
+        <tr><th>Service Fee (8%)</th><td>&#8369;{{ number_format($serviceFee, 2) }}</td></tr>
+        <tr><th>Local Tax (5%)</th><td>&#8369;{{ number_format($localTax, 2) }}</td></tr>
+        <tr><th>VAT (12%, Exclusive)</th><td>&#8369;{{ number_format($vat, 2) }}</td></tr>
         @if($hasDiscount)
             <tr>
                 <th>Original Amount</th>

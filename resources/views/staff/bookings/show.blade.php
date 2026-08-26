@@ -241,6 +241,7 @@
         $currentKids = max(0, (int) old('kids', $booking->guestDetail?->kids ?? 0));
         $currentOccupancyTotal = $currentAdults + $currentKids;
         $currentExtraBedding = max(0, $currentOccupancyTotal - $standardGuests);
+        $pricingQuote = $booking->pricingQuote();
         $isAssignedStaff = (int) $booking->staff_id === (int) auth('staff')->id();
         $bookingChipClass = match ($booking->status) {
             'confirmed', 'completed' => 'success',
@@ -294,8 +295,16 @@
                 <div class="booking-command-value">{{ $booking->guests }} guest{{ $booking->guests === 1 ? '' : 's' }} &middot; {{ $billedUnits }} night{{ $billedUnits === 1 ? '' : 's' }}</div>
             </div>
             <div class="booking-command-item">
-                <p class="booking-info-label">Booking Total</p>
-                <div class="booking-command-value">PHP {{ number_format((float) $booking->total_price, 2) }}</div>
+                <p class="booking-info-label">Accommodation</p>
+                <div class="booking-command-value">PHP {{ number_format((float) ($pricingQuote['chargeable_subtotal'] ?? 0), 2) }}</div>
+            </div>
+            <div class="booking-command-item">
+                <p class="booking-info-label">Service / Local / VAT</p>
+                <div class="booking-command-value">PHP {{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }} / PHP {{ number_format((float) ($pricingQuote['local_tax'] ?? 0), 2) }} / PHP {{ number_format((float) ($pricingQuote['vat'] ?? 0), 2) }}</div>
+            </div>
+            <div class="booking-command-item">
+                <p class="booking-info-label">Amount Due</p>
+                <div class="booking-command-value">PHP {{ number_format((float) ($booking->payment?->amount ?? $booking->total_price), 2) }}</div>
             </div>
         </div>
         <div class="booking-next-step mb-3">

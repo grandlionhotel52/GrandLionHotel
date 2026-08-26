@@ -80,6 +80,7 @@
             'pending_verification', 'refund_pending' => 'text-bg-info',
             default => 'text-bg-warning',
         };
+        $pricingQuote = $booking->pricingQuote();
     @endphp
 
     <div class="booking-admin-head d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
@@ -124,8 +125,24 @@
                 <p class="booking-admin-value">{{ $booking->guests }}</p>
             </div>
             <div class="booking-admin-item">
-                <p class="booking-admin-label">Total</p>
-                <p class="booking-admin-value">PHP {{ number_format($booking->total_price, 2) }}</p>
+                <p class="booking-admin-label">Accommodation Subtotal</p>
+                <p class="booking-admin-value">PHP {{ number_format((float) ($pricingQuote['chargeable_subtotal'] ?? 0), 2) }}</p>
+            </div>
+            <div class="booking-admin-item">
+                <p class="booking-admin-label">Service Fee (8%)</p>
+                <p class="booking-admin-value">PHP {{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }}</p>
+            </div>
+            <div class="booking-admin-item">
+                <p class="booking-admin-label">Local Tax (5%)</p>
+                <p class="booking-admin-value">PHP {{ number_format((float) ($pricingQuote['local_tax'] ?? 0), 2) }}</p>
+            </div>
+            <div class="booking-admin-item">
+                <p class="booking-admin-label">VAT (12%, Exclusive)</p>
+                <p class="booking-admin-value">PHP {{ number_format((float) ($pricingQuote['vat'] ?? 0), 2) }}</p>
+            </div>
+            <div class="booking-admin-item">
+                <p class="booking-admin-label">Amount Due</p>
+                <p class="booking-admin-value">PHP {{ number_format((float) ($booking->payment?->amount ?? $booking->total_price), 2) }}</p>
             </div>
             <div class="booking-admin-item">
                 <p class="booking-admin-label">Payment</p>

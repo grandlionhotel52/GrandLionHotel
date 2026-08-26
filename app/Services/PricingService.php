@@ -72,7 +72,9 @@ class PricingService
         $roomTotal = round($total, 2);
         $discountAmount = round($discountAmount, 2);
         $extraBeddingTotal = round($extraBeddingCount * $extraBeddingFeePerNight * $nights, 2);
-        $grandTotal = round($roomTotal + $extraBeddingTotal, 2);
+        $chargeableSubtotal = round($roomTotal + $extraBeddingTotal, 2);
+        $charges = $this->statutoryCharges($chargeableSubtotal);
+        $grandTotal = $charges['total'];
 
         return [
             'check_in' => $start->toDateString(),
@@ -81,12 +83,19 @@ class PricingService
             'guests' => $guestCount,
             'standard_guests' => Room::standardGuestCapacity(),
             'base_nightly_rate' => $nightlyRate,
-            'average_nightly_rate' => $nights > 0 ? round($grandTotal / $nights, 2) : $nightlyRate,
+            'average_nightly_rate' => $nights > 0 ? round($chargeableSubtotal / $nights, 2) : $nightlyRate,
             'base_total' => $baseTotal,
             'room_total' => $roomTotal,
             'extra_bedding_count' => $extraBeddingCount,
             'extra_bedding_fee_per_night' => $extraBeddingFeePerNight,
             'extra_bedding_total' => $extraBeddingTotal,
+            'chargeable_subtotal' => $chargeableSubtotal,
+            'service_fee_rate' => $charges['service_fee_rate'],
+            'service_fee' => $charges['service_fee'],
+            'local_tax_rate' => $charges['local_tax_rate'],
+            'local_tax' => $charges['local_tax'],
+            'vat_rate' => $charges['vat_rate'],
+            'vat' => $charges['vat'],
             'total' => $grandTotal,
             'discount_amount' => $discountAmount,
             'discounted_nights' => $discountedNights,
@@ -130,6 +139,13 @@ class PricingService
                 'extra_bedding_count' => $this->calculateExtraBeddingCount($booking->guests),
                 'extra_bedding_fee_per_night' => $this->extraBeddingFeePerNight(),
                 'extra_bedding_total' => 0.0,
+                'chargeable_subtotal' => 0.0,
+                'service_fee_rate' => $this->serviceFeeRate(),
+                'service_fee' => 0.0,
+                'local_tax_rate' => $this->localTaxRate(),
+                'local_tax' => 0.0,
+                'vat_rate' => $this->vatRate(),
+                'vat' => 0.0,
                 'total' => 0.0,
                 'discount_amount' => 0.0,
                 'discounted_nights' => 0,
@@ -154,5 +170,42 @@ class PricingService
     public function extraBeddingFeePerNight(): float
     {
         return round(max(0, (float) config('pricing.extra_bedding_fee_per_night', 0)), 2);
+    }
+
+    public function statutoryCharges(float $subtotal): array
+    {
+        $subtotal = round(max(0, $subtotal), 2);
+        $serviceFeeRate = $this->serviceFeeRate();
+        $localTaxRate = $this->localTaxRate();
+        $vatRate = $this->vatRate();
+        $serviceFee = round($subtotal * $serviceFeeRate, 2);
+        $localTax = round($subtotal * $localTaxRate, 2);
+        $vat = round($subtotal * $vatRate, 2);
+
+        return [
+            'subtotal' => $subtotal,
+            'service_fee_rate' => $serviceFeeRate,
+            'service_fee' => $serviceFee,
+            'local_tax_rate' => $localTaxRate,
+            'local_tax' => $localTax,
+            'vat_rate' => $vatRate,
+            'vat' => $vat,
+            'total' => round($subtotal + $serviceFee + $localTax + $vat, 2),
+        ];
+    }
+
+    public function serviceFeeRate(): float
+    {
+        return max(0, (float) config('pricing.service_fee_rate', 0.08));
+    }
+
+    public function localTaxRate(): float
+    {
+        return max(0, (float) config('pricing.local_tax_rate', 0.05));
+    }
+
+    public function vatRate(): float
+    {
+        return max(0, (float) config('pricing.vat_rate', 0.12));
     }
 }

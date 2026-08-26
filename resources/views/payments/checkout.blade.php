@@ -72,12 +72,17 @@
         $onlineMethods = ['instapay'];
         $pricingQuote = $booking->pricingQuote();
         $billedUnits = max(1, $booking->nights());
-        $subtotalAmount = (float) $booking->total_price;
+        $subtotalAmount = (float) ($booking->payment?->amount ?? $booking->total_price);
         $roomSubtotal = (float) ($pricingQuote['room_total'] ?? $subtotalAmount);
         $roomNightlyRate = (float) ($pricingQuote['base_nightly_rate'] ?? 0);
         $extraBeddingCount = (int) ($pricingQuote['extra_bedding_count'] ?? 0);
         $extraBeddingFeePerNight = (float) ($pricingQuote['extra_bedding_fee_per_night'] ?? 0);
         $extraBeddingTotal = (float) ($pricingQuote['extra_bedding_total'] ?? 0);
+        $chargeableSubtotal = (float) ($pricingQuote['chargeable_subtotal'] ?? ($roomSubtotal + $extraBeddingTotal));
+        $serviceFee = (float) ($pricingQuote['service_fee'] ?? 0);
+        $localTax = (float) ($pricingQuote['local_tax'] ?? 0);
+        $vat = (float) ($pricingQuote['vat'] ?? 0);
+        $discountAmount = (float) ($booking->payment?->discount_amount ?? 0);
         $merchantName = (string) config('services.qr_wallets.merchant_name', config('app.name'));
         $configuredQrUrl = trim((string) data_get(config('services.qr_wallets'), 'instapay.qr_image_url', ''));
         $instapayQrUrl = $configuredQrUrl;
@@ -126,6 +131,28 @@
                         <div class="checkout-summary-item">
                             <span class="checkout-summary-label">Extra bedding</span>
                             <span class="checkout-summary-value">{{ $extraBeddingCount }} &times; &#8369;{{ number_format($extraBeddingFeePerNight, 2) }} &times; {{ $billedUnits }}</span>
+                        </div>
+                    @endif
+                    <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">Accommodation subtotal</span>
+                        <span class="checkout-summary-value">&#8369;{{ number_format($chargeableSubtotal, 2) }}</span>
+                    </div>
+                    <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">Service fee (8%)</span>
+                        <span class="checkout-summary-value">&#8369;{{ number_format($serviceFee, 2) }}</span>
+                    </div>
+                    <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">Local tax (5%)</span>
+                        <span class="checkout-summary-value">&#8369;{{ number_format($localTax, 2) }}</span>
+                    </div>
+                    <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">VAT (12%, exclusive)</span>
+                        <span class="checkout-summary-value">&#8369;{{ number_format($vat, 2) }}</span>
+                    </div>
+                    @if($discountAmount > 0)
+                        <div class="checkout-summary-item text-success">
+                            <span class="checkout-summary-label">Discount</span>
+                            <span class="checkout-summary-value">-&#8369;{{ number_format($discountAmount, 2) }}</span>
                         </div>
                     @endif
                     <div class="checkout-summary-item total">

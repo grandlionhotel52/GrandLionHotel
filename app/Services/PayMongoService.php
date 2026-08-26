@@ -17,8 +17,9 @@ class PayMongoService
             throw new RuntimeException('PayMongo is not configured. Add the PayMongo secret key first.');
         }
 
-        $booking->loadMissing(['room', 'user']);
-        $amount = (int) round((float) $booking->total_price * 100);
+        $booking->loadMissing(['room', 'user', 'payment']);
+        $amountDue = (float) ($booking->payment?->amount ?? $booking->total_price);
+        $amount = (int) round(($amountDue > 0 ? $amountDue : (float) $booking->total_price) * 100);
 
         if ($amount < 100) {
             throw new RuntimeException('The booking amount is too small for PayMongo checkout.');
