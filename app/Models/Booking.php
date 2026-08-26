@@ -411,6 +411,8 @@ class Booking extends Model
             'discount_type' => $discount?->discount_type,
             'discount_id' => $discount?->discount_id,
             'discount_id_photo_path' => $discount?->discount_id_photo_path,
+            'promo_code' => $discount?->promoCode?->code,
+            'promo_discount_percent' => $discount?->promoCode?->discount_percent,
         ], static fn ($value): bool => !is_null($value) && $value !== '');
     }
 

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoomController as AdminRoomController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
+use App\Http\Controllers\Admin\PromoCodeController as AdminPromoCodeController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AuthController;
@@ -100,6 +101,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::get('/rooms/date-discounts', [AdminRoomController::class, 'dateDiscountsIndex'])->name('rooms.date-discounts.index');
     Route::patch('/rooms/date-discounts/range', [AdminRoomController::class, 'updateDateDiscountRange'])->name('rooms.date-discounts.range.update');
     Route::delete('/rooms/date-discounts/range', [AdminRoomController::class, 'destroyDateDiscountRange'])->name('rooms.date-discounts.range.destroy');
+    Route::get('/promo-codes', [AdminPromoCodeController::class, 'index'])->name('promo-codes.index');
+    Route::post('/promo-codes', [AdminPromoCodeController::class, 'store'])->name('promo-codes.store');
+    Route::put('/promo-codes/{promoCode}', [AdminPromoCodeController::class, 'update'])->name('promo-codes.update');
+    Route::delete('/promo-codes/{promoCode}', [AdminPromoCodeController::class, 'destroy'])->name('promo-codes.destroy');
 
     Route::get('/bookings', [AdminBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}', [AdminBookingController::class, 'show'])->name('bookings.show');

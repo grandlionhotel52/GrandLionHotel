@@ -6,6 +6,7 @@ use App\Mail\BookingCancelledMail;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\PromoCode;
 use App\Models\Room;
 use App\Services\AvailabilityService;
 use App\Services\PricingService;
@@ -59,7 +60,9 @@ class BookingController extends Controller
             );
         }
 
-        return view('bookings.create', compact('room', 'prefill', 'pricingPreview'));
+        $activePromoCodes = PromoCode::available()->orderBy('code')->get(['promo_code_id', 'code', 'discount_percent']);
+
+        return view('bookings.create', compact('room', 'prefill', 'pricingPreview', 'activePromoCodes'));
     }
 
     public function store(StoreBookingRequest $request)
@@ -70,6 +73,16 @@ class BookingController extends Controller
         }
 
         $room = Room::findOrFail($request->integer('room_id'));
+        $promoCode = null;
+        if ($request->input('discount_type') === 'promo') {
+            $normalizedPromoCode = strtoupper(trim((string) $request->input('promo_code')));
+            $promoCode = PromoCode::available()->where('code', $normalizedPromoCode)->first();
+            if (!$promoCode) {
+                return $this->respondWithBookingError($request, [
+                    'promo_code' => 'This promotional code is invalid, inactive, or expired.',
+                ]);
+            }
+        }
 
         if (!$room->is_available) {
             return $this->respondWithBookingError($request, [
@@ -115,6 +128,9 @@ class BookingController extends Controller
             'discount_type' => $request->input('discount_type'),
             'discount_id' => $request->input('discount_id'),
             'discount_id_photo_path' => $discountIdPhotoPath,
+            'promo_code_id' => $promoCode?->getKey(),
+            'promo_code' => $promoCode?->code,
+            'promo_discount_percent' => $promoCode?->discount_percent,
         ], static fn (mixed $value): bool => !is_null($value) && $value !== '');
 
         try {
@@ -155,7 +171,11 @@ class BookingController extends Controller
                     $request->integer('guests')
                 );
                 $discountType = strtolower((string) $request->input('discount_type', 'none'));
-                $discountRate = in_array($discountType, ['pwd', 'senior'], true) ? 0.20 : 0.0;
+                $discountRate = match ($discountType) {
+                    'pwd', 'senior' => 0.20,
+                    'promo' => max(0, min(100, (float) data_get($reservationMeta, 'promo_discount_percent'))) / 100,
+                    default => 0.0,
+                };
                 $discountAmount = round($totalPrice * $discountRate, 2);
                 $payableTotal = round(max(0, $totalPrice - $discountAmount), 2);
 
@@ -578,6 +598,7 @@ class BookingController extends Controller
             'discount_type' => $discountType,
             'discount_id' => data_get($reservationMeta, 'discount_id'),
             'discount_id_photo_path' => data_get($reservationMeta, 'discount_id_photo_path'),
+            'promo_code_id' => data_get($reservationMeta, 'promo_code_id'),
         ], static fn (mixed $value): bool => !is_null($value) && $value !== '');
 
         if (Schema::hasTable('booking_discounts')) {

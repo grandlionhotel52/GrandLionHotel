@@ -666,13 +666,14 @@ class BookingController extends Controller
         }
 
         $validated = $request->validate([
-            'discount_type' => ['nullable', 'in:none,pwd,senior'],
+            'discount_type' => ['nullable', 'in:none,pwd,senior,promo'],
             'discount_id' => ['nullable', 'string', 'max:80'],
         ]);
 
         $discountType = $validated['discount_type'] ?? 'none';
         $discountRate = match ($discountType) {
             'pwd', 'senior' => 0.20,
+            'promo' => max(0, min(100, (float) data_get($booking->reservation_meta, 'promo_discount_percent'))) / 100,
             default => 0.0,
         };
 
@@ -681,7 +682,7 @@ class BookingController extends Controller
         $payableAmount = round(max(0, $originalAmount - $discountAmount), 2);
         $uploadedDiscountProofPath = trim((string) data_get($booking->reservation_meta, 'discount_id_photo_path', ''));
 
-        if ($discountRate > 0 && blank($validated['discount_id'] ?? null) && $uploadedDiscountProofPath === '') {
+        if (in_array($discountType, ['pwd', 'senior'], true) && $discountRate > 0 && blank($validated['discount_id'] ?? null) && $uploadedDiscountProofPath === '') {
             return back()->withErrors([
                 'discount_id' => 'Provide a discount ID number or upload a discount ID photo before applying PWD/Senior discount.',
             ])->withInput();

@@ -337,7 +337,7 @@
                     @if(!empty($reservationMeta['discount_type']) && $reservationMeta['discount_type'] !== 'none')
                         <div class="col-md-6">
                             <small class="text-secondary d-block">Discount</small>
-                            <strong>{{ strtoupper((string) $reservationMeta['discount_type']) }} (20%)</strong>
+                            <strong>{{ $reservationMeta['discount_type'] === 'promo' ? 'PROMO '.$reservationMeta['promo_code'].' ('.number_format((float) $reservationMeta['promo_discount_percent'], 2).'%)' : strtoupper((string) $reservationMeta['discount_type']).' (20%)' }}</strong>
                         </div>
                     @endif
                     @if(!empty($reservationMeta['discount_id']))

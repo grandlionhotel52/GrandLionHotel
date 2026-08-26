@@ -237,7 +237,7 @@ class BookingController extends Controller
         return redirect()->route('admin.bookings.show', $booking)->with('status', 'Booking status updated.');
     }
 
-    public function approveOnlinePayment(Booking $booking)
+    public function approveOnlinePayment(Request $request, Booking $booking)
     {
         $booking->loadMissing(['payment']);
         $payment = $booking->payment;
@@ -254,12 +254,27 @@ class BookingController extends Controller
             return back()->withErrors(['payment' => 'Only supported online payment submissions can be approved here.']);
         }
 
+        $validated = $request->validate([
+            'verified_amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01'],
+        ], [
+            'verified_amount.required' => 'Enter the amount shown in the submitted online payment.',
+            'verified_amount.numeric' => 'Verified amount must be a number.',
+            'verified_amount.decimal' => 'Verified amount can have no more than 2 decimal places.',
+            'verified_amount.min' => 'Verified amount must be greater than zero.',
+        ]);
+
         if (blank($payment->customer_reference)) {
             return back()->withErrors(['payment' => 'The submitted online payment is missing its customer reference number.']);
         }
 
         if ((float) $payment->amount <= 0 || abs((float) $payment->amount - (float) $booking->total_price) > 0.009) {
             return back()->withErrors(['payment' => 'The submitted online payment amount does not match the booking total.']);
+        }
+
+        if (abs((float) $validated['verified_amount'] - (float) $payment->amount) > 0.009) {
+            return back()->withErrors([
+                'verified_amount' => 'Verified amount must exactly match PHP '.number_format((float) $payment->amount, 2).'.',
+            ])->withInput();
         }
 
         $payment->update([

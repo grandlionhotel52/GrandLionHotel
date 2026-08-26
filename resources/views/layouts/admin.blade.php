@@ -599,6 +599,7 @@
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active fw-semibold' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.bookings.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.bookings.index') }}">Bookings</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.rooms.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.rooms.index') }}">Rooms</a></li>
+                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.promo-codes.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.promo-codes.index') }}">Promo Codes</a></li>
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.refunds.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.refunds.index') }}">Refunds</a></li>
                     <li class="nav-item dropdown admin-nav-dropdown">
                         <button class="nav-link dropdown-toggle border-0 bg-transparent {{ request()->routeIs('admin.sales-report', 'admin.occupancy-report') ? 'active fw-semibold' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">

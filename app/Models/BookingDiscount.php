@@ -14,6 +14,7 @@ class BookingDiscount extends Model
 
     protected $fillable = [
         'booking_id',
+        'promo_code_id',
         'discount_type',
         'discount_id',
         'discount_id_photo_path',
@@ -22,5 +23,10 @@ class BookingDiscount extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class, 'booking_id', 'booking_id');
+    }
+
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class, 'promo_code_id', 'promo_code_id');
     }
 }

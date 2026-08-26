@@ -7,6 +7,7 @@ use App\Models\Admin;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\RegistrationVerification;
+use App\Models\PromoCode;
 use App\Models\Room;
 use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,6 +55,37 @@ class BookingWorkflowImprovementsTest extends TestCase
         $this->assertSame('breakfast_included', $booking->fresh('guestDetail')->guestDetail->meal_plan);
         $this->assertSame('2400.00', $booking->fresh('payment')->payment->amount);
         $this->assertSame('600.00', $booking->payment->discount_amount);
+    }
+
+    public function test_active_admin_promo_code_is_validated_and_applied_to_booking_total(): void
+    {
+        $customer = Customer::factory()->create([
+            'phone' => '09170000001',
+            'address_line' => 'Promo Street',
+            'city' => 'Manila',
+            'province' => 'Metro Manila (NCR)',
+        ]);
+        $room = Room::factory()->create(['is_available' => true, 'price_per_night' => 2000]);
+        $promo = PromoCode::create([
+            'code' => 'WELCOME15',
+            'discount_percent' => 15,
+            'starts_at' => today()->subDay(),
+            'ends_at' => today()->addWeek(),
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($customer)->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'check_in' => today()->addDay()->toDateString(),
+            'check_out' => today()->addDays(2)->toDateString(),
+            'discount_type' => 'promo',
+            'promo_code' => 'welcome15',
+        ])->assertSessionHasNoErrors();
+
+        $booking = Booking::query()->latest('booking_id')->firstOrFail()->load(['payment', 'discount.promoCode']);
+        $this->assertSame('1700.00', $booking->payment->amount);
+        $this->assertSame('300.00', $booking->payment->discount_amount);
+        $this->assertTrue($booking->discount->promoCode->is($promo));
     }
 
     public function test_admin_cannot_transition_pending_booking_directly_to_completed(): void

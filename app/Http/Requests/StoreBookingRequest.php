@@ -50,8 +50,9 @@ class StoreBookingRequest extends FormRequest
             'postal_code' => ['nullable', 'string', 'max:40'],
             'contact_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\\-\\s]{7,30}$/'],
             'contact_email' => ['nullable', 'email', 'max:255'],
-            'discount_type' => ['nullable', 'in:none,pwd,senior'],
+            'discount_type' => ['nullable', 'in:none,pwd,senior,promo'],
             'discount_id' => ['nullable', 'string', 'max:80', 'required_if:discount_type,pwd,senior'],
+            'promo_code' => ['nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9_-]+$/', 'required_if:discount_type,promo'],
             'discount_id_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'required_if:discount_type,pwd,senior'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];

@@ -339,6 +339,7 @@
                             <option value="none" @selected(old('discount_type', 'none') === 'none')>None</option>
                             <option value="pwd" @selected(old('discount_type') === 'pwd')>PWD (20%)</option>
                             <option value="senior" @selected(old('discount_type') === 'senior')>Senior (20%)</option>
+                            <option value="promo" @selected(old('discount_type') === 'promo')>Promotional Code</option>
                         </select>
                     </div>
 
@@ -351,6 +352,12 @@
                         <label class="form-label">Discount ID photo</label>
                         <input type="file" class="form-control" name="discount_id_photo" id="discount_id_photo_input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
                         <small class="text-secondary">Required for PWD/Senior discount.</small>
+                    </div>
+
+                    <div class="col-md-4 {{ old('discount_type') === 'promo' ? '' : 'd-none' }}" id="promo_code_group">
+                        <label class="form-label">Promo code</label>
+                        <input type="text" class="form-control text-uppercase" name="promo_code" id="promo_code_input" maxlength="40" value="{{ old('promo_code') }}" placeholder="Enter promotional code" autocomplete="off">
+                        <small class="text-secondary" id="promo_code_feedback">Enter a valid active code.</small>
                     </div>
 
                     <div class="col-12">
@@ -390,6 +397,10 @@
             const discountIdPhotoInput = document.getElementById('discount_id_photo_input');
             const discountIdGroup = document.getElementById('discount_id_group');
             const discountPhotoGroup = document.getElementById('discount_photo_group');
+            const promoCodeInput = document.getElementById('promo_code_input');
+            const promoCodeGroup = document.getElementById('promo_code_group');
+            const promoCodeFeedback = document.getElementById('promo_code_feedback');
+            const promoCodes = @json($activePromoCodes->mapWithKeys(fn ($promo) => [$promo->code => (float) $promo->discount_percent]));
             const standardGuests = {{ $standardGuests }};
             const baseNightlyRate = Number.parseFloat(form?.dataset.baseNightlyRate || '0') || 0;
             const submitButton = form?.querySelector('button[type="submit"]');
@@ -425,6 +436,13 @@
                 currency: 'PHP',
                 maximumFractionDigits: 2,
             }).format(Math.max(0, value));
+
+            const selectedIdentityDiscountRate = () => {
+                if (discountTypeSelect?.value === 'pwd' || discountTypeSelect?.value === 'senior') return 0.20;
+                if (discountTypeSelect?.value !== 'promo') return 0;
+                const code = (promoCodeInput?.value || '').trim().toUpperCase();
+                return Number(promoCodes[code] || 0) / 100;
+            };
 
             const parseDate = (value) => {
                 if (!value) {
@@ -534,6 +552,13 @@
                     const provisionalDiscount = provisionalBase * 0.20;
                     segments.push(`${discountTypeSelect.value.toUpperCase()} 20% discount (-${formatCurrency(provisionalDiscount)}, subject to verification)`);
                 }
+                if (discountTypeSelect?.value === 'promo') {
+                    const code = (promoCodeInput?.value || '').trim().toUpperCase();
+                    const rate = selectedIdentityDiscountRate();
+                    segments.push(rate > 0
+                        ? `${code} promotional discount (${Number(promoCodes[code])}% / -${formatCurrency(Number(currentPricing?.total || 0) * rate)})`
+                        : 'Enter a valid promotional code');
+                }
 
                 summaryDiscount.textContent = segments.length > 0 ? segments.join(' + ') : 'None selected';
             };
@@ -544,9 +569,7 @@
                 const nights = nightsBetween(checkInInput.value, checkOutInput.value);
                 const rate = pricing?.average_nightly_rate ?? baseNightlyRate;
                 const subtotal = pricing?.total ?? (nights > 0 ? nights * baseNightlyRate : 0);
-                const hasIdentityDiscount = discountTypeSelect
-                    && (discountTypeSelect.value === 'pwd' || discountTypeSelect.value === 'senior');
-                const identityDiscount = hasIdentityDiscount ? subtotal * 0.20 : 0;
+                const identityDiscount = subtotal * selectedIdentityDiscountRate();
                 const total = Math.max(0, subtotal - identityDiscount);
 
                 if (summaryStay) {
@@ -728,13 +751,20 @@
                 }
 
                 const requiresId = discountTypeSelect.value === 'pwd' || discountTypeSelect.value === 'senior';
+                const requiresPromo = discountTypeSelect.value === 'promo';
                 discountIdInput.required = requiresId;
                 discountIdInput.disabled = !requiresId;
                 discountIdGroup?.classList.toggle('d-none', !requiresId);
                 discountPhotoGroup?.classList.toggle('d-none', !requiresId);
+                promoCodeGroup?.classList.toggle('d-none', !requiresPromo);
                 if (discountIdPhotoInput) {
                     discountIdPhotoInput.required = requiresId;
                     discountIdPhotoInput.disabled = !requiresId;
+                }
+                if (promoCodeInput) {
+                    promoCodeInput.required = requiresPromo;
+                    promoCodeInput.disabled = !requiresPromo;
+                    if (!requiresPromo) promoCodeInput.value = '';
                 }
 
                 if (!requiresId) {
@@ -760,6 +790,13 @@
             });
             checkOutInput.addEventListener('change', refreshPricingPreview);
             discountTypeSelect?.addEventListener('change', updateDiscountState);
+            promoCodeInput?.addEventListener('input', () => {
+                promoCodeInput.value = promoCodeInput.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 40);
+                const rate = selectedIdentityDiscountRate();
+                promoCodeInput.setCustomValidity(discountTypeSelect?.value === 'promo' && rate <= 0 ? 'Enter a valid active promotional code.' : '');
+                if (promoCodeFeedback) promoCodeFeedback.textContent = rate > 0 ? `${Number(rate * 100)}% promotional discount applied.` : 'Enter a valid active code.';
+                renderPricingSummary(currentPricing, currentAvailability);
+            });
 
             syncAll();
             refreshPricingPreview();

@@ -214,10 +214,25 @@
                 <div class="alert alert-info small">
                     Verify the submitted reference and proof before approving.
                 </div>
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <form method="POST" action="{{ route('admin.bookings.approve-online-payment', $booking) }}" data-confirm="Approve this online payment submission?">
+                <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+                    <form method="POST" action="{{ route('admin.bookings.approve-online-payment', $booking) }}" class="d-flex flex-wrap gap-2 align-items-end" data-confirm="Approve this online payment submission?">
                         @csrf
                         @method('PATCH')
+                        <div>
+                            <label for="verified_online_amount" class="form-label mb-1">Verified amount</label>
+                            <input
+                                id="verified_online_amount"
+                                type="number"
+                                name="verified_amount"
+                                class="form-control @error('verified_amount') is-invalid @enderror"
+                                min="0.01"
+                                step="0.01"
+                                inputmode="decimal"
+                                value="{{ old('verified_amount', number_format((float) $booking->payment->amount, 2, '.', '')) }}"
+                                required
+                            >
+                            @error('verified_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                         <button type="submit" class="btn btn-ta">Approve Online Payment</button>
                     </form>
                     <form method="POST" action="{{ route('admin.bookings.reject-online-payment', $booking) }}" data-confirm="Reject this online payment submission?">

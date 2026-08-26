@@ -780,7 +780,7 @@
                     @if(!empty($reservationMeta['discount_type']) && $reservationMeta['discount_type'] !== 'none')
                         <div class="booking-info-item">
                             <p class="booking-info-label">Requested Discount</p>
-                            <p class="booking-info-value">{{ strtoupper((string) $reservationMeta['discount_type']) }} (20%)</p>
+                            <p class="booking-info-value">{{ $reservationMeta['discount_type'] === 'promo' ? 'PROMO '.$reservationMeta['promo_code'].' ('.number_format((float) $reservationMeta['promo_discount_percent'], 2).'%)' : strtoupper((string) $reservationMeta['discount_type']).' (20%)' }}</p>
                         </div>
                     @endif
                 </div>
@@ -963,6 +963,9 @@
                                 <option value="none" @selected(old('discount_type', data_get($booking->reservation_meta, 'discount_type', 'none')) === 'none')>None</option>
                                 <option value="pwd" @selected(old('discount_type', data_get($booking->reservation_meta, 'discount_type')) === 'pwd')>PWD (20%)</option>
                                 <option value="senior" @selected(old('discount_type', data_get($booking->reservation_meta, 'discount_type')) === 'senior')>Senior (20%)</option>
+                                @if(data_get($booking->reservation_meta, 'discount_type') === 'promo')
+                                    <option value="promo" @selected(old('discount_type', data_get($booking->reservation_meta, 'discount_type')) === 'promo')>Promo: {{ data_get($booking->reservation_meta, 'promo_code') }} ({{ number_format((float) data_get($booking->reservation_meta, 'promo_discount_percent'), 2) }}%)</option>
+                                @endif
                             </select>
                         </div>
                         <div class="col-12">

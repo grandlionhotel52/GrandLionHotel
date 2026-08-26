@@ -136,7 +136,13 @@ class AdminStaffButtonFlowsTest extends TestCase
         $this->assertSame($admin->id, $room->admin_id);
         $this->assertNotNull($room->status_updated_at);
 
-        $this->patch(route('admin.bookings.approve-online-payment', $onlineBooking))
+        $this->patch(route('admin.bookings.approve-online-payment', $onlineBooking), [
+            'verified_amount' => 'not-a-number',
+        ])->assertSessionHasErrors('verified_amount');
+
+        $this->patch(route('admin.bookings.approve-online-payment', $onlineBooking), [
+            'verified_amount' => $onlineBooking->payment->amount,
+        ])
             ->assertRedirect(route('admin.bookings.show', $onlineBooking));
 
         $onlineBooking->refresh();
