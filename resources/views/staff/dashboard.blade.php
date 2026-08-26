@@ -137,6 +137,16 @@
         };
     @endphp
 
+    <div class="alert alert-light border mb-4" role="note">
+        <strong class="d-block mb-2">Start here for each guest</strong>
+        <div class="row g-2 small text-secondary">
+            <div class="col-md-3"><strong class="text-dark">1. Review</strong><br>Check pre-booking details.</div>
+            <div class="col-md-3"><strong class="text-dark">2. Confirm</strong><br>Approve the room and dates.</div>
+            <div class="col-md-3"><strong class="text-dark">3. Payment</strong><br>Record received cash; admin verifies online payments.</div>
+            <div class="col-md-3"><strong class="text-dark">4. Arrival</strong><br>Check in only after payment.</div>
+        </div>
+    </div>
+
     <section class="mb-4">
         <div class="ops-section-head">
             <div>

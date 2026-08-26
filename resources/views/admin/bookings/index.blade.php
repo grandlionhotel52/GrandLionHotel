@@ -89,7 +89,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
             <h1 class="h4 mb-1">Booking Management</h1>
-            <p class="text-secondary mb-0">{{ number_format($bookings->total()) }} matching booking{{ $bookings->total() === 1 ? '' : 's' }}</p>
+            <p class="text-secondary mb-0">Filter the list, open a booking, then complete its next required action. {{ number_format($bookings->total()) }} result{{ $bookings->total() === 1 ? '' : 's' }}.</p>
         </div>
     </div>
 
@@ -158,7 +158,7 @@
                     </select>
                 </div>
                 <div class="col-lg-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-ta w-100">Apply</button>
+                    <button type="submit" class="btn btn-ta w-100">Apply filters</button>
                     <a href="{{ route('admin.bookings.index') }}" class="btn btn-ta-outline">Reset</a>
                 </div>
             </div>
@@ -203,7 +203,7 @@
                                 <div class="admin-action-group">
                                     <a href="{{ route('admin.bookings.show', $booking) }}" class="btn btn-sm btn-ta-outline">
                                         <i class="bi bi-eye"></i>
-                                        <span>View</span>
+                                        <span>Review booking</span>
                                     </a>
                                 </div>
                             </td>

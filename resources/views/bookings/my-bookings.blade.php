@@ -62,6 +62,15 @@
         </a>
     </div>
 
+    <div class="alert alert-light border mb-4" role="note">
+        <strong class="d-block mb-2">How your booking works</strong>
+        <div class="d-flex flex-wrap gap-3 small text-secondary">
+            <span><span class="badge text-bg-warning me-1">Pre-book</span> Waiting for hotel approval</span>
+            <span><span class="badge text-bg-success me-1">Confirmed</span> Ready for payment</span>
+            <span><span class="badge text-bg-primary me-1">Paid</span> Ready for arrival</span>
+        </div>
+    </div>
+
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="my-bookings-stat">
@@ -130,7 +139,7 @@
                             </td>
                             <td>&#8369;{{ number_format($booking->total_price, 2) }}</td>
                             <td class="text-end">
-                                <a href="{{ route('bookings.show', $booking) }}" class="btn btn-sm btn-ta-outline">Details</a>
+                                <a href="{{ route('bookings.show', $booking) }}" class="btn btn-sm btn-ta-outline">View details</a>
                                 @if($isOnlineAwaitingVerification)
                                     <span class="small text-secondary d-inline-block ms-2">Under verification</span>
                                 @elseif($isCashAwaitingVerification)

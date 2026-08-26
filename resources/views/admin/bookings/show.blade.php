@@ -202,7 +202,7 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <button type="submit" class="btn btn-ta w-100">Update</button>
+                <button type="submit" class="btn btn-ta w-100">Update booking status</button>
             </div>
         </form>
     </section>
@@ -212,7 +212,7 @@
             <h2 class="h5 mb-3">Payment Details</h2>
             @if($isOnlineAwaitingVerification)
                 <div class="alert alert-info small">
-                    Verify the submitted reference and proof before approving.
+                    <strong>Review before approving:</strong> match the payment method, reference number, proof, and exact amount due. Approval marks this booking as paid.
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
                     <form method="POST" action="{{ route('admin.bookings.approve-online-payment', $booking) }}" class="d-flex flex-wrap gap-2 align-items-end" data-confirm="Approve this online payment submission?">

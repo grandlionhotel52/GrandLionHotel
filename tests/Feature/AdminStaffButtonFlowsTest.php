@@ -384,21 +384,6 @@ class AdminStaffButtonFlowsTest extends TestCase
         $this->assertSame('completed', $activeBooking->status);
         $this->assertNotNull($activeBooking->actual_check_out_at);
 
-        $this->patch(route('staff.bookings.approve-online-payment', $onlineBooking))
-            ->assertRedirect(route('staff.bookings.show', $onlineBooking));
-
-        $onlineBooking->refresh();
-        $onlineBooking->load('payment');
-        $this->assertSame('paid', $onlineBooking->payment->status);
-
-        $this->patch(route('staff.bookings.reject-online-payment', $rejectedBooking))
-            ->assertRedirect(route('staff.bookings.show', $rejectedBooking));
-
-        $rejectedBooking->refresh();
-        $rejectedBooking->load('payment');
-        $this->assertSame('unpaid', $rejectedBooking->payment->status);
-        $this->assertNull($rejectedBooking->payment->transaction_reference);
-
         $walkInResponse = $this->post(route('staff.bookings.store'), [
             'customer_name' => 'Walk In Guest',
             'customer_email' => 'walkin@example.com',

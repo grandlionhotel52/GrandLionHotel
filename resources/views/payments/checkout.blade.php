@@ -99,7 +99,11 @@
             <section class="soft-card p-4 p-lg-5">
                 <p class="ta-eyebrow mb-1">Secure Payment</p>
                 <h1 class="h3 mb-1">Complete payment</h1>
-                <p class="text-secondary mb-4">Booking #{{ $booking->id }} · Review the amount before submitting.</p>
+                <p class="text-secondary mb-3">Booking #{{ $booking->id }} &middot; Review the amount before submitting.</p>
+
+                <div class="alert alert-light border small mb-4" role="note">
+                    <strong>Choose how you want to pay.</strong> Online payment is confirmed automatically after PayMongo succeeds. For cash, pay at the front desk and staff will record it after receiving your payment.
+                </div>
 
                 <div class="checkout-summary mb-4">
                     <div class="checkout-summary-item">
@@ -108,11 +112,11 @@
                     </div>
                     <div class="checkout-summary-item">
                         <span class="checkout-summary-label">Stay</span>
-                        <span class="checkout-summary-value">{{ $booking->check_in->format('M d') }} – {{ $booking->check_out->format('M d, Y') }}</span>
+                        <span class="checkout-summary-value">{{ $booking->check_in->format('M d') }} &ndash; {{ $booking->check_out->format('M d, Y') }}</span>
                     </div>
                     <div class="checkout-summary-item">
                         <span class="checkout-summary-label">Nightly rate</span>
-                        <span class="checkout-summary-value">&#8369;{{ number_format($roomNightlyRate, 2) }} × {{ $billedUnits }}</span>
+                        <span class="checkout-summary-value">&#8369;{{ number_format($roomNightlyRate, 2) }} &times; {{ $billedUnits }}</span>
                     </div>
                     <div class="checkout-summary-item">
                         <span class="checkout-summary-label">Room subtotal</span>
@@ -121,7 +125,7 @@
                     @if($extraBeddingCount > 0)
                         <div class="checkout-summary-item">
                             <span class="checkout-summary-label">Extra bedding</span>
-                            <span class="checkout-summary-value">{{ $extraBeddingCount }} × &#8369;{{ number_format($extraBeddingFeePerNight, 2) }} × {{ $billedUnits }}</span>
+                            <span class="checkout-summary-value">{{ $extraBeddingCount }} &times; &#8369;{{ number_format($extraBeddingFeePerNight, 2) }} &times; {{ $billedUnits }}</span>
                         </div>
                     @endif
                     <div class="checkout-summary-item total">
@@ -135,8 +139,8 @@
                     <div class="col-12">
                         <label class="form-label">Payment method</label>
                         <select class="form-select" name="method" id="payment_method_select" required>
-                            <option value="cash" @selected($selectedMethod === 'cash')>Cash</option>
-                            <option value="credit_debit_card" @selected($selectedMethod === 'credit_debit_card')>PayMongo — Card, GCash, or QR Ph</option>
+                            <option value="cash" @selected($selectedMethod === 'cash')>Cash &mdash; Pay at the front desk</option>
+                            <option value="credit_debit_card" @selected($selectedMethod === 'credit_debit_card')>Pay online &mdash; Card, GCash, or QR Ph</option>
                         </select>
                         <small class="text-secondary">
                             Online payments open PayMongo's secure checkout. Cash is paid at the front desk.
@@ -250,7 +254,7 @@
                     <div class="col-12 d-flex justify-content-end gap-2">
                         <x-back-button :href="$backRoute ?? route('bookings.show', $booking)" label="Back to booking details" />
                         <button type="submit" class="btn btn-ta" id="payment_submit_button">
-                            {{ in_array($selectedMethod, $onlineMethods, true) ? 'Submit for verification' : 'Confirm payment' }}
+                            {{ in_array($selectedMethod, $onlineMethods, true) ? 'Submit for verification' : ($selectedMethod === 'credit_debit_card' ? 'Continue to secure payment' : 'Choose cash payment') }}
                         </button>
                     </div>
                 </form>
@@ -281,7 +285,7 @@
                 cardTerminalPanel?.classList.toggle('d-none', methodSelect.value !== 'credit_debit_card');
                 submitButton.textContent = requiresOnlineProof
                     ? 'Submit for verification'
-                    : methodSelect.value === 'credit_debit_card' ? 'Continue to PayMongo' : 'Confirm payment';
+                    : methodSelect.value === 'credit_debit_card' ? 'Continue to secure payment' : 'Choose cash payment';
                 submitButton.disabled = requiresOnlineProof && !termsCheckbox?.checked;
             };
 

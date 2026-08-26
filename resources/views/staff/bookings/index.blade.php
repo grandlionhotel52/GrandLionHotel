@@ -259,7 +259,7 @@
         <div class="ops-page-head">
             <div>
                 <h1 class="h4 mb-1">Bookings Board</h1>
-                <p class="text-secondary mb-0">Prioritized work queue for guest stays.</p>
+                <p class="text-secondary mb-0">Choose a queue, review the booking, then complete its next required action.</p>
             </div>
             <a href="{{ route('staff.bookings.create') }}" class="btn btn-staff">
                 <i class="bi bi-plus-circle"></i>
@@ -334,7 +334,7 @@
                     </select>
                 </div>
                 <div class="col-lg-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-staff w-100">Apply</button>
+                    <button type="submit" class="btn btn-staff w-100">Apply filters</button>
                     <a href="{{ route('staff.bookings.index', $activeQueue === '' ? [] : ['queue' => $activeQueue]) }}" class="btn btn-staff-outline">Reset</a>
                 </div>
             </div>
@@ -469,7 +469,7 @@
 
                                     <a href="{{ route('staff.bookings.show', ['booking' => $booking, 'return_to' => request()->getRequestUri()]) }}" class="btn btn-sm btn-staff-outline">
                                         <i class="bi bi-eye"></i>
-                                        <span>Details</span>
+                                        <span>Review booking</span>
                                     </a>
                                 </div>
                             </td>

@@ -912,29 +912,7 @@
 
                 @if($isOnlineAwaitingVerification)
                     <div class="alert alert-info small mb-3">
-                        Customer submitted online payment proof. Verify the transfer using the uploaded screenshot and reference number, then approve or reject.
-                    </div>
-                    <div class="d-grid gap-2 mb-4">
-                        <form method="POST" action="{{ route('staff.bookings.approve-online-payment', $booking) }}" data-confirm="Approve this online payment submission?">
-                            @csrf
-                            @method('PATCH')
-                            @if(!empty($returnTo))
-                                <input type="hidden" name="return_to" value="{{ $returnTo }}">
-                            @endif
-                            <input type="hidden" name="stay_on_booking" value="1">
-                            <input type="hidden" name="redirect_section" value="payment-desk">
-                            <button type="submit" class="btn btn-staff w-100">Approve Online Payment</button>
-                        </form>
-                        <form method="POST" action="{{ route('staff.bookings.reject-online-payment', $booking) }}" data-confirm="Reject this online payment submission?">
-                            @csrf
-                            @method('PATCH')
-                            @if(!empty($returnTo))
-                                <input type="hidden" name="return_to" value="{{ $returnTo }}">
-                            @endif
-                            <input type="hidden" name="stay_on_booking" value="1">
-                            <input type="hidden" name="redirect_section" value="payment-desk">
-                            <button type="submit" class="btn btn-staff-outline w-100">Reject Submission</button>
-                        </form>
+                        <strong>Waiting for admin verification.</strong> The customer submitted an online payment. Staff cannot approve or reject online payments; continue only after an administrator verifies it.
                     </div>
                 @endif
 
@@ -954,7 +932,7 @@
                         <input type="hidden" name="redirect_section" value="payment-desk">
                         <div class="col-12">
                             <div class="alert alert-light border small mb-0">
-                                <strong>Cash payment only.</strong> Record this after the cash has been physically received. Online payments are handled through PayMongo or online-payment verification.
+                                <strong>Cash payment only.</strong> Record this after the cash has been physically received. Administrators handle online-payment verification.
                             </div>
                         </div>
                         <div class="col-12">

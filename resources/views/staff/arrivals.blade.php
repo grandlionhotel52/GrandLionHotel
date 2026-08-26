@@ -227,7 +227,7 @@
 
     <section class="arrivals-table-shell p-3 p-lg-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h5 mb-0">Arrivals Queue</h2>
+            <div><h2 class="h5 mb-1">Arrivals Queue</h2><p class="small text-secondary mb-0">Confirm the booking and payment before checking in a guest.</p></div>
         </div>
         
         @if($arrivals->isEmpty())

@@ -120,6 +120,16 @@
         };
     @endphp
 
+    <div class="alert alert-light border mb-4" role="note">
+        <strong class="d-block mb-2">Administrator quick guide</strong>
+        <div class="row g-2 small text-secondary">
+            <div class="col-md-3"><strong class="text-dark">Bookings</strong><br>Review exceptions and assign staff.</div>
+            <div class="col-md-3"><strong class="text-dark">Payments</strong><br>Verify submitted online payments.</div>
+            <div class="col-md-3"><strong class="text-dark">Rooms</strong><br>Maintain availability and rates.</div>
+            <div class="col-md-3"><strong class="text-dark">Reports</strong><br>Review revenue and occupancy.</div>
+        </div>
+    </div>
+
     <section class="mb-4">
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
             <div>
