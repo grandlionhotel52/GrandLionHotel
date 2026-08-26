@@ -286,14 +286,14 @@
                         <div class="booking-estimate-row"><span id="summary_units_label">Nights</span><strong id="summary_units">{{ $initialSummaryUnits }}</strong></div>
                         <div class="booking-estimate-row"><span>Rate</span><strong id="summary_rate">{{ $initialSummaryRate }}</strong></div>
                         <div class="booking-estimate-row"><span>Standard occupancy</span><strong id="summary_guests">{{ $initialGuests }} guests</strong></div>
-                        <div class="booking-estimate-row"><span>Date discount</span><strong id="summary_discount">{{ $initialSummaryDiscount }}</strong></div>
+                        <div class="booking-estimate-row"><span>Discount</span><strong id="summary_discount">{{ $initialSummaryDiscount }}</strong></div>
                         <div class="booking-estimate-row"><span>Availability</span><strong id="summary_availability">{{ $initialSummaryAvailability }}</strong></div>
                         <div class="booking-estimate-row booking-estimate-total mb-0">
                             <span>Estimated total</span>
                             <strong id="summary_total">&#8369;{{ number_format($pricingPreview['total'] ?? $room->price_per_night, 2) }}</strong>
                         </div>
-                        <small class="text-secondary d-block mt-2">
-                            Estimate includes saved date discounts. PWD/Senior discounts remain subject to staff verification.
+                        <small class="text-secondary d-block mt-2" id="summary_discount_note">
+                            Automatic date discounts are included when available. PWD/Senior discounts require staff verification.
                         </small>
                     </div>
                 </div>
@@ -540,6 +540,7 @@
             const summaryRate = document.getElementById('summary_rate');
             const summaryGuests = document.getElementById('summary_guests');
             const summaryDiscount = document.getElementById('summary_discount');
+            const summaryDiscountNote = document.getElementById('summary_discount_note');
             const summaryAvailability = document.getElementById('summary_availability');
             const summaryTotal = document.getElementById('summary_total');
             const dateFormatter = new Intl.DateTimeFormat('en-PH', {
@@ -679,6 +680,19 @@
                 }
 
                 summaryDiscount.textContent = segments.length > 0 ? segments.join(' + ') : 'None selected';
+
+                if (summaryDiscountNote) {
+                    const notes = [];
+                    if (currentPricing?.has_date_discount) {
+                        notes.push('Automatic date discount is included in this estimate.');
+                    }
+                    if (requiresId) {
+                        notes.push(`${discountTypeSelect.value.toUpperCase()} discount is estimated and requires staff ID verification.`);
+                    } else if (discountTypeSelect?.value === 'promo' && selectedIdentityDiscountRate() > 0) {
+                        notes.push('The applied promo code is included in this estimate.');
+                    }
+                    summaryDiscountNote.textContent = notes.length > 0 ? notes.join(' ') : 'No discount is currently applied.';
+                }
             };
 
             const renderPricingSummary = (pricing = null, availability = null) => {
