@@ -104,6 +104,23 @@
         .booking-form-key i {
             color: #72572f;
         }
+        .promo-code-box {
+            padding: .9rem;
+            border: 1px solid #ded4c5;
+            border-radius: 14px;
+            background: #faf8f4;
+        }
+        .promo-code-box .input-group .form-control {
+            min-width: 0;
+        }
+        .promo-code-feedback.is-success {
+            color: #167347 !important;
+            font-weight: 700;
+        }
+        .promo-code-feedback.is-error {
+            color: #a51d16 !important;
+            font-weight: 700;
+        }
         .booking-estimate {
             border-radius: 16px;
             border: 1px solid #e7dccb;
@@ -444,9 +461,17 @@
                     </div>
 
                     <div class="col-md-8" id="promo_code_group">
-                        <label class="form-label" for="promo_code_input">Have a promo code? <span class="text-secondary fw-normal">(optional)</span></label>
-                        <input type="text" class="form-control text-uppercase" name="promo_code" id="promo_code_input" maxlength="40" value="{{ old('promo_code') }}" placeholder="Enter promotional code" autocomplete="off">
-                        <small class="text-secondary" id="promo_code_feedback">Enter your code and the promotional discount will be selected automatically.</small>
+                        <div class="promo-code-box">
+                            <label class="form-label fw-semibold" for="promo_code_input"><i class="bi bi-tag me-1" aria-hidden="true"></i>Have a promo code? <span class="text-secondary fw-normal">(optional)</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control text-uppercase" name="promo_code" id="promo_code_input" maxlength="40" value="{{ old('promo_code') }}" placeholder="Enter code" autocomplete="off" aria-describedby="promo_code_feedback">
+                                <button type="button" class="btn btn-ta" id="promo_code_apply">Apply code</button>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
+                                <small class="text-secondary promo-code-feedback" id="promo_code_feedback" aria-live="polite">Enter a code, then select Apply code.</small>
+                                <button type="button" class="btn btn-link btn-sm text-danger p-0 d-none" id="promo_code_remove">Remove</button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="col-12">
@@ -489,7 +514,10 @@
             const promoCodeInput = document.getElementById('promo_code_input');
             const promoCodeGroup = document.getElementById('promo_code_group');
             const promoCodeFeedback = document.getElementById('promo_code_feedback');
+            const promoCodeApply = document.getElementById('promo_code_apply');
+            const promoCodeRemove = document.getElementById('promo_code_remove');
             const promoCodes = @json($activePromoCodes->mapWithKeys(fn ($promo) => [$promo->code => (float) $promo->discount_percent]));
+            let appliedPromoCode = '';
             const standardGuests = {{ $standardGuests }};
             const baseNightlyRate = Number.parseFloat(form?.dataset.baseNightlyRate || '0') || 0;
             const submitButton = form?.querySelector('button[type="submit"]');
@@ -530,6 +558,7 @@
                 if (discountTypeSelect?.value === 'pwd' || discountTypeSelect?.value === 'senior') return 0.20;
                 if (discountTypeSelect?.value !== 'promo') return 0;
                 const code = (promoCodeInput?.value || '').trim().toUpperCase();
+                if (code === '' || appliedPromoCode !== code) return 0;
                 return Number(promoCodes[code] || 0) / 100;
             };
 
@@ -875,17 +904,67 @@
                 refreshPricingPreview();
             });
             checkOutInput.addEventListener('change', refreshPricingPreview);
-            discountTypeSelect?.addEventListener('change', updateDiscountState);
+            discountTypeSelect?.addEventListener('change', () => {
+                if (discountTypeSelect.value !== 'promo' && appliedPromoCode !== '') {
+                    appliedPromoCode = '';
+                    if (promoCodeInput) promoCodeInput.value = '';
+                    promoCodeRemove?.classList.add('d-none');
+                    promoCodeFeedback?.classList.remove('is-success', 'is-error');
+                    if (promoCodeFeedback) promoCodeFeedback.textContent = 'Enter a code, then select Apply code.';
+                }
+                updateDiscountState();
+            });
             promoCodeInput?.addEventListener('input', () => {
                 promoCodeInput.value = promoCodeInput.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 40);
-                if (promoCodeInput.value !== '' && discountTypeSelect?.value !== 'promo') {
-                    discountTypeSelect.value = 'promo';
-                    updateDiscountState();
+                if (appliedPromoCode !== promoCodeInput.value) {
+                    appliedPromoCode = '';
+                    promoCodeRemove?.classList.add('d-none');
                 }
-                const rate = selectedIdentityDiscountRate();
-                promoCodeInput.setCustomValidity(discountTypeSelect?.value === 'promo' && rate <= 0 ? 'Enter a valid active promotional code.' : '');
-                if (promoCodeFeedback) promoCodeFeedback.textContent = rate > 0 ? `${Number(rate * 100)}% promotional discount applied.` : (promoCodeInput.value === '' ? 'Enter your code and the promotional discount will be selected automatically.' : 'This code is not active or valid.');
+                promoCodeInput.setCustomValidity('');
+                promoCodeFeedback?.classList.remove('is-success', 'is-error');
+                if (promoCodeFeedback) promoCodeFeedback.textContent = promoCodeInput.value === '' ? 'Enter a code, then select Apply code.' : 'Select Apply code to check this promotion.';
                 renderPricingSummary(currentPricing, currentAvailability);
+            });
+
+            promoCodeApply?.addEventListener('click', () => {
+                const code = (promoCodeInput?.value || '').trim().toUpperCase();
+                const discountPercent = Number(promoCodes[code] || 0);
+                promoCodeFeedback?.classList.remove('is-success', 'is-error');
+
+                if (code === '' || discountPercent <= 0) {
+                    appliedPromoCode = '';
+                    promoCodeInput?.setCustomValidity('Enter a valid active promotional code.');
+                    promoCodeFeedback?.classList.add('is-error');
+                    if (promoCodeFeedback) promoCodeFeedback.textContent = code === '' ? 'Enter a promo code first.' : 'This promo code is invalid, inactive, or expired.';
+                    promoCodeRemove?.classList.add('d-none');
+                    promoCodeInput?.reportValidity();
+                    renderPricingSummary(currentPricing, currentAvailability);
+                    return;
+                }
+
+                appliedPromoCode = code;
+                promoCodeInput.value = code;
+                promoCodeInput.setCustomValidity('');
+                if (discountTypeSelect) discountTypeSelect.value = 'promo';
+                updateDiscountState();
+                promoCodeFeedback?.classList.add('is-success');
+                if (promoCodeFeedback) promoCodeFeedback.textContent = `${discountPercent}% discount applied successfully.`;
+                promoCodeRemove?.classList.remove('d-none');
+                renderPricingSummary(currentPricing, currentAvailability);
+            });
+
+            promoCodeRemove?.addEventListener('click', () => {
+                appliedPromoCode = '';
+                if (promoCodeInput) {
+                    promoCodeInput.value = '';
+                    promoCodeInput.required = false;
+                    promoCodeInput.setCustomValidity('');
+                }
+                if (discountTypeSelect?.value === 'promo') discountTypeSelect.value = 'none';
+                promoCodeFeedback?.classList.remove('is-success', 'is-error');
+                if (promoCodeFeedback) promoCodeFeedback.textContent = 'Promo code removed. Enter another code if you have one.';
+                promoCodeRemove.classList.add('d-none');
+                updateDiscountState();
             });
 
             syncAll();
@@ -897,6 +976,17 @@
 
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
+
+                const enteredPromoCode = (promoCodeInput?.value || '').trim().toUpperCase();
+                if (discountTypeSelect?.value === 'promo' && appliedPromoCode !== enteredPromoCode) {
+                    promoCodeInput?.setCustomValidity('Select Apply code before submitting your booking.');
+                    promoCodeFeedback?.classList.remove('is-success');
+                    promoCodeFeedback?.classList.add('is-error');
+                    if (promoCodeFeedback) promoCodeFeedback.textContent = 'Select Apply code before submitting your booking.';
+                    promoCodeInput?.reportValidity();
+                    promoCodeInput?.focus();
+                    return;
+                }
 
                 if (form.dataset.submitting === '1') {
                     return;
