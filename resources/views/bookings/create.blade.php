@@ -121,6 +121,30 @@
             color: #a51d16 !important;
             font-weight: 700;
         }
+        .date-availability {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            padding: .7rem .85rem;
+            border-radius: 12px;
+            font-size: .88rem;
+            font-weight: 700;
+        }
+        .date-availability.is-checking {
+            color: #475467;
+            background: #f2f4f7;
+            border: 1px solid #d0d5dd;
+        }
+        .date-availability.is-available {
+            color: #11643d;
+            background: #ecfdf3;
+            border: 1px solid #86d6aa;
+        }
+        .date-availability.is-unavailable {
+            color: #9b1c1c;
+            background: #fff1f0;
+            border: 1px solid #f1a7a2;
+        }
         .booking-estimate {
             border-radius: 16px;
             border: 1px solid #e7dccb;
@@ -328,12 +352,6 @@
                     <span>Other fields are optional</span>
                 </div>
 
-                @if(!empty($prefill['availability_message']))
-                    <div id="booking_prefill_feedback" class="alert booking-page-alert {{ $prefill['unavailable_for_selected_dates'] ? 'alert-warning' : 'alert-info' }}" role="alert" tabindex="-1">
-                        {{ $prefill['availability_message'] }}
-                    </div>
-                @endif
-
                 <div id="booking_ajax_feedback" class="alert alert-danger booking-page-alert d-none" role="alert" tabindex="-1" aria-live="assertive"></div>
 
                 <form
@@ -419,7 +437,11 @@
                         <label class="form-label">Departure date</label>
                         <input type="date" class="form-control" id="check_out_input" name="check_out" required min="{{ $minimumCheckOut }}" value="{{ $initialCheckOut }}">
                     </div>
-                    <div class="col-12" id="nightly_time_policy_note">
+                    <div class="col-12">
+                        <div id="date_availability_feedback" class="date-availability is-checking" role="status" aria-live="polite">
+                            <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                            <span>Checking availability...</span>
+                        </div>
                     </div>
                     <div class="col-12 pt-2">
                         <h2 class="h5 mb-1">Preferences and Discounts</h2>
@@ -492,7 +514,7 @@
             const checkInInput = document.getElementById('check_in_input');
             const checkOutInput = document.getElementById('check_out_input');
             const ajaxFeedback = document.getElementById('booking_ajax_feedback');
-            const prefillFeedback = document.getElementById('booking_prefill_feedback');
+            const dateAvailabilityFeedback = document.getElementById('date_availability_feedback');
             const discountTypeSelect = document.getElementById('discount_type_select');
             const discountTypeChoice = document.getElementById('discount_type_choice');
             const discountIdInput = document.getElementById('discount_id_input');
@@ -632,6 +654,24 @@
                     summaryAvailability.textContent = availability?.message || fallbackMessage;
                 }
 
+                if (dateAvailabilityFeedback) {
+                    const message = availability?.message || fallbackMessage;
+                    const isAvailable = availability?.stay_available === true;
+                    const isUnavailable = availability?.stay_available === false;
+                    const icon = dateAvailabilityFeedback.querySelector('i');
+                    const text = dateAvailabilityFeedback.querySelector('span');
+
+                    dateAvailabilityFeedback.classList.toggle('is-available', isAvailable);
+                    dateAvailabilityFeedback.classList.toggle('is-unavailable', isUnavailable);
+                    dateAvailabilityFeedback.classList.toggle('is-checking', !isAvailable && !isUnavailable);
+                    checkInInput.classList.toggle('is-valid', isAvailable);
+                    checkOutInput.classList.toggle('is-valid', isAvailable);
+                    checkInInput.classList.toggle('is-invalid', isUnavailable);
+                    checkOutInput.classList.toggle('is-invalid', isUnavailable);
+                    if (icon) icon.className = isAvailable ? 'bi bi-check-circle-fill' : (isUnavailable ? 'bi bi-x-circle-fill' : 'bi bi-hourglass-split');
+                    if (text) text.textContent = message;
+                }
+
                 if (submitButton) {
                     const canSubmit = availability?.stay_available ?? false;
                     submitButton.disabled = !canSubmit;
@@ -754,6 +794,8 @@
                     return;
                 }
 
+                updateAvailabilityState(null, 'Checking availability...');
+
                 try {
                     const previewUrl = new URL(form.dataset.previewUrl, window.location.origin);
                     previewUrl.searchParams.set('check_in', checkInInput.value);
@@ -771,9 +813,7 @@
                         currentPricing = null;
                         renderPricingSummary(null, null);
 
-                        if (summaryAvailability) {
-                            summaryAvailability.textContent = payload?.message || 'Unable to load pricing right now.';
-                        }
+                        updateAvailabilityState(null, payload?.message || 'Unable to check availability right now.');
 
                         if (submitButton) {
                             submitButton.disabled = true;
@@ -789,9 +829,7 @@
                     currentPricing = null;
                     renderPricingSummary(null, null);
 
-                    if (summaryAvailability) {
-                        summaryAvailability.textContent = 'Unable to load pricing right now.';
-                    }
+                    updateAvailabilityState(null, 'Unable to check availability right now.');
 
                     if (submitButton) {
                         submitButton.disabled = true;
@@ -974,10 +1012,6 @@
 
             syncAll();
             refreshPricingPreview();
-
-            if (prefillFeedback && prefillFeedback.classList.contains('alert-warning')) {
-                prefillFeedback.classList.add('is-visible');
-            }
 
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
