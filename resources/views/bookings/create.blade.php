@@ -354,10 +354,10 @@
                         <small class="text-secondary">Required for PWD/Senior discount.</small>
                     </div>
 
-                    <div class="col-md-4 {{ old('discount_type') === 'promo' ? '' : 'd-none' }}" id="promo_code_group">
-                        <label class="form-label">Promo code</label>
+                    <div class="col-md-8" id="promo_code_group">
+                        <label class="form-label" for="promo_code_input">Have a promo code? <span class="text-secondary fw-normal">(optional)</span></label>
                         <input type="text" class="form-control text-uppercase" name="promo_code" id="promo_code_input" maxlength="40" value="{{ old('promo_code') }}" placeholder="Enter promotional code" autocomplete="off">
-                        <small class="text-secondary" id="promo_code_feedback">Enter a valid active code.</small>
+                        <small class="text-secondary" id="promo_code_feedback">Enter your code and the promotional discount will be selected automatically.</small>
                     </div>
 
                     <div class="col-12">
@@ -756,15 +756,12 @@
                 discountIdInput.disabled = !requiresId;
                 discountIdGroup?.classList.toggle('d-none', !requiresId);
                 discountPhotoGroup?.classList.toggle('d-none', !requiresId);
-                promoCodeGroup?.classList.toggle('d-none', !requiresPromo);
                 if (discountIdPhotoInput) {
                     discountIdPhotoInput.required = requiresId;
                     discountIdPhotoInput.disabled = !requiresId;
                 }
                 if (promoCodeInput) {
                     promoCodeInput.required = requiresPromo;
-                    promoCodeInput.disabled = !requiresPromo;
-                    if (!requiresPromo) promoCodeInput.value = '';
                 }
 
                 if (!requiresId) {
@@ -792,9 +789,13 @@
             discountTypeSelect?.addEventListener('change', updateDiscountState);
             promoCodeInput?.addEventListener('input', () => {
                 promoCodeInput.value = promoCodeInput.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 40);
+                if (promoCodeInput.value !== '' && discountTypeSelect?.value !== 'promo') {
+                    discountTypeSelect.value = 'promo';
+                    updateDiscountState();
+                }
                 const rate = selectedIdentityDiscountRate();
                 promoCodeInput.setCustomValidity(discountTypeSelect?.value === 'promo' && rate <= 0 ? 'Enter a valid active promotional code.' : '');
-                if (promoCodeFeedback) promoCodeFeedback.textContent = rate > 0 ? `${Number(rate * 100)}% promotional discount applied.` : 'Enter a valid active code.';
+                if (promoCodeFeedback) promoCodeFeedback.textContent = rate > 0 ? `${Number(rate * 100)}% promotional discount applied.` : (promoCodeInput.value === '' ? 'Enter your code and the promotional discount will be selected automatically.' : 'This code is not active or valid.');
                 renderPricingSummary(currentPricing, currentAvailability);
             });
 
