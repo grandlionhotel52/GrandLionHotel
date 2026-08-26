@@ -126,6 +126,27 @@
             background: #fff1f0;
             border: 1px solid #f1a7a2;
         }
+        .booking-submit-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            place-items: center;
+            padding: 1.5rem;
+            background: rgba(20, 27, 39, .7);
+            backdrop-filter: blur(4px);
+        }
+        .booking-submit-overlay.is-visible {
+            display: grid;
+        }
+        .booking-submit-dialog {
+            width: min(100%, 420px);
+            padding: 2rem;
+            text-align: center;
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, .3);
+        }
         .booking-estimate {
             border-radius: 16px;
             border: 1px solid #e7dccb;
@@ -479,6 +500,15 @@
             </section>
         </div>
     </div>
+
+    <div class="booking-submit-overlay" id="booking_submit_overlay" role="status" aria-live="assertive" aria-hidden="true">
+        <div class="booking-submit-dialog">
+            <div class="spinner-border text-warning mb-3" id="booking_submit_spinner" aria-hidden="true"></div>
+            <i class="bi bi-check-circle-fill text-success fs-1 d-none mb-3" id="booking_submit_success_icon" aria-hidden="true"></i>
+            <h2 class="h5 mb-2" id="booking_submit_title">Submitting pre-booking...</h2>
+            <p class="text-secondary mb-0" id="booking_submit_message">Please wait. Do not close or refresh this page.</p>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -510,6 +540,11 @@
             const standardGuests = {{ $standardGuests }};
             const baseNightlyRate = Number.parseFloat(form?.dataset.baseNightlyRate || '0') || 0;
             const submitButton = form?.querySelector('button[type="submit"]');
+            const submitOverlay = document.getElementById('booking_submit_overlay');
+            const submitSpinner = document.getElementById('booking_submit_spinner');
+            const submitSuccessIcon = document.getElementById('booking_submit_success_icon');
+            const submitTitle = document.getElementById('booking_submit_title');
+            const submitMessage = document.getElementById('booking_submit_message');
             const defaultSubmitText = submitButton?.textContent?.trim() || 'Submit pre-booking';
             let currentPricing = @json($pricingPreview);
             let currentAvailability = null;
@@ -1078,11 +1113,16 @@
                 }
 
                 form.dataset.submitting = '1';
+                form.setAttribute('aria-busy', 'true');
                 const originalButtonText = submitButton ? submitButton.textContent : defaultSubmitText;
                 if (submitButton) {
                     submitButton.disabled = true;
+                    submitButton.setAttribute('aria-disabled', 'true');
                     submitButton.textContent = 'Submitting request...';
                 }
+                submitOverlay?.classList.add('is-visible');
+                submitOverlay?.setAttribute('aria-hidden', 'false');
+                let submissionSucceeded = false;
 
                 await refreshPricingPreview();
                 syncAll();
@@ -1092,10 +1132,14 @@
                 if (!currentAvailability?.stay_available) {
                     showAlert(currentAvailability?.message || 'Select available stay dates before submitting your booking.');
                     delete form.dataset.submitting;
+                    form.removeAttribute('aria-busy');
                     if (submitButton) {
                         submitButton.disabled = false;
+                        submitButton.removeAttribute('aria-disabled');
                         submitButton.textContent = originalButtonText || defaultSubmitText;
                     }
+                    submitOverlay?.classList.remove('is-visible');
+                    submitOverlay?.setAttribute('aria-hidden', 'true');
                     return;
                 }
 
@@ -1113,17 +1157,13 @@
                     const payload = isJson ? await response.json() : null;
 
                     if (response.ok) {
-                        if (payload && payload.redirect) {
-                            window.location.href = payload.redirect;
-                            return;
-                        }
-
-                        if (response.redirected) {
-                            window.location.href = response.url;
-                            return;
-                        }
-
-                        window.location.reload();
+                        submissionSucceeded = true;
+                        submitSpinner?.classList.add('d-none');
+                        submitSuccessIcon?.classList.remove('d-none');
+                        if (submitTitle) submitTitle.textContent = 'Pre-booking submitted';
+                        if (submitMessage) submitMessage.textContent = 'Opening your booking details...';
+                        const destination = payload?.redirect || (response.redirected ? response.url : @json(route('bookings.my')));
+                        window.location.replace(destination);
                         return;
                     }
 
@@ -1154,11 +1194,16 @@
                 } catch (error) {
                     showAlert('Network error. Please check your connection and try again.');
                 } finally {
+                    if (submissionSucceeded) return;
                     delete form.dataset.submitting;
+                    form.removeAttribute('aria-busy');
                     if (submitButton) {
                         submitButton.disabled = false;
+                        submitButton.removeAttribute('aria-disabled');
                         submitButton.textContent = originalButtonText || 'Submit pre-booking';
                     }
+                    submitOverlay?.classList.remove('is-visible');
+                    submitOverlay?.setAttribute('aria-hidden', 'true');
                 }
             });
         })();
