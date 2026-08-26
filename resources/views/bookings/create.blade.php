@@ -293,7 +293,7 @@
                             <strong id="summary_total">&#8369;{{ number_format($pricingPreview['total'] ?? $room->price_per_night, 2) }}</strong>
                         </div>
                         <small class="text-secondary d-block mt-2" id="summary_discount_note">
-                            Automatic date discounts are included when available. PWD/Senior discounts require staff verification.
+                            Date discounts are automatic. ID discounts require verification.
                         </small>
                     </div>
                 </div>
@@ -303,31 +303,29 @@
         <div class="col-lg-8">
             <section class="soft-card p-4 p-lg-5">
                 <div class="booking-process" role="note" aria-labelledby="booking_process_title">
-                    <p class="small fw-bold text-uppercase mb-3" id="booking_process_title">How booking works <span class="text-secondary fw-normal">&mdash; information only</span></p>
+                    <p class="small fw-bold text-uppercase mb-3" id="booking_process_title">Booking process</p>
                     <ol class="booking-stepper">
                         <li class="booking-step">
                             <span class="booking-step-number">1</span>
-                            <span><span class="booking-step-title">Enter guest details</span><span class="booking-step-description">Fill in the form below.</span></span>
+                            <span class="booking-step-title">Guest details</span>
                         </li>
                         <li class="booking-step">
                             <span class="booking-step-number">2</span>
-                            <span><span class="booking-step-title">Choose your stay</span><span class="booking-step-description">Select guests, dates, and preferences.</span></span>
+                            <span class="booking-step-title">Stay dates</span>
                         </li>
                         <li class="booking-step">
                             <span class="booking-step-number">3</span>
-                            <span><span class="booking-step-title">Hotel reviews</span><span class="booking-step-description">Staff confirms availability after submission.</span></span>
+                            <span class="booking-step-title">Hotel confirmation</span>
                         </li>
                     </ol>
                 </div>
 
-                <p class="ta-eyebrow mb-1">Pre-booking</p>
                 <h1 class="h3 mb-2">Pre-book your stay</h1>
-                <p class="text-secondary mb-4">Submit your request for hotel review. This will not be confirmed until staff approves it.</p>
+                <p class="text-secondary mb-3">Staff confirms your request after submission.</p>
 
                 <div class="booking-form-key" aria-label="Form guide">
-                    <span><i class="bi bi-pencil-square" aria-hidden="true"></i>White fields can be filled in</span>
                     <span><strong class="text-danger">*</strong> Required</span>
-                    <span><i class="bi bi-info-circle" aria-hidden="true"></i>Fields without * are optional</span>
+                    <span>Other fields are optional</span>
                 </div>
 
                 @if(!empty($prefill['availability_message']))
@@ -356,7 +354,6 @@
 
                     <div class="col-12 pt-1">
                         <h2 class="h5 mb-1">Guest Information</h2>
-                        <p class="small text-secondary mb-0">Who is staying?</p>
                     </div>
 
                     <div class="col-md-6">
@@ -411,7 +408,6 @@
 
                     <div class="col-12 pt-2">
                         <h2 class="h5 mb-1">Stay Schedule</h2>
-                        <p class="small text-secondary mb-0">Set your stay dates</p>
                     </div>
 
                     <div class="col-md-6">
@@ -426,8 +422,7 @@
                     <div class="col-12" id="nightly_time_policy_note">
                     </div>
                     <div class="col-12 pt-2">
-                        <h2 class="h5 mb-1">Discount and Special Requests</h2>
-                        <p class="small text-secondary mb-0">Choose your payment method after the hotel confirms your booking.</p>
+                        <h2 class="h5 mb-1">Preferences and Discounts</h2>
                     </div>
 
                     <div class="col-12">
@@ -436,7 +431,6 @@
                             <option value="room_only" @selected(old('meal_plan', 'room_only') === 'room_only')>Room Only — No Breakfast</option>
                             <option value="breakfast_included" @selected(old('meal_plan') === 'breakfast_included')>Breakfast Included</option>
                         </select>
-                        <small class="text-secondary">Your selection will be included in the booking details. Any applicable meal charge will be confirmed by the hotel.</small>
                     </div>
 
                     <div class="col-md-4">
@@ -457,7 +451,6 @@
                     <div class="col-md-4 {{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? '' : 'd-none' }}" id="discount_photo_group">
                         <label class="form-label">Discount ID photo</label>
                         <input type="file" class="form-control" name="discount_id_photo" id="discount_id_photo_input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-                        <small class="text-secondary">Required for PWD/Senior discount.</small>
                     </div>
 
                     <div class="col-md-8" id="promo_code_group">
@@ -468,7 +461,7 @@
                                 <button type="button" class="btn btn-ta" id="promo_code_apply">Apply code</button>
                             </div>
                             <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
-                                <small class="text-secondary promo-code-feedback" id="promo_code_feedback" aria-live="polite">Enter a code, then select Apply code.</small>
+                                <small class="text-secondary promo-code-feedback" id="promo_code_feedback" aria-live="polite">Enter code, then apply.</small>
                                 <button type="button" class="btn btn-link btn-sm text-danger p-0 d-none" id="promo_code_remove">Remove</button>
                             </div>
                         </div>
@@ -477,12 +470,6 @@
                     <div class="col-12">
                         <label class="form-label">Special request (optional)</label>
                         <textarea class="form-control" name="notes" rows="3" maxlength="500" placeholder="Example: extra bed or accessibility needs">{{ old('notes') }}</textarea>
-                    </div>
-
-                    <div class="col-12">
-                        <div class="alert alert-light border mb-0 small">
-                            This is a pre-booking request only. It is not confirmed until hotel staff approves it.
-                        </div>
                     </div>
 
                     <div class="col-12 d-flex justify-content-end gap-2">
@@ -684,14 +671,14 @@
                 if (summaryDiscountNote) {
                     const notes = [];
                     if (currentPricing?.has_date_discount) {
-                        notes.push('Automatic date discount is included in this estimate.');
+                        notes.push('Date discount included.');
                     }
                     if (requiresId) {
-                        notes.push(`${discountTypeSelect.value.toUpperCase()} discount is estimated and requires staff ID verification.`);
+                        notes.push(`${discountTypeSelect.value.toUpperCase()} discount requires ID verification.`);
                     } else if (discountTypeSelect?.value === 'promo' && selectedIdentityDiscountRate() > 0) {
-                        notes.push('The applied promo code is included in this estimate.');
+                        notes.push('Promo code included.');
                     }
-                    summaryDiscountNote.textContent = notes.length > 0 ? notes.join(' ') : 'No discount is currently applied.';
+                    summaryDiscountNote.textContent = notes.length > 0 ? notes.join(' ') : 'No discount applied.';
                 }
             };
 
