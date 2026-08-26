@@ -238,6 +238,7 @@
                     action="{{ route('bookings.store') }}"
                     class="row g-3"
                     enctype="multipart/form-data"
+                    data-no-submit-lock
                     data-base-nightly-rate="{{ number_format((float) $room->price_per_night, 2, '.', '') }}"
                     data-preview-url="{{ route('rooms.pricing-preview', $room) }}"
                 >
@@ -770,6 +771,17 @@
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
 
+                if (form.dataset.submitting === '1') {
+                    return;
+                }
+
+                form.dataset.submitting = '1';
+                const originalButtonText = submitButton ? submitButton.textContent : defaultSubmitText;
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Submitting request...';
+                }
+
                 await refreshPricingPreview();
                 syncAll();
                 clearFormErrors();
@@ -777,14 +789,12 @@
 
                 if (!currentAvailability?.stay_available) {
                     showAlert(currentAvailability?.message || 'Select available stay dates before submitting your booking.');
+                    delete form.dataset.submitting;
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalButtonText || defaultSubmitText;
+                    }
                     return;
-                }
-
-                const originalButtonText = submitButton ? submitButton.textContent : defaultSubmitText;
-
-                if (submitButton) {
-                    submitButton.disabled = true;
-                    submitButton.textContent = 'Submitting request...';
                 }
 
                 try {
@@ -842,6 +852,7 @@
                 } catch (error) {
                     showAlert('Network error. Please check your connection and try again.');
                 } finally {
+                    delete form.dataset.submitting;
                     if (submitButton) {
                         submitButton.disabled = false;
                         submitButton.textContent = originalButtonText || 'Submit pre-booking';
