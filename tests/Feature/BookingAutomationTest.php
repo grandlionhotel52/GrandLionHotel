@@ -17,6 +17,23 @@ class BookingAutomationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_payment_deadline_uses_two_pm_on_the_arrival_date_instead_of_midnight(): void
+    {
+        $this->travelTo('2026-08-26 09:00:00');
+        config()->set('booking_automation.payment_due_hours', 72);
+
+        $booking = Booking::factory()->create([
+            'status' => 'pending',
+            'check_in' => '2026-08-28',
+            'check_out' => '2026-08-29',
+            'payment_due_at' => null,
+        ]);
+
+        $booking->update(['status' => 'confirmed']);
+
+        $this->assertSame('2026-08-28 14:00:00', $booking->fresh()->payment_due_at->format('Y-m-d H:i:s'));
+    }
+
     public function test_stale_unpaid_pending_booking_expires_and_customer_is_notified(): void
     {
         Mail::fake();

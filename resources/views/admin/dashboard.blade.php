@@ -269,7 +269,7 @@
                             <td>{{ $booking->guestName() }}</td>
                             <td>{{ $booking->room->name ?? '-' }}</td>
                             <td>{{ $booking->check_in->format('M d') }} - {{ $booking->check_out->format('M d') }}</td>
-                            <td><span class="badge {{ $statusClass($booking->status) }}">{{ ucfirst($booking->status) }}</span></td>
+                            <td><span class="badge {{ $statusClass($booking->status) }}">{{ \App\Models\Booking::statusLabel($booking->status) }}</span></td>
                             <td><span class="badge {{ $paymentClass($booking->payment_status) }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span></td>
                             <td>{{ $booking->assignedStaff?->name ?? '-' }}</td>
                             <td class="text-end admin-action-col">

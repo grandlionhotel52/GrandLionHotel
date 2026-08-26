@@ -202,9 +202,6 @@ class PaymentController extends Controller
                     'paid_at' => null,
                     'verified_at' => null,
                     'transaction_reference' => null,
-                    'original_amount' => null,
-                    'discount_rate' => null,
-                    'discount_amount' => null,
                 ]
             );
 

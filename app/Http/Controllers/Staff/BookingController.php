@@ -431,13 +431,16 @@ class BookingController extends Controller
         return $this->redirectAfterBookingAction($request, $booking, 'Room marked clean and ready for the next guest.');
     }
 
-    public function arrivals()
+    public function arrivals(Request $request)
     {
-        $today = Carbon::today()->toDateString();
+        $validated = $request->validate([
+            'date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+        $selectedDate = $validated['date'] ?? Carbon::today()->toDateString();
 
         $arrivals = Booking::query()
             ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff'])
-            ->whereDate('check_in', $today)
+            ->whereDate('check_in', $selectedDate)
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereNull('actual_check_in_at')
             ->orderBy('check_in')
@@ -446,21 +449,23 @@ class BookingController extends Controller
             ->withQueryString();
 
         $stats = [
-            'total_arrivals' => Booking::whereDate('check_in', $today)
+            'total_arrivals' => Booking::whereDate('check_in', $selectedDate)
                 ->whereIn('status', ['pending', 'confirmed'])
                 ->whereNull('actual_check_in_at')
                 ->count(),
-            'checked_in' => Booking::whereDate('check_in', $today)
+            'checked_in' => Booking::whereDate('check_in', $selectedDate)
                 ->whereIn('status', ['confirmed'])
                 ->whereNotNull('actual_check_in_at')
                 ->count(),
-            'pending' => Booking::whereDate('check_in', $today)
+            'pending' => Booking::whereDate('check_in', $selectedDate)
                 ->where('status', 'pending')
                 ->whereNull('actual_check_in_at')
                 ->count(),
         ];
 
-        return view('staff.arrivals', compact('arrivals', 'stats'));
+        $selectedDateLabel = Carbon::createFromFormat('Y-m-d', $selectedDate)->format('M d, Y');
+
+        return view('staff.arrivals', compact('arrivals', 'stats', 'selectedDate', 'selectedDateLabel'));
     }
 
     public function updateStaffNotes(Request $request, Booking $booking)
@@ -671,7 +676,7 @@ class BookingController extends Controller
             default => 0.0,
         };
 
-        $originalAmount = round((float) $booking->total_price, 2);
+        $originalAmount = round((float) ($booking->payment?->original_amount ?? $booking->total_price), 2);
         $discountAmount = round($originalAmount * $discountRate, 2);
         $payableAmount = round(max(0, $originalAmount - $discountAmount), 2);
         $uploadedDiscountProofPath = trim((string) data_get($booking->reservation_meta, 'discount_id_photo_path', ''));

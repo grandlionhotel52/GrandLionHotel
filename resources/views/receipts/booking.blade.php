@@ -146,7 +146,7 @@
         </tr>
         <tr>
             <th>Booking Status</th>
-            <td>{{ ucfirst($booking->status) }}</td>
+            <td>{{ \App\Models\Booking::statusLabel($booking->status) }}</td>
         </tr>
         <tr>
             <th>Payment Method</th>

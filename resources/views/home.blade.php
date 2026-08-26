@@ -513,9 +513,15 @@
                                 type="search"
                                 name="type"
                                 class="form-control"
-                                placeholder="Room type or view"
+                                list="heroRoomSuggestions"
+                                placeholder="Choose or type room type/view"
                                 autocomplete="off"
                             >
+                            <datalist id="heroRoomSuggestions">
+                                @foreach($roomSearchSuggestions as $suggestion)
+                                    <option value="{{ $suggestion }}"></option>
+                                @endforeach
+                            </datalist>
                         </div>
                         <div class="hero-search-field hero-date-field">
                             <i class="bi bi-calendar3" aria-hidden="true"></i>

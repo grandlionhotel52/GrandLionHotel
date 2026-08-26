@@ -245,6 +245,32 @@ class AdminStaffButtonFlowsTest extends TestCase
             ->assertSessionHasErrors('email');
     }
 
+    public function test_staff_can_filter_arrivals_board_by_date(): void
+    {
+        $staff = Staff::factory()->create();
+        $customer = Customer::factory()->create();
+        $room = $this->createRoom();
+        $selectedDate = Carbon::today()->addDays(3)->toDateString();
+
+        $arrival = $this->createBooking(
+            customer: $customer,
+            room: $room,
+            status: 'confirmed',
+            paymentStatus: 'unpaid'
+        );
+        $arrival->update([
+            'check_in' => $selectedDate,
+            'check_out' => Carbon::parse($selectedDate)->addDay()->toDateString(),
+        ]);
+
+        $this->actingAs($staff, 'staff')
+            ->get(route('staff.arrivals', ['date' => $selectedDate]))
+            ->assertOk()
+            ->assertSee('Showing arrivals for '.Carbon::parse($selectedDate)->format('M d, Y'))
+            ->assertSee('#'.$arrival->id)
+            ->assertSee('value="'.$selectedDate.'"', false);
+    }
+
     public function test_staff_pages_and_operational_actions_work(): void
     {
         Mail::fake();

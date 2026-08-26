@@ -320,7 +320,7 @@
                     <select id="staff_booking_status" class="form-select" name="status">
                         <option value="">All</option>
                         @foreach(['pending', 'confirmed', 'cancelled', 'completed'] as $status)
-                            <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
+                            <option value="{{ $status }}" @selected(request('status') === $status)>{{ \App\Models\Booking::statusLabel($status) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -409,7 +409,7 @@
                             </td>
                             <td>
                                 <div class="ops-status-stack">
-                                    <span class="badge {{ $statusBadgeClass($booking->status) }}">{{ ucfirst($booking->status) }}</span>
+                                    <span class="badge {{ $statusBadgeClass($booking->status) }}">{{ \App\Models\Booking::statusLabel($booking->status) }}</span>
                                     @if($booking->actual_check_in_at && !$booking->actual_check_out_at)
                                         <span class="badge text-bg-primary">Checked in</span>
                                     @elseif($booking->actual_check_out_at)

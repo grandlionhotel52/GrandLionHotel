@@ -113,7 +113,7 @@
                     <select class="form-select" name="status">
                         <option value="">All</option>
                         @foreach(['pending', 'confirmed', 'cancelled', 'completed'] as $status)
-                            <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
+                            <option value="{{ $status }}" @selected(request('status') === $status)>{{ \App\Models\Booking::statusLabel($status) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -157,7 +157,7 @@
                             </td>
                             <td>{{ $booking->room->name ?? '-' }}</td>
                             <td>{{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</td>
-                            <td><span class="badge {{ $statusClass($booking->status) }}">{{ ucfirst($booking->status) }}</span></td>
+                            <td><span class="badge {{ $statusClass($booking->status) }}">{{ \App\Models\Booking::statusLabel($booking->status) }}</span></td>
                             <td><span class="badge {{ $paymentClass($booking->payment_status) }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span></td>
                             <td>{{ $booking->assignedStaff->name ?? '-' }}</td>
                             <td class="text-end admin-action-col">

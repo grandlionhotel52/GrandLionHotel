@@ -186,8 +186,22 @@
     @endphp
 
     <section class="mb-4">
-        <h1 class="h4 mb-1">Arrivals Board</h1>
-        <p class="text-secondary mb-0">{{ now()->format('M d, Y') }}</p>
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <h1 class="h4 mb-1">Arrivals Board</h1>
+                <p class="text-secondary mb-0">Showing arrivals for {{ $selectedDateLabel }}</p>
+            </div>
+            <form method="GET" action="{{ route('staff.arrivals') }}" class="d-flex flex-wrap align-items-end gap-2">
+                <div>
+                    <label for="arrival_date" class="form-label small fw-semibold mb-1">Arrival date</label>
+                    <input id="arrival_date" type="date" name="date" class="form-control" value="{{ $selectedDate }}" required>
+                </div>
+                <button type="submit" class="btn btn-staff">Show arrivals</button>
+                @if($selectedDate !== now()->toDateString())
+                    <a href="{{ route('staff.arrivals') }}" class="btn btn-staff-outline">Today</a>
+                @endif
+            </form>
+        </div>
     </section>
 
     <div class="row g-3 mb-4">
@@ -218,7 +232,7 @@
         
         @if($arrivals->isEmpty())
             <div class="text-center py-5">
-                <p class="text-secondary mb-0">No arrivals scheduled for today.</p>
+                <p class="text-secondary mb-0">No arrivals scheduled for {{ $selectedDateLabel }}.</p>
             </div>
         @else
             <div class="table-responsive">
@@ -257,7 +271,7 @@
                                 <td>{{ $booking->check_in->format('M d, Y') }}</td>
                                 <td>
                                     <span class="badge text-bg-{{ $booking->status === 'confirmed' ? 'success' : 'secondary' }}">
-                                        {{ ucfirst($booking->status) }}
+                                        {{ \App\Models\Booking::statusLabel($booking->status) }}
                                     </span>
                                 </td>
                                 <td>
@@ -267,7 +281,7 @@
                                 </td>
                                 <td class="text-end arrivals-actions-col staff-action-col">
                                     <div class="arrivals-actions staff-action-group">
-                                        @if($booking->status === 'confirmed' && $booking->payment_status === 'paid')
+                                        @if($booking->status === 'confirmed' && $booking->payment_status === 'paid' && $selectedDate <= now()->toDateString())
                                             <form method="POST" action="{{ route('staff.bookings.check-in', $booking) }}" data-confirm="Check in this guest now?">
                                                 @csrf
                                                 @method('PATCH')
@@ -287,30 +301,6 @@
                                                     <span>Cash</span>
                                                 </button>
                                             </form>
-                                            <form method="POST" action="{{ route('staff.bookings.record-payment', $booking) }}" data-confirm="Record card payment for this booking?">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="hidden" name="method" value="credit_debit_card">
-                                                <button type="submit" class="btn btn-sm btn-staff-outline">
-                                                    <i class="bi bi-credit-card-2-front"></i>
-                                                    <span>Card</span>
-                                                </button>
-                                            </form>
-                                            <button
-                                                type="button"
-                                                class="btn btn-sm btn-staff js-open-gcash-qr"
-                                                data-booking-id="{{ $booking->id }}"
-                                                data-amount="{{ number_format((float) $booking->total_price, 2, '.', '') }}"
-                                                data-record-url="{{ route('staff.bookings.record-payment', $booking) }}"
-                                                data-guest-name="{{ $booking->guestName() }}"
-                                                data-room-name="{{ $booking->room->name ?? '-' }}"
-                                                data-default-discount="{{ data_get($booking->reservation_meta, 'discount_type', 'none') }}"
-                                                data-default-discount-id="{{ data_get($booking->reservation_meta, 'discount_id', '') }}"
-                                                data-default-discount-proof-url="{{ $resolveDiscountProofUrl(data_get($booking->reservation_meta, 'discount_id_photo_path', '')) }}"
-                                            >
-                                                <i class="bi bi-qr-code"></i>
-                                                <span>Legacy InstaPay QR</span>
-                                            </button>
                                         @elseif($booking->status === 'confirmed' && $booking->payment_status === 'pending_verification')
                                             <span class="small text-secondary d-inline-block">Awaiting payment verification</span>
                                         @elseif($booking->status === 'pending')

@@ -87,7 +87,7 @@
             <p class="small text-secondary mb-1">Booking #{{ $booking->id }}</p>
             <h1 class="h4 mb-2">{{ $displayName }} · {{ $booking->room->name ?? 'Room unavailable' }}</h1>
             <div class="d-flex flex-wrap gap-2">
-                <span class="badge {{ $statusBadgeClass }}">{{ ucfirst($booking->status) }}</span>
+                <span class="badge {{ $statusBadgeClass }}">{{ \App\Models\Booking::statusLabel($booking->status) }}</span>
                 <span class="badge {{ $paymentBadgeClass }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span>
             </div>
             @if($booking->status === 'confirmed' && $booking->payment_status === 'unpaid' && $booking->payment_due_at)
@@ -147,6 +147,10 @@
                 <p class="booking-admin-label">Address</p>
                 <p class="booking-admin-value">{{ $profileAddress ?: '-' }}</p>
             </div>
+            <div class="booking-admin-item">
+                <p class="booking-admin-label">Meal Option</p>
+                <p class="booking-admin-value">{{ ($reservationMeta['meal_plan'] ?? 'room_only') === 'breakfast_included' ? 'Breakfast Included' : 'Room Only — No Breakfast' }}</p>
+            </div>
         </div>
 
         @if($booking->notes)
@@ -192,7 +196,7 @@
                 <select class="form-select" name="status" required>
                     @foreach(['pending', 'confirmed', 'cancelled', 'completed'] as $status)
                         <option value="{{ $status }}" {{ $booking->status === $status ? 'selected' : '' }}>
-                            {{ ucfirst($status) }}
+                            {{ \App\Models\Booking::statusLabel($status) }}
                         </option>
                     @endforeach
                 </select>

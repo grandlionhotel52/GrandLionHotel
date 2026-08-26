@@ -39,6 +39,10 @@ class BookingWorkflowImprovementsTest extends TestCase
             'check_in' => now()->addDay()->toDateString(),
             'check_out' => now()->addDays(3)->toDateString(),
             'guests' => 2,
+            'meal_plan' => 'breakfast_included',
+            'discount_type' => 'pwd',
+            'discount_id' => 'PWD-TEST-001',
+            'discount_id_photo' => \Illuminate\Http\UploadedFile::fake()->create('pwd-id.jpg', 10, 'image/jpeg'),
         ]);
 
         $booking = Booking::query()->firstOrFail();
@@ -47,6 +51,9 @@ class BookingWorkflowImprovementsTest extends TestCase
         $response->assertSessionHas('status', 'Pre-booking submitted. This is not yet confirmed. Wait for staff confirmation before payment.');
         $this->assertSame('pending', $booking->status);
         $this->assertSame('unpaid', $booking->payment_status);
+        $this->assertSame('breakfast_included', $booking->fresh('guestDetail')->guestDetail->meal_plan);
+        $this->assertSame('2400.00', $booking->fresh('payment')->payment->amount);
+        $this->assertSame('600.00', $booking->payment->discount_amount);
     }
 
     public function test_admin_cannot_transition_pending_booking_directly_to_completed(): void

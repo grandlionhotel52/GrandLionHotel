@@ -26,6 +26,7 @@ class BookingGuestDetail extends Model
         'postal_code',
         'adults',
         'kids',
+        'meal_plan',
         'payment_preference',
     ];
 

@@ -80,7 +80,7 @@ class Booking extends Model
                 $hours = max(1, (int) config('booking_automation.payment_due_hours', 24));
                 $deadline = now()->addHours($hours);
                 if ($booking->check_in) {
-                    $checkInDeadline = Carbon::parse($booking->check_in)->startOfDay();
+                    $checkInDeadline = Carbon::parse($booking->check_in)->startOfDay()->setTime(14, 0);
                     if ($checkInDeadline->isFuture()) {
                         $deadline = $deadline->min($checkInDeadline);
                     }
@@ -165,6 +165,15 @@ class Booking extends Model
     public function billedUnits(): int
     {
         return $this->nights();
+    }
+
+    public static function statusLabel(?string $status): string
+    {
+        $normalized = strtolower(trim((string) $status));
+
+        return $normalized === 'pending'
+            ? 'Pre-book'
+            : ucfirst(str_replace('_', ' ', $normalized));
     }
 
     public function getGuestsAttribute(mixed $value = null): int
@@ -397,6 +406,7 @@ class Booking extends Model
             'province' => $detail->province,
             'adults' => $detail->adults,
             'kids' => $detail->kids,
+            'meal_plan' => $detail->meal_plan ?: 'room_only',
             'payment_preference' => $detail->payment_preference,
             'discount_type' => $discount?->discount_type,
             'discount_id' => $discount?->discount_id,

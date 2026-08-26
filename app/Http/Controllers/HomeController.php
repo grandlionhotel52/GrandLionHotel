@@ -24,6 +24,14 @@ class HomeController extends Controller
             ->orderBy('type')
             ->take(8)
             ->get();
+        $roomSearchSuggestions = Room::query()
+            ->get(['type', 'view_type'])
+            ->flatMap(static fn (Room $room): array => [$room->type, $room->view_type])
+            ->filter(static fn (mixed $value): bool => filled($value))
+            ->map(static fn (mixed $value): string => trim((string) $value))
+            ->unique(static fn (string $value): string => strtolower($value))
+            ->sort()
+            ->values();
 
         $platformStats = [
             'total_rooms' => Room::count(),
@@ -38,6 +46,6 @@ class HomeController extends Controller
             ->orderBy('discount_date_start')
             ->first();
 
-        return view('home', compact('featuredRooms', 'roomCategories', 'platformStats', 'currentPromotion'));
+        return view('home', compact('featuredRooms', 'roomCategories', 'roomSearchSuggestions', 'platformStats', 'currentPromotion'));
     }
 }

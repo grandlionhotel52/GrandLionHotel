@@ -21,6 +21,7 @@ class StoreBookingRequest extends FormRequest
             'guests' => Room::standardGuestCapacity(),
             'adults' => Room::standardGuestCapacity(),
             'kids' => 0,
+            'meal_plan' => $this->input('meal_plan', 'room_only'),
         ]);
     }
 
@@ -39,6 +40,7 @@ class StoreBookingRequest extends FormRequest
             'guests' => ['required', 'integer', 'min:1'],
             'adults' => ['nullable', 'integer', 'min:1'],
             'kids' => ['nullable', 'integer', 'min:0'],
+            'meal_plan' => ['required', Rule::in(['room_only', 'breakfast_included'])],
             'first_name' => ['nullable', 'string', 'max:80'],
             'last_name' => ['nullable', 'string', 'max:80'],
             'street_address' => ['nullable', 'string', 'max:255'],

@@ -237,7 +237,7 @@
                                     </td>
                                     <td>{{ $booking->room->name ?? '-' }}</td>
                                     <td>
-                                        <span class="badge {{ $statusBadgeClass($booking->status) }}">{{ ucfirst($booking->status) }}</span>
+                                        <span class="badge {{ $statusBadgeClass($booking->status) }}">{{ \App\Models\Booking::statusLabel($booking->status) }}</span>
                                     </td>
                                     <td class="text-end staff-action-col">
                                         <div class="staff-action-group">

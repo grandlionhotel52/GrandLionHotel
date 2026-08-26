@@ -181,9 +181,7 @@
             'cancelled' => 'danger',
             default => 'warning',
         };
-        $bookingStatusLabel = $booking->status === 'pending'
-            ? 'Pre-booked — Pending Confirmation'
-            : ucfirst($booking->status);
+        $bookingStatusLabel = \App\Models\Booking::statusLabel($booking->status);
         $paymentStatusClass = match ($booking->payment_status) {
             'paid' => 'success',
             'refund_pending' => 'warning',
@@ -326,6 +324,10 @@
                             <strong>{{ $reservationMeta['kids'] }}</strong>
                         </div>
                     @endif
+                    <div class="col-md-6">
+                        <small class="text-secondary d-block">Meal option</small>
+                        <strong>{{ ($reservationMeta['meal_plan'] ?? 'room_only') === 'breakfast_included' ? 'Breakfast Included' : 'Room Only — No Breakfast' }}</strong>
+                    </div>
                     @if(!empty($reservationMeta['payment_preference']))
                         <div class="col-md-6">
                             <small class="text-secondary d-block">Payment preference</small>

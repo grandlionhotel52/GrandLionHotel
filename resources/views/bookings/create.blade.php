@@ -323,6 +323,15 @@
                         <p class="small text-secondary mb-0">Choose your payment method after the hotel confirms your booking.</p>
                     </div>
 
+                    <div class="col-12">
+                        <label class="form-label" for="meal_plan_select">Meal option</label>
+                        <select class="form-select" name="meal_plan" id="meal_plan_select" required>
+                            <option value="room_only" @selected(old('meal_plan', 'room_only') === 'room_only')>Room Only — No Breakfast</option>
+                            <option value="breakfast_included" @selected(old('meal_plan') === 'breakfast_included')>Breakfast Included</option>
+                        </select>
+                        <small class="text-secondary">Your selection will be included in the booking details. Any applicable meal charge will be confirmed by the hotel.</small>
+                    </div>
+
                     <div class="col-md-4">
                         <label class="form-label">Discount type</label>
                         <select class="form-select" name="discount_type" id="discount_type_select">
@@ -520,7 +529,9 @@
                     && (discountTypeSelect.value === 'pwd' || discountTypeSelect.value === 'senior');
 
                 if (requiresId) {
-                    segments.push(`${discountTypeSelect.value.toUpperCase()} selected (subject to verification)`);
+                    const provisionalBase = Number(currentPricing?.total || 0);
+                    const provisionalDiscount = provisionalBase * 0.20;
+                    segments.push(`${discountTypeSelect.value.toUpperCase()} 20% discount (-${formatCurrency(provisionalDiscount)}, subject to verification)`);
                 }
 
                 summaryDiscount.textContent = segments.length > 0 ? segments.join(' + ') : 'None selected';
@@ -531,7 +542,11 @@
                 const checkOutDate = parseDate(checkOutInput.value);
                 const nights = nightsBetween(checkInInput.value, checkOutInput.value);
                 const rate = pricing?.average_nightly_rate ?? baseNightlyRate;
-                const total = pricing?.total ?? (nights > 0 ? nights * baseNightlyRate : 0);
+                const subtotal = pricing?.total ?? (nights > 0 ? nights * baseNightlyRate : 0);
+                const hasIdentityDiscount = discountTypeSelect
+                    && (discountTypeSelect.value === 'pwd' || discountTypeSelect.value === 'senior');
+                const identityDiscount = hasIdentityDiscount ? subtotal * 0.20 : 0;
+                const total = Math.max(0, subtotal - identityDiscount);
 
                 if (summaryStay) {
                     if (checkInDate && checkOutDate) {
@@ -728,7 +743,7 @@
                     }
                 }
 
-                updateSummaryDiscountText();
+                renderPricingSummary(currentPricing, currentAvailability);
             };
 
             const syncAll = () => {

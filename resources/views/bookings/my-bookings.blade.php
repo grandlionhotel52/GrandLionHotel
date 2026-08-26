@@ -118,7 +118,7 @@
                                     <small class="text-info">Reschedule requested: {{ $booking->requested_check_in?->format('M d, Y') }} - {{ $booking->requested_check_out?->format('M d, Y') }}</small>
                                 @endif
                             </td>
-                            <td><span class="badge {{ $statusClass($booking->status) }}">{{ $booking->status === 'pending' ? 'Pre-booked — Pending Confirmation' : ucfirst($booking->status) }}</span></td>
+                            <td><span class="badge {{ $statusClass($booking->status) }}">{{ \App\Models\Booking::statusLabel($booking->status) }}</span></td>
                             <td>
                                 <span class="badge {{ $paymentClass($booking->payment_status) }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span>
                                 @if($isOnlineAwaitingVerification)

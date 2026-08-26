@@ -225,7 +225,7 @@
             $reservationMeta['state_province'] ?? null,
             $reservationMeta['postal_code'] ?? null,
         ])->filter()->implode(', ');
-        $bookingStatusLabel = ucfirst($booking->status);
+        $bookingStatusLabel = \App\Models\Booking::statusLabel($booking->status);
         $paymentStatusLabel = ucfirst(str_replace('_', ' ', $booking->payment_status));
         $billedUnits = $booking->nights();
         $isOnlineAwaitingVerification = $booking->payment_status === 'pending_verification'
@@ -766,6 +766,10 @@
                     <div class="booking-info-item">
                         <p class="booking-info-label">Reservation Address</p>
                         <p class="booking-info-value">{{ $guestAddress !== '' ? $guestAddress : '-' }}</p>
+                    </div>
+                    <div class="booking-info-item">
+                        <p class="booking-info-label">Meal Option</p>
+                        <p class="booking-info-value">{{ ($reservationMeta['meal_plan'] ?? 'room_only') === 'breakfast_included' ? 'Breakfast Included' : 'Room Only — No Breakfast' }}</p>
                     </div>
                     @if(!empty($reservationMeta['payment_preference']))
                         <div class="booking-info-item">

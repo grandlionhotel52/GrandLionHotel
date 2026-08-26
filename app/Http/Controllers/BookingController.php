@@ -111,6 +111,7 @@ class BookingController extends Controller
             'contact_email' => $request->input('contact_email'),
             'adults' => $request->filled('adults') ? $request->integer('adults') : null,
             'kids' => $request->filled('kids') ? $request->integer('kids') : null,
+            'meal_plan' => $request->input('meal_plan', 'room_only'),
             'discount_type' => $request->input('discount_type'),
             'discount_id' => $request->input('discount_id'),
             'discount_id_photo_path' => $discountIdPhotoPath,
@@ -153,6 +154,10 @@ class BookingController extends Controller
                     $checkOut,
                     $request->integer('guests')
                 );
+                $discountType = strtolower((string) $request->input('discount_type', 'none'));
+                $discountRate = in_array($discountType, ['pwd', 'senior'], true) ? 0.20 : 0.0;
+                $discountAmount = round($totalPrice * $discountRate, 2);
+                $payableTotal = round(max(0, $totalPrice - $discountAmount), 2);
 
                 $booking = Booking::create([
                     'customer_id' => $request->user()->id,
@@ -174,9 +179,12 @@ class BookingController extends Controller
                 $this->syncBookingDiscount($booking, $reservationMeta);
 
                 $booking->payment()->create([
-                    'amount' => $totalPrice,
+                    'amount' => $payableTotal,
                     'method' => 'pending',
                     'status' => 'unpaid',
+                    'original_amount' => $discountRate > 0 ? $totalPrice : null,
+                    'discount_rate' => $discountRate > 0 ? $discountRate : null,
+                    'discount_amount' => $discountRate > 0 ? $discountAmount : null,
                 ]);
 
                 return $booking;
@@ -555,6 +563,7 @@ class BookingController extends Controller
             'postal_code' => data_get($reservationMeta, 'postal_code'),
             'adults' => data_get($reservationMeta, 'adults'),
             'kids' => data_get($reservationMeta, 'kids'),
+            'meal_plan' => data_get($reservationMeta, 'meal_plan', 'room_only'),
         ], static fn ($value): bool => !is_null($value) && $value !== '');
     }
 
