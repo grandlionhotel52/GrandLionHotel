@@ -44,7 +44,7 @@ class BookingWorkflowImprovementsTest extends TestCase
         $booking = Booking::query()->firstOrFail();
 
         $response->assertRedirect(route('bookings.show', $booking));
-        $response->assertSessionHas('status', 'Booking request submitted. Wait for staff confirmation before payment.');
+        $response->assertSessionHas('status', 'Pre-booking submitted. This is not yet confirmed. Wait for staff confirmation before payment.');
         $this->assertSame('pending', $booking->status);
         $this->assertSame('unpaid', $booking->payment_status);
     }

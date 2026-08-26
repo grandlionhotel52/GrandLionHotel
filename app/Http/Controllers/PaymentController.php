@@ -217,6 +217,12 @@ class PaymentController extends Controller
         $this->authorizeOwner($booking);
         $booking->refresh()->loadMissing(['room', 'payment']);
 
+        if ($booking->payment_status === 'paid') {
+            return redirect()
+                ->route('bookings.success', $booking)
+                ->with('status', 'Payment confirmed. Your booking is ready.');
+        }
+
         return view('payments.paymongo-confirmation', compact('booking'));
     }
 
@@ -228,6 +234,9 @@ class PaymentController extends Controller
         return response()->json([
             'payment_status' => $booking->payment_status,
             'paid' => $booking->payment_status === 'paid',
+            'redirect' => $booking->payment_status === 'paid'
+                ? route('bookings.success', $booking)
+                : null,
             'transaction_reference' => $booking->payment?->transaction_reference,
             'provider_payment_id' => $booking->payment?->provider_payment_id,
             'message' => $booking->payment_status === 'paid'

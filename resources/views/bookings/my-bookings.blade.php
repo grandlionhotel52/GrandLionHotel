@@ -118,7 +118,7 @@
                                     <small class="text-info">Reschedule requested: {{ $booking->requested_check_in?->format('M d, Y') }} - {{ $booking->requested_check_out?->format('M d, Y') }}</small>
                                 @endif
                             </td>
-                            <td><span class="badge {{ $statusClass($booking->status) }}">{{ ucfirst($booking->status) }}</span></td>
+                            <td><span class="badge {{ $statusClass($booking->status) }}">{{ $booking->status === 'pending' ? 'Pre-booked — Pending Confirmation' : ucfirst($booking->status) }}</span></td>
                             <td>
                                 <span class="badge {{ $paymentClass($booking->payment_status) }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span>
                                 @if($isOnlineAwaitingVerification)
@@ -138,7 +138,7 @@
                                 @elseif($booking->payment_status !== 'paid' && $booking->status === 'confirmed')
                                     <a href="{{ route('payments.checkout', $booking) }}" class="btn btn-sm btn-ta">Pay now</a>
                                 @elseif($booking->status === 'pending')
-                                    <span class="small text-secondary d-inline-block ms-2">Awaiting staff confirmation</span>
+                                    <span class="small text-secondary d-inline-block ms-2">Not yet confirmed</span>
                                 @elseif($booking->payment_status === 'paid')
                                     <a href="{{ route('bookings.receipt', $booking) }}" class="btn btn-sm btn-ta">Receipt</a>
                                 @endif

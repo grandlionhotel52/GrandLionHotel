@@ -213,13 +213,12 @@ class QrPaymentMethodsTest extends TestCase
                 'payment_status' => 'paid',
                 'transaction_reference' => 'GLH-TEST-PAID',
                 'provider_payment_id' => 'pay_test_paid',
+                'redirect' => route('bookings.success', $booking),
             ]);
 
         $this->get(route('payments.paymongo.return', $booking))
-            ->assertOk()
-            ->assertSee('Your payment was successful')
-            ->assertSee('GLH-TEST-PAID')
-            ->assertSee('Download receipt');
+            ->assertRedirect(route('bookings.success', $booking))
+            ->assertSessionHas('status', 'Payment confirmed. Your booking is ready.');
     }
 
     public function test_online_payment_requires_reference_and_proof(): void

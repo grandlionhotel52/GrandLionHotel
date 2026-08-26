@@ -220,9 +220,9 @@
                     <div class="booking-step">3. Staff confirmation</div>
                 </div>
 
-                <p class="ta-eyebrow mb-1">Reservation</p>
-                <h1 class="h3 mb-2">Book your stay</h1>
-                <p class="text-secondary mb-4">Review your details and submit your request.</p>
+                <p class="ta-eyebrow mb-1">Pre-booking</p>
+                <h1 class="h3 mb-2">Pre-book your stay</h1>
+                <p class="text-secondary mb-4">Submit your request for hotel review. This will not be confirmed until staff approves it.</p>
 
                 @if(!empty($prefill['availability_message']))
                     <div id="booking_prefill_feedback" class="alert booking-page-alert {{ $prefill['unavailable_for_selected_dates'] ? 'alert-warning' : 'alert-info' }}" role="alert" tabindex="-1">
@@ -350,13 +350,13 @@
 
                     <div class="col-12">
                         <div class="alert alert-light border mb-0 small">
-                            Staff confirmation is required before payment.
+                            This is a pre-booking request only. It is not confirmed until hotel staff approves it.
                         </div>
                     </div>
 
                     <div class="col-12 d-flex justify-content-end gap-2">
                         <x-back-button :href="route('rooms.show', $room)" label="Back to room" />
-                        <button type="submit" class="btn btn-ta">Request booking</button>
+                        <button type="submit" class="btn btn-ta">Submit pre-booking</button>
                     </div>
                 </form>
             </section>
@@ -383,7 +383,7 @@
             const standardGuests = {{ $standardGuests }};
             const baseNightlyRate = Number.parseFloat(form?.dataset.baseNightlyRate || '0') || 0;
             const submitButton = form?.querySelector('button[type="submit"]');
-            const defaultSubmitText = submitButton?.textContent?.trim() || 'Request booking';
+            const defaultSubmitText = submitButton?.textContent?.trim() || 'Submit pre-booking';
             let currentPricing = @json($pricingPreview);
             let currentAvailability = null;
 
@@ -829,7 +829,7 @@
                 } finally {
                     if (submitButton) {
                         submitButton.disabled = false;
-                        submitButton.textContent = originalButtonText || 'Request booking';
+                        submitButton.textContent = originalButtonText || 'Submit pre-booking';
                     }
                 }
             });

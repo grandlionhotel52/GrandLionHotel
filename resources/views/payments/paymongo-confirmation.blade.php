@@ -2,6 +2,20 @@
 
 @section('title', 'PayMongo Payment Confirmation')
 
+@push('head')
+    <style>
+        .payment-processing-ring {
+            width: 4.5rem;
+            height: 4.5rem;
+            border-width: 0.35rem;
+        }
+        .payment-processing-note {
+            max-width: 30rem;
+            margin-inline: auto;
+        }
+    </style>
+@endpush
+
 @section('content')
     @php($isPaid = $booking->payment_status === 'paid')
     <div class="row justify-content-center py-4">
@@ -19,7 +33,8 @@
                     <p class="ta-eyebrow mb-1">Payment submitted</p>
                     <h1 class="h2 mb-3">We are confirming your payment</h1>
                     <p class="text-secondary">Please do not pay again or upload proof. This page will update automatically when PayMongo confirms the transaction.</p>
-                    <div class="spinner-border text-warning my-2" role="status"><span class="visually-hidden">Checking payment status</span></div>
+                    <div class="spinner-border text-warning payment-processing-ring my-3" role="status"><span class="visually-hidden">Finalizing your booking</span></div>
+                    <p class="small fw-semibold text-warning mb-0" aria-live="polite">Finalizing your booking...</p>
                 @endif
 
                 <div class="border rounded-3 p-3 my-4 text-start">
@@ -36,7 +51,7 @@
                         @if($booking->payment?->provider_payment_id)<br>PayMongo ID: {{ $booking->payment->provider_payment_id }}@endif
                     </div>
                 @else
-                    <p class="small text-secondary" id="confirmation-help">Confirmation normally takes a few seconds. You may safely leave this page and check My Bookings later.</p>
+                    <p class="small text-secondary payment-processing-note" id="confirmation-help">Confirmation normally takes a few seconds. Once payment is confirmed, you will automatically continue to your completed booking.</p>
                 @endif
 
                 <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
@@ -63,7 +78,8 @@
                     const response = await fetch(card.dataset.statusUrl, { headers: { Accept: 'application/json' }, cache: 'no-store' });
                     const data = await response.json();
                     if (response.ok && data.paid) {
-                        window.location.reload();
+                        const destination = data.redirect || @json(route('bookings.success', $booking));
+                        window.location.replace(destination);
                         return;
                     }
                 } catch (_) {}

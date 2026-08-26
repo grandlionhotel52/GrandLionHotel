@@ -196,11 +196,13 @@ class BookingController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Booking created successfully.',
+                'message' => $isAwaitingConfirmation
+                    ? 'Pre-booking submitted. This is not yet confirmed.'
+                    : 'Booking created successfully.',
                 'booking_id' => $booking->id,
                 'redirect' => $nextRedirect,
                 'next_step' => $isAwaitingConfirmation
-                    ? 'Await staff confirmation before payment.'
+                    ? 'Pre-booked only. Await staff confirmation before payment.'
                     : 'Proceed to payment checkout.',
             ], 201);
         }
@@ -208,7 +210,7 @@ class BookingController extends Controller
         if ($isAwaitingConfirmation) {
             return redirect()
                 ->route('bookings.show', $booking)
-                ->with('status', 'Booking request submitted. Wait for staff confirmation before payment.');
+                ->with('status', 'Pre-booking submitted. This is not yet confirmed. Wait for staff confirmation before payment.');
         }
 
         return redirect()->route('payments.checkout', $booking);

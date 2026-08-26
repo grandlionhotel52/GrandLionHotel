@@ -181,6 +181,9 @@
             'cancelled' => 'danger',
             default => 'warning',
         };
+        $bookingStatusLabel = $booking->status === 'pending'
+            ? 'Pre-booked — Pending Confirmation'
+            : ucfirst($booking->status);
         $paymentStatusClass = match ($booking->payment_status) {
             'paid' => 'success',
             'refund_pending' => 'warning',
@@ -223,7 +226,7 @@
                     </p>
                     <div class="d-flex flex-wrap gap-2">
                         <span class="booking-status-chip {{ $bookingStatusClass }}">
-                            <i class="bi bi-calendar-check"></i>{{ ucfirst($booking->status) }}
+                            <i class="bi bi-calendar-check"></i>{{ $bookingStatusLabel }}
                         </span>
                         <span class="booking-status-chip {{ $paymentStatusClass }}">
                             <i class="bi bi-credit-card"></i>{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}
@@ -245,11 +248,11 @@
         <div class="booking-flow-grid">
             <article class="booking-flow-step {{ $isRequested ? 'is-complete' : '' }}">
                 <p class="label mb-0">Step 1</p>
-                <p class="status mb-0">Request submitted</p>
+                <p class="status mb-0">Pre-booking submitted</p>
             </article>
             <article class="booking-flow-step {{ $isCancelled ? 'is-cancelled' : ($isConfirmed ? 'is-complete' : 'is-current') }}">
                 <p class="label mb-0">Step 2</p>
-                <p class="status mb-0">{{ $isCancelled ? 'Cancelled' : ($isConfirmed ? 'Confirmed' : 'Awaiting staff review') }}</p>
+                <p class="status mb-0">{{ $isCancelled ? 'Cancelled' : ($isConfirmed ? 'Confirmed' : 'Not yet confirmed') }}</p>
             </article>
             <article class="booking-flow-step {{ $isCancelled ? 'is-cancelled' : ($isPaid ? 'is-complete' : ($isConfirmed ? 'is-current' : '')) }}">
                 <p class="label mb-0">Step 3</p>
