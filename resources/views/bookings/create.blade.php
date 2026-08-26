@@ -434,13 +434,13 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Discount type</label>
-                        <select class="form-select" name="discount_type" id="discount_type_select">
-                            <option value="none" @selected(old('discount_type', 'none') === 'none')>None</option>
+                        <label class="form-label">ID discount</label>
+                        <select class="form-select" id="discount_type_choice">
+                            <option value="none" @selected(!in_array(old('discount_type'), ['pwd', 'senior'], true))>No ID discount</option>
                             <option value="pwd" @selected(old('discount_type') === 'pwd')>PWD (20%)</option>
                             <option value="senior" @selected(old('discount_type') === 'senior')>Senior (20%)</option>
-                            <option value="promo" @selected(old('discount_type') === 'promo')>Promotional Code</option>
                         </select>
+                        <input type="hidden" name="discount_type" id="discount_type_select" value="{{ old('discount_type', 'none') }}">
                     </div>
 
                     <div class="col-md-4 {{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? '' : 'd-none' }}" id="discount_id_group">
@@ -453,7 +453,7 @@
                         <input type="file" class="form-control" name="discount_id_photo" id="discount_id_photo_input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
                     </div>
 
-                    <div class="col-md-8" id="promo_code_group">
+                    <div class="col-12" id="promo_code_group">
                         <div class="promo-code-box">
                             <label class="form-label fw-semibold" for="promo_code_input"><i class="bi bi-tag me-1" aria-hidden="true"></i>Have a promo code? <span class="text-secondary fw-normal">(optional)</span></label>
                             <div class="input-group">
@@ -494,6 +494,7 @@
             const ajaxFeedback = document.getElementById('booking_ajax_feedback');
             const prefillFeedback = document.getElementById('booking_prefill_feedback');
             const discountTypeSelect = document.getElementById('discount_type_select');
+            const discountTypeChoice = document.getElementById('discount_type_choice');
             const discountIdInput = document.getElementById('discount_id_input');
             const discountIdPhotoInput = document.getElementById('discount_id_photo_input');
             const discountIdGroup = document.getElementById('discount_id_group');
@@ -905,8 +906,9 @@
                 refreshPricingPreview();
             });
             checkOutInput.addEventListener('change', refreshPricingPreview);
-            discountTypeSelect?.addEventListener('change', () => {
-                if (discountTypeSelect.value !== 'promo' && appliedPromoCode !== '') {
+            discountTypeChoice?.addEventListener('change', () => {
+                if (discountTypeSelect) discountTypeSelect.value = discountTypeChoice.value;
+                if (appliedPromoCode !== '') {
                     appliedPromoCode = '';
                     if (promoCodeInput) promoCodeInput.value = '';
                     promoCodeRemove?.classList.add('d-none');
@@ -947,6 +949,7 @@
                 promoCodeInput.value = code;
                 promoCodeInput.setCustomValidity('');
                 if (discountTypeSelect) discountTypeSelect.value = 'promo';
+                if (discountTypeChoice) discountTypeChoice.value = 'none';
                 updateDiscountState();
                 promoCodeFeedback?.classList.add('is-success');
                 if (promoCodeFeedback) promoCodeFeedback.textContent = `${discountPercent}% discount applied successfully.`;
@@ -962,6 +965,7 @@
                     promoCodeInput.setCustomValidity('');
                 }
                 if (discountTypeSelect?.value === 'promo') discountTypeSelect.value = 'none';
+                if (discountTypeChoice) discountTypeChoice.value = 'none';
                 promoCodeFeedback?.classList.remove('is-success', 'is-error');
                 if (promoCodeFeedback) promoCodeFeedback.textContent = 'Promo code removed. Enter another code if you have one.';
                 promoCodeRemove.classList.add('d-none');
