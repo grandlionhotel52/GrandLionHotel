@@ -48,7 +48,7 @@ class StoreBookingRequest extends FormRequest
             'guest_city' => ['nullable', 'string', 'max:120'],
             'state_province' => $provinceRules,
             'postal_code' => ['nullable', 'string', 'max:40'],
-            'contact_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\\-\\s]{7,30}$/'],
+            'contact_phone' => ['nullable', 'string', 'max:20', 'regex:/^(?:09\\d{9}|\\+639\\d{9})$/'],
             'contact_email' => ['nullable', 'email', 'max:255'],
             'discount_type' => ['nullable', 'in:none,pwd,senior,promo'],
             'discount_id' => ['nullable', 'string', 'max:80', 'required_if:discount_type,pwd,senior'],
@@ -61,7 +61,7 @@ class StoreBookingRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'contact_phone.regex' => 'Contact phone must contain only digits, spaces, +, (), or -.',
+            'contact_phone.regex' => 'Phone number must be 11 digits starting with 09, or +639 followed by 9 digits.',
             'state_province.in' => 'Please select a valid province from the suggested list.',
             'discount_id_photo.required_if' => 'Upload a PWD/Senior ID photo when selecting a discount.',
             'discount_id_photo.image' => 'Discount ID upload must be an image file.',

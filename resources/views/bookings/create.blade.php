@@ -415,8 +415,9 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Phone number</label>
-                        <input type="text" class="form-control" name="contact_phone" value="{{ old('contact_phone', $user->phone) }}" maxlength="30" placeholder="+63...">
+                        <label class="form-label" for="contact_phone_input">Phone number</label>
+                        <input type="tel" class="form-control" id="contact_phone_input" name="contact_phone" value="{{ old('contact_phone', $user->phone) }}" maxlength="20" inputmode="tel" pattern="(?:09[0-9]{9}|\+639[0-9]{9})" placeholder="09XXXXXXXXX" aria-describedby="contact_phone_feedback">
+                        <small class="text-secondary" id="contact_phone_feedback" aria-live="polite">11 digits starting with 09, or +639 followed by 9 digits.</small>
                     </div>
 
                     <div class="col-md-6">
@@ -513,6 +514,8 @@
             const kidsInput = document.getElementById('kids_input');
             const checkInInput = document.getElementById('check_in_input');
             const checkOutInput = document.getElementById('check_out_input');
+            const contactPhoneInput = document.getElementById('contact_phone_input');
+            const contactPhoneFeedback = document.getElementById('contact_phone_feedback');
             const ajaxFeedback = document.getElementById('booking_ajax_feedback');
             const dateAvailabilityFeedback = document.getElementById('date_availability_feedback');
             const discountTypeSelect = document.getElementById('discount_type_select');
@@ -645,6 +648,62 @@
                 if (summaryGuests) {
                     summaryGuests.textContent = `${standardGuests} guests`;
                 }
+            };
+
+            const validateContactPhone = () => {
+                if (!contactPhoneInput) return true;
+
+                const startsWithPlus = contactPhoneInput.value.trim().startsWith('+');
+                const digits = contactPhoneInput.value.replace(/\D/g, '');
+                contactPhoneInput.value = startsWithPlus ? `+${digits}` : digits;
+
+                const value = contactPhoneInput.value;
+                const isInternational = value.startsWith('+');
+                const expectedDigits = isInternational ? 12 : 11;
+                const digitCount = digits.length;
+                const prefixCanBeValid = isInternational
+                    ? '+639'.startsWith(value) || value.startsWith('+639')
+                    : '09'.startsWith(value) || value.startsWith('09');
+                const isValid = /^(?:09\d{9}|\+639\d{9})$/.test(value);
+
+                contactPhoneInput.classList.remove('is-valid', 'is-invalid');
+                contactPhoneFeedback?.classList.remove('text-success', 'text-danger');
+
+                if (value === '') {
+                    contactPhoneInput.setCustomValidity('');
+                    if (contactPhoneFeedback) contactPhoneFeedback.textContent = '11 digits starting with 09, or +639 followed by 9 digits.';
+                    return true;
+                }
+
+                if (digitCount > expectedDigits) {
+                    contactPhoneInput.setCustomValidity('Phone number has too many digits.');
+                    contactPhoneInput.classList.add('is-invalid');
+                    contactPhoneFeedback?.classList.add('text-danger');
+                    if (contactPhoneFeedback) contactPhoneFeedback.textContent = `Too many digits: ${digitCount}/${expectedDigits}.`;
+                    return false;
+                }
+
+                if (!prefixCanBeValid) {
+                    contactPhoneInput.setCustomValidity('Use a number starting with 09 or +639.');
+                    contactPhoneInput.classList.add('is-invalid');
+                    contactPhoneFeedback?.classList.add('text-danger');
+                    if (contactPhoneFeedback) contactPhoneFeedback.textContent = 'Phone number must start with 09 or +639.';
+                    return false;
+                }
+
+                if (!isValid) {
+                    contactPhoneInput.setCustomValidity('Complete the phone number.');
+                    contactPhoneInput.classList.add('is-invalid');
+                    contactPhoneFeedback?.classList.add('text-danger');
+                    if (contactPhoneFeedback) contactPhoneFeedback.textContent = `${digitCount}/${expectedDigits} digits entered.`;
+                    return false;
+                }
+
+                contactPhoneInput.setCustomValidity('');
+                contactPhoneInput.classList.add('is-valid');
+                contactPhoneFeedback?.classList.add('text-success');
+                if (contactPhoneFeedback) contactPhoneFeedback.textContent = 'Valid phone number.';
+                return true;
             };
 
             const updateAvailabilityState = (availability, fallbackMessage = 'Select valid dates to preview.') => {
@@ -944,6 +1003,11 @@
                 refreshPricingPreview();
             });
             checkOutInput.addEventListener('change', refreshPricingPreview);
+            contactPhoneInput?.addEventListener('input', validateContactPhone);
+            contactPhoneInput?.addEventListener('blur', () => {
+                validateContactPhone();
+                if (contactPhoneInput.value !== '') contactPhoneInput.reportValidity();
+            });
             discountTypeChoice?.addEventListener('change', () => {
                 if (discountTypeSelect) discountTypeSelect.value = discountTypeChoice.value;
                 if (appliedPromoCode !== '') {
@@ -1011,6 +1075,7 @@
             });
 
             syncAll();
+            validateContactPhone();
             refreshPricingPreview();
 
             form.addEventListener('submit', async (event) => {
@@ -1024,6 +1089,11 @@
                     if (promoCodeFeedback) promoCodeFeedback.textContent = 'Select Apply code before submitting your booking.';
                     promoCodeInput?.reportValidity();
                     promoCodeInput?.focus();
+                    return;
+                }
+
+                if (!validateContactPhone() || !form.checkValidity()) {
+                    form.reportValidity();
                     return;
                 }
 
