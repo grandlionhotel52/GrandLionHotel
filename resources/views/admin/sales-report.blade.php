@@ -129,18 +129,6 @@
                     <p class="value text-warning">&#8369;{{ number_format((float) $summary['total_discount'], 2) }}</p>
                 </div>
             </div>
-            <div class="col-sm-6 col-xl-2">
-                <div class="admin-report-stat">
-                    <p class="label">Online Payments</p>
-                    <p class="value text-info">{{ $summary['online_payments'] }}</p>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-2">
-                <div class="admin-report-stat">
-                    <p class="label">Cash Payments</p>
-                    <p class="value">{{ $summary['cash_payments'] }}</p>
-                </div>
-            </div>
         </div>
     </section>
 
