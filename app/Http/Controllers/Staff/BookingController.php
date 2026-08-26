@@ -631,6 +631,8 @@ class BookingController extends Controller
 
     public function recordPayment(Request $request, Booking $booking)
     {
+        $booking->loadMissing('payment');
+
         if ($booking->payment_status === 'paid') {
             return back()->withErrors(['payment' => 'Payment is already recorded as paid.']);
         }
@@ -651,9 +653,14 @@ class BookingController extends Controller
             return back()->withErrors(['payment' => 'Booking is already completed.']);
         }
 
+        $currentMethod = strtolower(trim((string) ($booking->payment?->method ?? 'pending')));
+        if (!in_array($currentMethod, ['', 'pending', Payment::METHOD_CASH], true)) {
+            return back()->withErrors([
+                'payment' => 'Staff can manually record cash payments only. Online payments must use PayMongo or the online verification flow.',
+            ]);
+        }
+
         $validated = $request->validate([
-            'method' => ['required', Rule::in(Payment::allowedMethods())],
-            'qr_reference' => ['nullable', 'string', 'max:80'],
             'discount_type' => ['nullable', 'in:none,pwd,senior'],
             'discount_id' => ['nullable', 'string', 'max:80'],
         ]);
@@ -682,9 +689,8 @@ class BookingController extends Controller
             $discountRate > 0 ? $uploadedDiscountProofPath : null
         );
 
-        $this->paymentService->charge($booking, $validated['method'], [
+        $this->paymentService->charge($booking, Payment::METHOD_CASH, [
             'amount' => $payableAmount,
-            'qr_reference' => $validated['qr_reference'] ?? null,
             'original_amount' => $originalAmount,
             'discount_rate' => $discountRate > 0 ? $discountRate : null,
             'discount_amount' => $discountRate > 0 ? $discountAmount : null,
@@ -695,7 +701,7 @@ class BookingController extends Controller
 
         $this->sendBookingMail($booking, new BookingPaidMail($booking));
 
-        return $this->redirectAfterBookingAction($request, $booking, 'Payment recorded successfully.');
+        return $this->redirectAfterBookingAction($request, $booking, 'Cash payment recorded successfully.');
     }
 
     public function approveOnlinePayment(Request $request, Booking $booking)
@@ -713,6 +719,14 @@ class BookingController extends Controller
 
         if (!Payment::isOnlineMethod((string) $payment->method)) {
             return back()->withErrors(['payment' => 'Only submitted online payments can be approved here.']);
+        }
+
+        if (blank($payment->customer_reference)) {
+            return back()->withErrors(['payment' => 'The submitted online payment is missing its customer reference number.']);
+        }
+
+        if ((float) $payment->amount <= 0 || abs((float) $payment->amount - (float) $booking->total_price) > 0.009) {
+            return back()->withErrors(['payment' => 'The submitted online payment amount does not match the booking total.']);
         }
 
         $payment->update([

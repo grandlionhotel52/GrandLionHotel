@@ -254,6 +254,14 @@ class BookingController extends Controller
             return back()->withErrors(['payment' => 'Only supported online payment submissions can be approved here.']);
         }
 
+        if (blank($payment->customer_reference)) {
+            return back()->withErrors(['payment' => 'The submitted online payment is missing its customer reference number.']);
+        }
+
+        if ((float) $payment->amount <= 0 || abs((float) $payment->amount - (float) $booking->total_price) > 0.009) {
+            return back()->withErrors(['payment' => 'The submitted online payment amount does not match the booking total.']);
+        }
+
         $payment->update([
             'status' => 'paid',
             'source' => 'online_verified',

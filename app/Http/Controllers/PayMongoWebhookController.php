@@ -80,8 +80,19 @@ class PayMongoWebhookController extends Controller
             return response('Ignored.', 200);
         }
 
+        if ($sessionId === ''
+            || !str_starts_with($sessionId, 'cs_')
+            || trim((string) $payment->provider_session_id) !== $sessionId
+            || !in_array($payment->source, ['paymongo_checkout_pending', 'paymongo_checkout'], true)) {
+            report(new \RuntimeException('PayMongo webhook session mismatch for booking '.$payment->booking_id));
+
+            return response('Ignored.', 200);
+        }
+
         $expectedAmount = (int) round((float) $payment->amount * 100);
-        if ((int) data_get($paymentData, 'attributes.amount') !== $expectedAmount
+        $providerAmount = (int) data_get($paymentData, 'attributes.amount');
+        if ($providerAmount !== $expectedAmount
+            || ($checkoutSession && (int) $checkoutSession->amount_centavos !== $providerAmount)
             || strtoupper((string) data_get($paymentData, 'attributes.currency')) !== 'PHP') {
             report(new \RuntimeException('PayMongo webhook amount mismatch for session '.$sessionId));
             return response('Ignored.', 200);
@@ -94,6 +105,11 @@ class PayMongoWebhookController extends Controller
         }
 
         $providerPaymentId = trim((string) data_get($paymentData, 'id'));
+        if (!str_starts_with($providerPaymentId, 'pay_')) {
+            report(new \RuntimeException('PayMongo webhook returned an invalid payment ID for session '.$sessionId));
+
+            return response('Ignored.', 200);
+        }
         $providerMethod = strtolower(trim((string) data_get($paymentData, 'attributes.source.type')));
         $paymentMethod = match ($providerMethod) {
             Payment::METHOD_GCASH => Payment::METHOD_GCASH,

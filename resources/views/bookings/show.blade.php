@@ -585,6 +585,17 @@
         <div class="col-lg-4">
             <section class="soft-card p-4 booking-side-panel">
                 <h2 class="h5 mb-3">Payment</h2>
+                @if($booking->payment)
+                    <p class="small text-secondary mb-1">Method: <strong>{{ \App\Models\Payment::methodLabel($booking->payment->method) }}</strong></p>
+                    <p class="small text-secondary mb-1">Status: <strong>{{ ucfirst(str_replace('_', ' ', $booking->payment->status)) }}</strong></p>
+                    <p class="small text-secondary mb-1">Recorded amount: <strong>&#8369;{{ number_format((float) $booking->payment->amount, 2) }}</strong></p>
+                    @if($booking->payment->paid_at)
+                        <p class="small text-secondary mb-1">Paid at: <strong>{{ $booking->payment->paid_at->format('M d, Y h:i A') }}</strong></p>
+                    @endif
+                    @if($booking->payment->verified_at)
+                        <p class="small text-secondary mb-3">Verified by: <strong>{{ $booking->payment->source === 'paymongo_checkout' ? 'PayMongo (automatic)' : 'Hotel staff' }}</strong></p>
+                    @endif
+                @endif
                 @if($isOnlineAwaitingVerification)
                     <p class="small text-secondary mb-1">Method selected: {{ \App\Models\Payment::methodLabel((string) ($booking->payment?->method ?? 'online')) }} (awaiting staff verification)</p>
                 @endif

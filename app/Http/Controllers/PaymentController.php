@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\BookingPaidMail;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\PayMongoCheckoutSession;
 use App\Services\PaymentService;
 use App\Services\PayMongoService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -83,12 +81,29 @@ class PaymentController extends Controller
         $validated = $request->validate([
             'method' => ['required', Rule::in(Payment::allowedMethods())],
             'qr_reference' => ['nullable', 'string', 'max:80'],
-            'customer_reference' => ['nullable', 'string', 'max:120', Rule::requiredIf(fn (): bool => $request->input('method') === Payment::METHOD_INSTAPAY)],
-            'payment_proof' => ['nullable', 'image', 'max:5120', Rule::requiredIf(fn (): bool => $request->input('method') === Payment::METHOD_INSTAPAY)],
+            'customer_reference' => [
+                'nullable',
+                'string',
+                'min:6',
+                'max:120',
+                'regex:/^[A-Za-z0-9][A-Za-z0-9 ._-]*$/',
+                Rule::requiredIf(fn (): bool => $request->input('method') === Payment::METHOD_INSTAPAY),
+            ],
+            'payment_proof' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
+                Rule::requiredIf(fn (): bool => $request->input('method') === Payment::METHOD_INSTAPAY),
+            ],
             'terms_accepted' => ['exclude_unless:method,'.Payment::METHOD_INSTAPAY, 'required', 'accepted'],
         ]);
 
-        if ($validated['method'] === Payment::METHOD_CREDIT_DEBIT_CARD) {
+        if (in_array($validated['method'], [
+            Payment::METHOD_CREDIT_DEBIT_CARD,
+            Payment::METHOD_GCASH,
+            Payment::METHOD_QRPH,
+        ], true)) {
             $amountCentavos = (int) round((float) $booking->total_price * 100);
             $existingSession = PayMongoCheckoutSession::query()
                 ->where('booking_id', $booking->id)
@@ -198,18 +213,9 @@ class PaymentController extends Controller
                 ->with('status', 'Payment proof submitted. Staff will review your online payment before marking it as paid.');
         }
 
-        $this->paymentService->charge($booking, $validated['method'], [
-            'qr_reference' => $validated['qr_reference'] ?? null,
+        return back()->withErrors([
+            'method' => 'The selected payment method cannot be processed. Please choose a supported option.',
         ]);
-        $booking->refresh()->loadMissing(['user', 'room', 'payment']);
-
-        try {
-            Mail::to($booking->user->email)->queue(new BookingPaidMail($booking));
-        } catch (Throwable $exception) {
-            report($exception);
-        }
-
-        return redirect()->route('bookings.success', $booking);
     }
 
     public function payMongoReturn(Booking $booking)

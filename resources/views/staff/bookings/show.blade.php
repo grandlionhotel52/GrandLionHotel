@@ -934,8 +934,13 @@
                     </div>
                 @endif
 
-                @if($booking->payment_status === 'unpaid' && in_array($booking->status, ['confirmed'], true))
-                    <form method="POST" action="{{ route('staff.bookings.record-payment', $booking) }}" class="row g-3 align-items-end mb-4" data-confirm="Record this payment now?">
+                @php
+                    $staffCanRecordCash = $booking->payment_status === 'unpaid'
+                        && $booking->status === 'confirmed'
+                        && in_array(strtolower((string) ($booking->payment?->method ?? 'pending')), ['', 'pending', 'cash'], true);
+                @endphp
+                @if($staffCanRecordCash)
+                    <form method="POST" action="{{ route('staff.bookings.record-payment', $booking) }}" class="row g-3 align-items-end mb-4" data-confirm="Confirm that the cash payment was received?">
                         @csrf
                         @method('PATCH')
                         @if(!empty($returnTo))
@@ -944,13 +949,9 @@
                         <input type="hidden" name="stay_on_booking" value="1">
                         <input type="hidden" name="redirect_section" value="payment-desk">
                         <div class="col-12">
-                            <label class="form-label">Payment Method</label>
-                            <select class="form-select" name="method" required>
-                                <option value="cash" @selected(old('method', 'cash') === 'cash')>Cash</option>
-                                <option value="credit_debit_card" @selected(old('method') === 'credit_debit_card')>Credit/Debit Card via PayMongo</option>
-                                <option value="gcash" @selected(old('method') === 'gcash')>GCash via PayMongo</option>
-                                <option value="qrph" @selected(old('method') === 'qrph')>QR Ph via PayMongo</option>
-                            </select>
+                            <div class="alert alert-light border small mb-0">
+                                <strong>Cash payment only.</strong> Record this after the cash has been physically received. Online payments are handled through PayMongo or online-payment verification.
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Discount</label>
@@ -968,7 +969,7 @@
                             @endif
                         </div>
                         <div class="col-12">
-                            <button type="submit" class="btn btn-staff w-100">Record Payment</button>
+                            <button type="submit" class="btn btn-staff w-100">Record Cash Payment</button>
                         </div>
                     </form>
                 @endif
