@@ -155,11 +155,11 @@
                                     <option value="credit_debit_card" @selected(old('payment_preference') == 'credit_debit_card')>PayMongo — Card, GCash, or QR Ph</option>
                                 </select>
                             </div>
-                            <div class="col-12">
+                            <div class="col-12 {{ (int) old('guests', $standardGuests) > $standardGuests ? '' : 'd-none' }}" id="walkin_extra_bedding_group">
                                 <div class="form-check">
-                                    <input class="form-check-input @error('extra_bedding_confirmed') is-invalid @enderror" type="checkbox" value="1" id="walkin_extra_bedding_confirmed" name="extra_bedding_confirmed" @checked(old('extra_bedding_confirmed'))>
+                                    <input class="form-check-input @error('extra_bedding_confirmed') is-invalid @enderror" type="checkbox" value="1" id="walkin_extra_bedding_confirmed" name="extra_bedding_confirmed" @checked(old('extra_bedding_confirmed')) @disabled((int) old('guests', $standardGuests) <= $standardGuests)>
                                     <label class="form-check-label" for="walkin_extra_bedding_confirmed">
-                                        Confirm extra bedding approval when the booking exceeds {{ $standardGuests }} guests.
+                                        Confirm extra bedding for guest 3 and above.
                                     </label>
                                 </div>
                                 @error('extra_bedding_confirmed')
@@ -229,6 +229,8 @@
         const checkInInput = document.getElementById('walkin_check_in');
         const checkOutInput = document.getElementById('walkin_check_out');
         const guestsInput = document.getElementById('walkin_guests');
+        const extraBeddingGroup = document.getElementById('walkin_extra_bedding_group');
+        const extraBeddingCheckbox = document.getElementById('walkin_extra_bedding_confirmed');
         const standardGuests = {{ $standardGuests }};
         const extraBeddingFeePerNight = {{ number_format($extraBeddingFeePerNight, 2, '.', '') }};
 
@@ -247,6 +249,21 @@
         if (!roomSelect || !checkInInput || !checkOutInput || !guestsInput) {
             return;
         }
+
+        const updateExtraBeddingField = () => {
+            const needsExtraBedding = Number(guestsInput.value || 0) >= 3;
+            extraBeddingGroup?.classList.toggle('d-none', !needsExtraBedding);
+            if (extraBeddingCheckbox) {
+                extraBeddingCheckbox.disabled = !needsExtraBedding;
+                extraBeddingCheckbox.required = needsExtraBedding;
+                if (!needsExtraBedding) {
+                    extraBeddingCheckbox.checked = false;
+                }
+            }
+        };
+
+        guestsInput.addEventListener('input', updateExtraBeddingField);
+        updateExtraBeddingField();
 
         const toDateInputValue = (date) => {
             const year = date.getFullYear();

@@ -819,7 +819,7 @@
                         <label class="form-label">Current Total Guests</label>
                         <input type="text" class="form-control" value="{{ $currentOccupancyTotal }}" disabled>
                     </div>
-                    <div class="col-12">
+                    <div class="col-12 {{ $currentOccupancyTotal >= 3 ? '' : 'd-none' }}" id="occupancy_extra_bedding_group">
                         <div class="form-check">
                             <input
                                 class="form-check-input @error('extra_bedding_confirmed') is-invalid @enderror"
@@ -828,9 +828,10 @@
                                 id="extra_bedding_confirmed"
                                 name="extra_bedding_confirmed"
                                 @checked(old('extra_bedding_confirmed', $booking->extra_bedding_count > 0))
+                                @disabled($currentOccupancyTotal < 3)
                             >
                             <label class="form-check-label" for="extra_bedding_confirmed">
-                                Confirm extra bedding approval.
+                                Confirm extra bedding for guest 3 and above.
                                 @if($currentExtraBedding > 0)
                                     This update adds {{ $currentExtraBedding }} guest{{ $currentExtraBedding === 1 ? '' : 's' }} beyond the 2-guest standard occupancy.
                                 @else
@@ -1064,3 +1065,33 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const adultsInput = document.querySelector('#occupancy-update input[name="adults"]');
+            const kidsInput = document.querySelector('#occupancy-update input[name="kids"]');
+            const beddingGroup = document.getElementById('occupancy_extra_bedding_group');
+            const beddingCheckbox = document.getElementById('extra_bedding_confirmed');
+
+            if (!adultsInput || !kidsInput || !beddingGroup || !beddingCheckbox) {
+                return;
+            }
+
+            const updateExtraBeddingField = () => {
+                const totalGuests = Number(adultsInput.value || 0) + Number(kidsInput.value || 0);
+                const needsExtraBedding = totalGuests >= 3;
+                beddingGroup.classList.toggle('d-none', !needsExtraBedding);
+                beddingCheckbox.disabled = !needsExtraBedding;
+                beddingCheckbox.required = needsExtraBedding;
+                if (!needsExtraBedding) {
+                    beddingCheckbox.checked = false;
+                }
+            };
+
+            adultsInput.addEventListener('input', updateExtraBeddingField);
+            kidsInput.addEventListener('input', updateExtraBeddingField);
+            updateExtraBeddingField();
+        })();
+    </script>
+@endpush
