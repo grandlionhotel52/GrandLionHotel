@@ -20,26 +20,89 @@
             font-size: clamp(1.45rem, 1.1vw + 1rem, 1.9rem);
         }
         .booking-stepper {
+            position: relative;
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 0.55rem;
-            margin-bottom: 1rem;
+            gap: 1rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
         }
         .booking-step {
-            border-radius: 14px;
-            border: 1px solid #e4d8c6;
-            background: #fff;
-            padding: 0.55rem 0.72rem;
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            color: #425066;
+            position: relative;
+            display: grid;
+            grid-template-columns: 2.25rem minmax(0, 1fr);
+            gap: .7rem;
+            align-items: start;
+            color: #475467;
+            cursor: default;
         }
-        .booking-step.active {
-            border-color: rgba(184, 146, 84, 0.55);
-            background: rgba(255, 255, 255, 0.96);
-            color: #2f3d53;
+        .booking-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 1.1rem;
+            left: calc(2.25rem + .35rem);
+            right: -1rem;
+            height: 1px;
+            background: #d9c7aa;
+            z-index: 0;
+        }
+        .booking-step-number {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            place-items: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 50%;
+            background: #72572f;
+            color: #fff;
+            font-weight: 800;
+        }
+        .booking-step:last-child .booking-step-number {
+            background: #e9e2d6;
+            color: #51452f;
+        }
+        .booking-step-title {
+            display: block;
+            margin-top: .05rem;
+            color: #263247;
+            font-size: .82rem;
+            font-weight: 800;
+            letter-spacing: .025em;
+            text-transform: uppercase;
+        }
+        .booking-step-description {
+            display: block;
+            margin-top: .15rem;
+            font-size: .76rem;
+            line-height: 1.35;
+        }
+        .booking-process {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #b89254;
+            border-radius: 0 14px 14px 0;
+            background: #faf7f1;
+        }
+        .booking-form-key {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .65rem 1rem;
+            padding: .75rem .9rem;
+            margin-bottom: 1.25rem;
+            border-radius: 12px;
+            background: #f7f8fa;
+            color: #596273;
+            font-size: .8rem;
+        }
+        .booking-form-key span {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+        }
+        .booking-form-key i {
+            color: #72572f;
         }
         .booking-estimate {
             border-radius: 16px;
@@ -96,6 +159,14 @@
         @media (max-width: 767.98px) {
             .booking-stepper {
                 grid-template-columns: 1fr;
+            }
+            .booking-step:not(:last-child)::after {
+                top: 2.25rem;
+                bottom: -1rem;
+                left: 1.1rem;
+                right: auto;
+                width: 1px;
+                height: auto;
             }
         }
     </style>
@@ -214,15 +285,33 @@
 
         <div class="col-lg-8">
             <section class="soft-card p-4 p-lg-5">
-                <div class="booking-stepper">
-                    <div class="booking-step active">1. Guest details</div>
-                    <div class="booking-step active">2. Stay schedule</div>
-                    <div class="booking-step">3. Staff confirmation</div>
+                <div class="booking-process" role="note" aria-labelledby="booking_process_title">
+                    <p class="small fw-bold text-uppercase mb-3" id="booking_process_title">How booking works <span class="text-secondary fw-normal">&mdash; information only</span></p>
+                    <ol class="booking-stepper">
+                        <li class="booking-step">
+                            <span class="booking-step-number">1</span>
+                            <span><span class="booking-step-title">Enter guest details</span><span class="booking-step-description">Fill in the form below.</span></span>
+                        </li>
+                        <li class="booking-step">
+                            <span class="booking-step-number">2</span>
+                            <span><span class="booking-step-title">Choose your stay</span><span class="booking-step-description">Select guests, dates, and preferences.</span></span>
+                        </li>
+                        <li class="booking-step">
+                            <span class="booking-step-number">3</span>
+                            <span><span class="booking-step-title">Hotel reviews</span><span class="booking-step-description">Staff confirms availability after submission.</span></span>
+                        </li>
+                    </ol>
                 </div>
 
                 <p class="ta-eyebrow mb-1">Pre-booking</p>
                 <h1 class="h3 mb-2">Pre-book your stay</h1>
                 <p class="text-secondary mb-4">Submit your request for hotel review. This will not be confirmed until staff approves it.</p>
+
+                <div class="booking-form-key" aria-label="Form guide">
+                    <span><i class="bi bi-pencil-square" aria-hidden="true"></i>White fields can be filled in</span>
+                    <span><strong class="text-danger">*</strong> Required</span>
+                    <span><i class="bi bi-info-circle" aria-hidden="true"></i>Fields without * are optional</span>
+                </div>
 
                 @if(!empty($prefill['availability_message']))
                     <div id="booking_prefill_feedback" class="alert booking-page-alert {{ $prefill['unavailable_for_selected_dates'] ? 'alert-warning' : 'alert-info' }}" role="alert" tabindex="-1">

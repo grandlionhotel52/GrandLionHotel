@@ -29,6 +29,24 @@
         background-color: #fff;
     }
 
+    input.form-control,
+    textarea.form-control {
+        cursor: text;
+    }
+
+    select.form-select,
+    button:not(:disabled),
+    input[type="checkbox"]:not(:disabled),
+    input[type="radio"]:not(:disabled),
+    input[type="file"]:not(:disabled) {
+        cursor: pointer;
+    }
+
+    :where(.badge, .ta-chip, .booking-top-chip):not(a):not(button) {
+        cursor: default;
+        user-select: none;
+    }
+
     .form-control:disabled,
     .form-control[readonly],
     .form-select:disabled {
