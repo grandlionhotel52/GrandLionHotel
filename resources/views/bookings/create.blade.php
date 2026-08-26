@@ -85,25 +85,6 @@
             border-radius: 0 14px 14px 0;
             background: #faf7f1;
         }
-        .booking-form-key {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .65rem 1rem;
-            padding: .75rem .9rem;
-            margin-bottom: 1.25rem;
-            border-radius: 12px;
-            background: #f7f8fa;
-            color: #596273;
-            font-size: .8rem;
-        }
-        .booking-form-key span {
-            display: inline-flex;
-            align-items: center;
-            gap: .35rem;
-        }
-        .booking-form-key i {
-            color: #72572f;
-        }
         .promo-code-box {
             padding: .9rem;
             border: 1px solid #ded4c5;
@@ -346,11 +327,6 @@
 
                 <h1 class="h3 mb-2">Pre-book your stay</h1>
                 <p class="text-secondary mb-3">Staff confirms your request after submission.</p>
-
-                <div class="booking-form-key" aria-label="Form guide">
-                    <span><strong class="text-danger">*</strong> Required</span>
-                    <span>Other fields are optional</span>
-                </div>
 
                 <div id="booking_ajax_feedback" class="alert alert-danger booking-page-alert d-none" role="alert" tabindex="-1" aria-live="assertive"></div>
 
