@@ -61,6 +61,8 @@
                                             value="{{ old('first_name') }}"
                                             placeholder="Your first name"
                                             autocomplete="given-name"
+                                            minlength="2"
+                                            maxlength="120"
                                             required
                                         >
                                         @error('first_name')
@@ -76,6 +78,8 @@
                                             value="{{ old('last_name') }}"
                                             placeholder="Your last name"
                                             autocomplete="family-name"
+                                            minlength="2"
+                                            maxlength="120"
                                             required
                                         >
                                         @error('last_name')
@@ -91,6 +95,7 @@
                                             value="{{ old('email') }}"
                                             placeholder="you@example.com"
                                             autocomplete="email"
+                                            maxlength="255"
                                             required
                                         >
                                         @error('email')
@@ -103,14 +108,17 @@
                                             type="text"
                                             class="form-control auth-premium-input @error('phone') is-invalid @enderror"
                                             name="phone"
+                                            id="register_phone"
                                             value="{{ old('phone') }}"
-                                            placeholder="+63..."
-                                            maxlength="30"
+                                            placeholder="09XXXXXXXXX"
+                                            maxlength="13"
                                             inputmode="tel"
-                                            pattern="[0-9+()\-\s]{7,30}"
+                                            pattern="(?:09[0-9]{9}|\+639[0-9]{9})"
+                                            aria-describedby="register_phone_help"
                                             autocomplete="tel"
                                             required
                                         >
+                                        <div id="register_phone_help" class="form-text">Use 09 followed by 9 digits (11 digits total), or +639 followed by 9 digits.</div>
                                         @error('phone')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -182,6 +190,45 @@
     <script>
         (() => {
             const toggles = document.querySelectorAll('[data-password-toggle]');
+            const phoneInput = document.getElementById('register_phone');
+            const phoneHelp = document.getElementById('register_phone_help');
+
+            if (phoneInput) {
+                const validatePhone = () => {
+                    let value = phoneInput.value;
+                    const hasInternationalPrefix = value.startsWith('+');
+
+                    value = value.replace(/\D/g, '');
+                    phoneInput.value = hasInternationalPrefix
+                        ? `+${value.slice(0, 12)}`
+                        : value.slice(0, 11);
+
+                    if (phoneInput.value === '') {
+                        phoneInput.setCustomValidity('Please enter your phone number.');
+                        phoneInput.classList.remove('is-valid', 'is-invalid');
+                        phoneHelp?.classList.remove('text-danger', 'text-success');
+                        if (phoneHelp) phoneHelp.textContent = 'Use 09 followed by 9 digits (11 digits total), or +639 followed by 9 digits.';
+                    } else if (!/^(?:09\d{9}|\+639\d{9})$/.test(phoneInput.value)) {
+                        phoneInput.setCustomValidity('Phone number must be exactly 11 digits starting with 09, or +639 followed by 9 digits.');
+                        phoneInput.classList.add('is-invalid');
+                        phoneInput.classList.remove('is-valid');
+                        phoneHelp?.classList.add('text-danger');
+                        phoneHelp?.classList.remove('text-success');
+                        if (phoneHelp) phoneHelp.textContent = `${phoneInput.value.length} character(s) entered. Complete a valid 09XXXXXXXXX or +639XXXXXXXXX number.`;
+                    } else {
+                        phoneInput.setCustomValidity('');
+                        phoneInput.classList.add('is-valid');
+                        phoneInput.classList.remove('is-invalid');
+                        phoneHelp?.classList.add('text-success');
+                        phoneHelp?.classList.remove('text-danger');
+                        if (phoneHelp) phoneHelp.textContent = 'Phone number is complete.';
+                    }
+                };
+
+                phoneInput.addEventListener('input', validatePhone);
+                phoneInput.addEventListener('blur', () => phoneInput.reportValidity());
+                validatePhone();
+            }
 
             toggles.forEach((toggleButton) => {
                 toggleButton.addEventListener('click', () => {

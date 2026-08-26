@@ -102,8 +102,8 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:120'],
-            'last_name' => ['required', 'string', 'max:120'],
+            'first_name' => ['required', 'string', 'min:2', 'max:120'],
+            'last_name' => ['required', 'string', 'min:2', 'max:120'],
             'email' => [
                 'required',
                 'email',
@@ -114,15 +114,17 @@ class AuthController extends Controller
                     }
                 },
             ],
-            'phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+()\\-\\s]{7,30}$/'],
+            'phone' => ['required', 'string', 'regex:/^(?:09\d{9}|\+639\d{9})$/'],
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ], [
             'first_name.required' => 'Please enter your first name.',
+            'first_name.min' => 'First name must contain at least 2 characters.',
             'last_name.required' => 'Please enter your last name.',
+            'last_name.min' => 'Last name must contain at least 2 characters.',
             'email.required' => 'Please enter your email address.',
             'email.email' => 'Enter a valid email address (example: name@gmail.com).',
             'phone.required' => 'Please enter your phone number.',
-            'phone.regex' => 'Enter a valid phone number using digits and + ( ) - symbols.',
+            'phone.regex' => 'Enter exactly 11 digits starting with 09, or use +639 followed by 9 digits.',
             'password.required' => 'Please create a password.',
             'password.confirmed' => 'Password confirmation does not match.',
             'password.min' => 'Password must be at least 8 characters with uppercase and numbers.',
