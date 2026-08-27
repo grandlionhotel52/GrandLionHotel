@@ -31,8 +31,8 @@
                     <p class="text-secondary">No proof upload is needed. PayMongo securely confirmed your payment.</p>
                 @else
                     <p class="ta-eyebrow mb-1">Payment submitted</p>
-                    <h1 class="h2 mb-3">We are confirming your payment</h1>
-                    <p class="text-secondary">Please do not pay again or upload proof. This page will update automatically when PayMongo confirms the transaction.</p>
+                    <h1 class="h2 mb-3">PayMongo is finalizing your payment</h1>
+                    <p class="text-secondary">No staff approval or proof upload is needed. This page updates automatically as soon as PayMongo completes the transaction.</p>
                     <div class="spinner-border text-warning payment-processing-ring my-3" role="status"><span class="visually-hidden">Finalizing your booking</span></div>
                     <p class="small fw-semibold text-warning mb-0" aria-live="polite">Finalizing your booking...</p>
                 @endif
@@ -51,7 +51,7 @@
                         @if($booking->payment?->provider_payment_id)<br>PayMongo ID: {{ $booking->payment->provider_payment_id }}@endif
                     </div>
                 @else
-                    <p class="small text-secondary payment-processing-note" id="confirmation-help">Confirmation normally takes a few seconds. Once payment is confirmed, you will automatically continue to your completed booking.</p>
+                    <p class="small text-secondary payment-processing-note" id="confirmation-help">This normally takes a few seconds. You will automatically continue to your paid booking.</p>
                 @endif
 
                 <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">

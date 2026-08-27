@@ -167,7 +167,7 @@
                         <label class="form-label">Payment method</label>
                         <select class="form-select" name="method" id="payment_method_select" required>
                             <option value="cash" @selected($selectedMethod === 'cash')>Cash &mdash; Pay at the front desk</option>
-                            <option value="credit_debit_card" @selected($selectedMethod === 'credit_debit_card')>Pay online &mdash; Card, GCash, or QR Ph</option>
+                            <option value="credit_debit_card" @selected($selectedMethod === 'credit_debit_card')>Pay online &mdash; Card, GCash, Maya, or QR Ph</option>
                         </select>
                         <small class="text-secondary">
                             Online payments open PayMongo's secure checkout. Cash is paid at the front desk.
@@ -179,7 +179,7 @@
                             <div class="d-flex gap-2 align-items-start">
                                 <i class="bi bi-credit-card fs-5" aria-hidden="true"></i>
                                 <div>
-                                    <strong class="d-block mb-1">Card, GCash, and QR Ph powered by PayMongo</strong>
+                                    <strong class="d-block mb-1">Card, GCash, Maya, and QR Ph powered by PayMongo</strong>
                                     <span class="small">You will be redirected to PayMongo to choose an available payment method. The hotel never receives or stores sensitive account or card details.</span>
                                 </div>
                             </div>

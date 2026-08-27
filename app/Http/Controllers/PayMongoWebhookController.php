@@ -113,6 +113,7 @@ class PayMongoWebhookController extends Controller
         $providerMethod = strtolower(trim((string) data_get($paymentData, 'attributes.source.type')));
         $paymentMethod = match ($providerMethod) {
             Payment::METHOD_GCASH => Payment::METHOD_GCASH,
+            Payment::METHOD_PAYMAYA => Payment::METHOD_PAYMAYA,
             Payment::METHOD_QRPH => Payment::METHOD_QRPH,
             default => Payment::METHOD_CREDIT_DEBIT_CARD,
         };

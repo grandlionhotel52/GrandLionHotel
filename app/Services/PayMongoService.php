@@ -35,7 +35,7 @@ class PayMongoService
                         'currency' => 'PHP',
                         'quantity' => 1,
                     ]],
-                    'payment_method_types' => ['card', 'gcash', 'qrph'],
+                    'payment_method_types' => ['card', 'gcash', 'paymaya', 'qrph'],
                     'success_url' => route('payments.paymongo.return', $booking),
                     'cancel_url' => route('payments.checkout', $booking),
                     'reference_number' => $this->referenceFor($booking),
@@ -49,7 +49,7 @@ class PayMongoService
 
         if ($response->failed()) {
             report(new RuntimeException('PayMongo checkout creation failed with HTTP '.$response->status()));
-            throw new RuntimeException('PayMongo could not start the card checkout. Please try again.');
+            throw new RuntimeException('PayMongo could not start the online checkout. Please try again.');
         }
 
         $sessionId = trim((string) $response->json('data.id'));

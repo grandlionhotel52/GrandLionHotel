@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Booking;
 use App\Models\Customer;
+use App\Models\Payment;
 use App\Models\Room;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -87,7 +88,7 @@ class QrPaymentMethodsTest extends TestCase
 
         Http::assertSent(fn ($request): bool =>
             $request->url() === 'https://api.paymongo.com/v2/checkout_sessions'
-            && $request['data']['attributes']['payment_method_types'] === ['card', 'gcash', 'qrph']
+            && $request['data']['attributes']['payment_method_types'] === ['card', 'gcash', 'paymaya', 'qrph']
             && $request['data']['attributes']['reference_number'] === 'BOOKING-'.$booking->id
         );
     }
@@ -119,7 +120,7 @@ class QrPaymentMethodsTest extends TestCase
         $this->assertDatabaseCount('paymongo_checkout_sessions', 1);
     }
 
-    public function test_signed_paymongo_webhook_marks_card_payment_as_paid(): void
+    public function test_signed_paymongo_webhook_marks_maya_payment_as_paid_automatically(): void
     {
         $booking = Booking::factory()->create(['status' => 'confirmed']);
         $booking->payment()->update([
@@ -144,7 +145,12 @@ class QrPaymentMethodsTest extends TestCase
                         'reference_number' => 'BOOKING-'.$booking->id,
                         'payments' => [[
                             'id' => 'pay_test_paid',
-                            'attributes' => ['status' => 'paid', 'amount' => 250000, 'currency' => 'PHP'],
+                            'attributes' => [
+                                'status' => 'paid',
+                                'amount' => 250000,
+                                'currency' => 'PHP',
+                                'source' => ['type' => 'paymaya'],
+                            ],
                         ]],
                     ],
                 ],
@@ -160,6 +166,8 @@ class QrPaymentMethodsTest extends TestCase
 
         $booking->refresh()->load('payment');
         $this->assertSame('paid', $booking->payment_status);
+        $this->assertSame('confirmed', $booking->status);
+        $this->assertSame(Payment::METHOD_PAYMAYA, $booking->payment->method);
         $this->assertSame('paymongo_checkout', $booking->payment->source);
         $this->assertSame('pay_test_paid', $booking->payment->provider_payment_id);
         $this->assertNotNull($booking->payment->verified_at);
@@ -187,8 +195,8 @@ class QrPaymentMethodsTest extends TestCase
         $this->actingAs($customer, 'customer')
             ->get(route('payments.paymongo.return', $booking))
             ->assertOk()
-            ->assertSee('We are confirming your payment')
-            ->assertSee('Please do not pay again or upload proof.')
+            ->assertSee('PayMongo is finalizing your payment')
+            ->assertSee('No staff approval or proof upload is needed.')
             ->assertDontSee('Continue to PayMongo');
     }
 

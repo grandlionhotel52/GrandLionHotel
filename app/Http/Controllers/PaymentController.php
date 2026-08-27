@@ -107,6 +107,7 @@ class PaymentController extends Controller
         if (in_array($validated['method'], [
             Payment::METHOD_CREDIT_DEBIT_CARD,
             Payment::METHOD_GCASH,
+            Payment::METHOD_PAYMAYA,
             Payment::METHOD_QRPH,
         ], true)) {
             $amountCentavos = (int) round($amountDue * 100);
