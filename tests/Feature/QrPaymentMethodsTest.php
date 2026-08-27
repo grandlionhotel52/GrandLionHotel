@@ -138,20 +138,26 @@ class QrPaymentMethodsTest extends TestCase
 
         $payload = json_encode([
             'data' => [
-                'type' => 'checkout_session.payment.paid',
-                'data' => [
-                    'id' => 'cs_test_paid',
-                    'attributes' => [
-                        'reference_number' => 'BOOKING-'.$booking->id,
-                        'payments' => [[
-                            'id' => 'pay_test_paid',
-                            'attributes' => [
-                                'status' => 'paid',
-                                'amount' => 250000,
-                                'currency' => 'PHP',
-                                'source' => ['type' => 'paymaya'],
-                            ],
-                        ]],
+                'id' => 'evt_test_paid',
+                'type' => 'event',
+                'attributes' => [
+                    'type' => 'checkout_session.payment.paid',
+                    'livemode' => false,
+                    'data' => [
+                        'id' => 'cs_test_paid',
+                        'type' => 'checkout_session',
+                        'attributes' => [
+                            'reference_number' => 'BOOKING-'.$booking->id,
+                            'payments' => [[
+                                'id' => 'pay_test_paid',
+                                'attributes' => [
+                                    'status' => 'paid',
+                                    'amount' => 250000,
+                                    'currency' => 'PHP',
+                                    'source' => ['type' => 'paymaya'],
+                                ],
+                            ]],
+                        ],
                     ],
                 ],
             ],

@@ -31,9 +31,11 @@ class PayMongoWebhookController extends Controller
             return response('Received.', 200);
         }
 
-        $eventType = (string) data_get($event, 'data.type');
+        // PayMongo wraps live and test webhook details under data.attributes.
+        // Keep the legacy fallback so previously recorded fixtures remain compatible.
+        $eventType = (string) data_get($event, 'data.attributes.type', data_get($event, 'data.type'));
         if (in_array($eventType, ['payment.refunded', 'payment.refund.update', 'payment.refund.updated'], true)) {
-            $resource = data_get($event, 'data.data');
+            $resource = data_get($event, 'data.attributes.data', data_get($event, 'data.data'));
             $resourceId = trim((string) data_get($resource, 'id'));
             $status = strtolower(trim((string) data_get($resource, 'attributes.status')));
 
@@ -66,7 +68,7 @@ class PayMongoWebhookController extends Controller
             return response('Received.', 200);
         }
 
-        $session = data_get($event, 'data.data');
+        $session = data_get($event, 'data.attributes.data', data_get($event, 'data.data'));
         $sessionId = trim((string) data_get($session, 'id'));
         $reference = trim((string) data_get($session, 'attributes.reference_number'));
         $paymentData = collect((array) data_get($session, 'attributes.payments', []))
