@@ -240,6 +240,11 @@ class PaymentController extends Controller
         $this->authorizeOwner($booking);
         $booking->refresh()->loadMissing('payment');
 
+        if ($booking->payment_status !== 'paid') {
+            $this->reconcilePayMongoCheckout($booking);
+            $booking->refresh()->loadMissing('payment');
+        }
+
         return response()->json([
             'payment_status' => $booking->payment_status,
             'paid' => $booking->payment_status === 'paid',
@@ -252,6 +257,62 @@ class PaymentController extends Controller
                 ? 'Payment confirmed. Your receipt is ready.'
                 : 'Your payment was submitted and is still being confirmed by PayMongo.',
         ]);
+    }
+
+    private function reconcilePayMongoCheckout(Booking $booking): void
+    {
+        $payment = $booking->payment;
+        $sessionId = trim((string) ($payment?->provider_session_id ?? ''));
+        if (!$payment
+            || $payment->source !== 'paymongo_checkout_pending'
+            || !str_starts_with($sessionId, 'cs_')) {
+            return;
+        }
+
+        try {
+            $session = $this->payMongoService->retrieveCheckoutSession($sessionId);
+        } catch (Throwable $exception) {
+            report($exception);
+            return;
+        }
+
+        if (trim((string) data_get($session, 'attributes.reference_number')) !== $this->payMongoService->referenceFor($booking)) {
+            return;
+        }
+
+        $paymentData = collect((array) data_get($session, 'attributes.payments', []))
+            ->first(fn (array $item): bool => data_get($item, 'attributes.status') === 'paid');
+        if (!$paymentData) {
+            return;
+        }
+
+        $expectedAmount = (int) round((float) $payment->amount * 100);
+        $providerAmount = (int) data_get($paymentData, 'attributes.amount');
+        $providerPaymentId = trim((string) data_get($paymentData, 'id'));
+        if ($providerAmount !== $expectedAmount
+            || strtoupper((string) data_get($paymentData, 'attributes.currency')) !== 'PHP'
+            || !str_starts_with($providerPaymentId, 'pay_')) {
+            return;
+        }
+
+        $providerMethod = strtolower(trim((string) data_get($paymentData, 'attributes.source.type')));
+        $method = match ($providerMethod) {
+            Payment::METHOD_GCASH => Payment::METHOD_GCASH,
+            Payment::METHOD_PAYMAYA => Payment::METHOD_PAYMAYA,
+            Payment::METHOD_QRPH => Payment::METHOD_QRPH,
+            default => Payment::METHOD_CREDIT_DEBIT_CARD,
+        };
+
+        $paidPayment = $this->paymentService->charge($booking, $method, ['source' => 'paymongo_checkout']);
+        $paidPayment->forceFill([
+            'provider_payment_id' => $providerPaymentId,
+            'source' => 'paymongo_checkout',
+            'verified_at' => $paidPayment->verified_at ?? now(),
+        ])->save();
+
+        PayMongoCheckoutSession::query()
+            ->where('provider_session_id', $sessionId)
+            ->update(['status' => 'paid']);
     }
 
     private function authorizeOwner(Booking $booking): void

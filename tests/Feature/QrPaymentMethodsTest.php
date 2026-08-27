@@ -235,6 +235,53 @@ class QrPaymentMethodsTest extends TestCase
             ->assertSessionHas('status', 'Payment confirmed. Your booking is ready.');
     }
 
+    public function test_status_poll_recovers_a_paid_checkout_when_webhook_was_missed(): void
+    {
+        $customer = Customer::factory()->create();
+        $booking = Booking::factory()->create(['customer_id' => $customer->id, 'status' => 'confirmed']);
+        $booking->payment()->update([
+            'amount' => 2699,
+            'status' => 'unpaid',
+            'method' => Payment::METHOD_CREDIT_DEBIT_CARD,
+            'source' => 'paymongo_checkout_pending',
+            'provider_session_id' => 'cs_test_missed_webhook',
+            'paid_at' => null,
+        ]);
+
+        config(['services.paymongo.secret_key' => 'sk_test_example']);
+        Http::fake([
+            'api.paymongo.com/v2/checkout_sessions/cs_test_missed_webhook' => Http::response([
+                'data' => [
+                    'id' => 'cs_test_missed_webhook',
+                    'attributes' => [
+                        'reference_number' => 'BOOKING-'.$booking->id,
+                        'payments' => [[
+                            'id' => 'pay_test_recovered',
+                            'attributes' => [
+                                'status' => 'paid',
+                                'amount' => 269900,
+                                'currency' => 'PHP',
+                                'source' => ['type' => 'gcash'],
+                            ],
+                        ]],
+                    ],
+                ],
+            ]),
+        ]);
+
+        $this->actingAs($customer, 'customer')
+            ->getJson(route('payments.paymongo.status', $booking))
+            ->assertOk()
+            ->assertJsonPath('paid', true)
+            ->assertJsonPath('payment_status', 'paid')
+            ->assertJsonPath('provider_payment_id', 'pay_test_recovered');
+
+        $booking->refresh()->load('payment');
+        $this->assertSame('paid', $booking->payment_status);
+        $this->assertSame(Payment::METHOD_GCASH, $booking->payment->method);
+        $this->assertSame('paymongo_checkout', $booking->payment->source);
+    }
+
     public function test_online_payment_requires_reference_and_proof(): void
     {
         $user = Customer::factory()->create();

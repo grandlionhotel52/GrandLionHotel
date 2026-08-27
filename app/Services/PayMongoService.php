@@ -67,6 +67,28 @@ class PayMongoService
         return 'BOOKING-'.$booking->getKey();
     }
 
+    public function retrieveCheckoutSession(string $sessionId): array
+    {
+        $secretKey = trim((string) config('services.paymongo.secret_key'));
+        $sessionId = trim($sessionId);
+
+        if ($secretKey === '' || !str_starts_with($sessionId, 'cs_')) {
+            throw new RuntimeException('A valid PayMongo checkout session is required.');
+        }
+
+        $response = $this->client($secretKey)->get('/v2/checkout_sessions/'.$sessionId);
+        if ($response->failed()) {
+            throw new RuntimeException('PayMongo could not verify the checkout session yet.');
+        }
+
+        $session = $response->json('data');
+        if (!is_array($session) || trim((string) data_get($session, 'id')) !== $sessionId) {
+            throw new RuntimeException('PayMongo returned an invalid checkout session.');
+        }
+
+        return $session;
+    }
+
     public function createRefund(string $paymentId, float $amount, string $notes = ''): array
     {
         $secretKey = trim((string) config('services.paymongo.secret_key'));
