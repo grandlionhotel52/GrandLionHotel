@@ -1129,6 +1129,8 @@
                 }
 
                 form.dataset.submitting = '1';
+                form.dataset.unsavedSubmitting = '1';
+                form.dataset.dirty = '0';
                 form.setAttribute('aria-busy', 'true');
                 const originalButtonText = submitButton ? submitButton.textContent : defaultSubmitText;
                 if (submitButton) {
@@ -1148,6 +1150,8 @@
                 if (!currentAvailability?.stay_available) {
                     showAlert(currentAvailability?.message || 'Select available stay dates before submitting your booking.');
                     delete form.dataset.submitting;
+                    form.dataset.unsavedSubmitting = '0';
+                    form.dataset.dirty = '1';
                     form.removeAttribute('aria-busy');
                     if (submitButton) {
                         submitButton.disabled = false;
@@ -1212,6 +1216,8 @@
                 } finally {
                     if (submissionSucceeded) return;
                     delete form.dataset.submitting;
+                    form.dataset.unsavedSubmitting = '0';
+                    form.dataset.dirty = '1';
                     form.removeAttribute('aria-busy');
                     if (submitButton) {
                         submitButton.disabled = false;
