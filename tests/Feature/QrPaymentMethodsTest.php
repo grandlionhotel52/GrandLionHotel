@@ -235,7 +235,7 @@ class QrPaymentMethodsTest extends TestCase
             ->assertSessionHas('status', 'Payment confirmed. Your booking is ready.');
     }
 
-    public function test_status_poll_recovers_a_paid_checkout_when_webhook_was_missed(): void
+    public function test_return_to_merchant_recovers_a_paid_checkout_when_webhook_was_missed(): void
     {
         $customer = Customer::factory()->create();
         $booking = Booking::factory()->create(['customer_id' => $customer->id, 'status' => 'confirmed']);
@@ -250,7 +250,7 @@ class QrPaymentMethodsTest extends TestCase
 
         config(['services.paymongo.secret_key' => 'sk_test_example']);
         Http::fake([
-            'api.paymongo.com/v2/checkout_sessions/cs_test_missed_webhook' => Http::response([
+            'api.paymongo.com/v1/checkout_sessions/cs_test_missed_webhook' => Http::response([
                 'data' => [
                     'id' => 'cs_test_missed_webhook',
                     'attributes' => [
@@ -270,11 +270,9 @@ class QrPaymentMethodsTest extends TestCase
         ]);
 
         $this->actingAs($customer, 'customer')
-            ->getJson(route('payments.paymongo.status', $booking))
-            ->assertOk()
-            ->assertJsonPath('paid', true)
-            ->assertJsonPath('payment_status', 'paid')
-            ->assertJsonPath('provider_payment_id', 'pay_test_recovered');
+            ->get(route('payments.paymongo.return', $booking))
+            ->assertRedirect(route('bookings.success', $booking))
+            ->assertSessionHas('status', 'Payment confirmed. Your booking is ready.');
 
         $booking->refresh()->load('payment');
         $this->assertSame('paid', $booking->payment_status);

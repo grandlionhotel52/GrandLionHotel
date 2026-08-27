@@ -76,7 +76,7 @@ class PayMongoService
             throw new RuntimeException('A valid PayMongo checkout session is required.');
         }
 
-        $response = $this->client($secretKey)->get('/v2/checkout_sessions/'.$sessionId);
+        $response = $this->client($secretKey)->get('/v1/checkout_sessions/'.$sessionId);
         if ($response->failed()) {
             throw new RuntimeException('PayMongo could not verify the checkout session yet.');
         }

@@ -226,6 +226,11 @@ class PaymentController extends Controller
         $this->authorizeOwner($booking);
         $booking->refresh()->loadMissing(['room', 'payment']);
 
+        if ($booking->payment_status !== 'paid') {
+            $this->reconcilePayMongoCheckout($booking);
+            $booking->refresh()->loadMissing(['room', 'payment']);
+        }
+
         if ($booking->payment_status === 'paid') {
             return redirect()
                 ->route('bookings.success', $booking)
