@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Admin;
 use App\Models\Booking;
 use App\Models\Customer;
+use App\Models\Payment;
 use App\Models\Room;
 use App\Models\RoomStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -91,6 +92,38 @@ class OperationalFeaturesTest extends TestCase
             ->assertOk()
             ->assertSee('Occupancy Report')
             ->assertSee('Room nights sold');
+    }
+
+    public function test_occupancy_report_counts_cash_and_online_room_nights_as_sold(): void
+    {
+        $admin = Admin::factory()->create();
+        $stayDate = now()->addDay()->startOfDay();
+
+        foreach ([Payment::METHOD_CASH, Payment::METHOD_GCASH] as $method) {
+            $booking = Booking::factory()->create([
+                'room_id' => Room::factory()->create()->id,
+                'check_in' => $stayDate,
+                'check_out' => $stayDate->copy()->addDay(),
+                'status' => 'confirmed',
+            ]);
+
+            $booking->payment()->updateOrCreate(['booking_id' => $booking->id], [
+                'amount' => 1000,
+                'method' => $method,
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
+        }
+
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.occupancy-report', [
+                'from' => $stayDate->toDateString(),
+                'to' => $stayDate->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertSee('including both cash and online payments')
+            ->assertSeeInOrder(['Room nights sold', '2'])
+            ->assertSeeInOrder(['Occupied', 'Available', 'Occupancy', '2']);
     }
 
     public function test_legacy_room_search_redirects_to_the_canonical_route(): void

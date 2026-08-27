@@ -6,7 +6,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
         <div>
             <h1 class="h3 mb-1">Occupancy Report</h1>
-            <p class="text-secondary mb-0">Confirmed and completed room nights across the selected period.</p>
+            <p class="text-secondary mb-0">Confirmed and completed room nights, including both cash and online payments.</p>
         </div>
         <form method="GET" action="{{ route('admin.occupancy-report') }}" class="d-flex flex-wrap align-items-end gap-2">
             <div>
