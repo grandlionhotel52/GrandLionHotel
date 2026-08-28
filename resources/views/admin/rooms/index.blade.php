@@ -153,7 +153,7 @@
     </div>
 
     <section class="admin-rooms-shell p-3 p-lg-4 mb-4">
-        <form method="GET" action="{{ route('admin.rooms.index') }}" id="adminRoomSearchForm">
+        <form method="GET" action="{{ route('admin.rooms.index') }}" id="adminRoomSearchForm" data-ajax-list-form="#admin_room_results">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-4">
                     <label class="form-label" for="adminRoomQuickSearch">Quick search</label>
@@ -184,13 +184,13 @@
                     </select>
                 </div>
                 <div class="col-lg-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-ta w-100">Apply</button>
-                    <a href="{{ route('admin.rooms.index') }}" class="btn btn-ta-outline">Reset</a>
+                    <a href="{{ route('admin.rooms.index') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
                 </div>
             </div>
         </form>
     </section>
 
+    <div id="admin_room_results" aria-live="polite">
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle">
@@ -285,6 +285,7 @@
 
     <div class="mt-3">
         {{ $rooms->links() }}
+    </div>
     </div>
 
     <div class="modal fade" id="createRoomModal" tabindex="-1" aria-labelledby="createRoomModalLabel" aria-hidden="true">
@@ -590,32 +591,17 @@
             const roomSearchHelp = document.getElementById('adminRoomSearchHelp');
 
             if (roomSearchForm && roomSearchField) {
-                let roomSearchTimer;
-                const submittedRoomSearch = roomSearchField.value.trim();
-                const submitRoomSearch = function () {
-                    roomSearchHelp.textContent = 'Searching rooms...';
-                    roomSearchForm.requestSubmit();
-                };
-
                 roomSearchField.addEventListener('input', function () {
-                    window.clearTimeout(roomSearchTimer);
                     const value = roomSearchField.value.trim();
                     roomSearchClear?.classList.toggle('d-none', value === '');
                     roomSearchHelp.textContent = value === '' ? 'Showing all rooms...' : 'Waiting for you to finish typing...';
-
-                    if (value === submittedRoomSearch) {
-                        roomSearchHelp.textContent = 'Results update as you type.';
-                        return;
-                    }
-
-                    roomSearchTimer = window.setTimeout(submitRoomSearch, 450);
                 });
 
                 roomSearchClear?.addEventListener('click', function () {
-                    window.clearTimeout(roomSearchTimer);
                     roomSearchField.value = '';
                     roomSearchClear.classList.add('d-none');
-                    submitRoomSearch();
+                    roomSearchHelp.textContent = 'Showing all rooms...';
+                    roomSearchForm.requestSubmit();
                 });
             }
 

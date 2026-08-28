@@ -58,12 +58,12 @@
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
             <div>
                 <h1 class="h4 mb-1">Sales Report</h1>
-                <p class="text-secondary mb-0">Paid sales for {{ $selectedRangeLabel }}</p>
+                <p class="text-secondary mb-0" id="admin_sales_range_label" data-ajax-list-sync>Paid sales for {{ $selectedRangeLabel }}</p>
             </div>
         </div>
 
         <section class="admin-report-shell p-3 p-lg-4 mb-4">
-            <form method="GET" action="{{ route('admin.sales-report') }}">
+            <form method="GET" action="{{ route('admin.sales-report') }}" data-ajax-list-form="#admin_sales_results">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-4 col-lg-3">
                         <label class="form-label">From Date</label>
@@ -86,13 +86,13 @@
                         </select>
                     </div>
                     <div class="col-lg-3 d-flex gap-2">
-                        <button type="submit" class="btn btn-ta w-100">Apply</button>
-                        <a href="{{ route('admin.sales-report') }}" class="btn btn-ta-outline">Reset</a>
+                        <a href="{{ route('admin.sales-report') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
                     </div>
                 </div>
             </form>
         </section>
 
+        <div id="admin_sales_results" aria-live="polite">
         <div class="row g-3 mb-4">
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
@@ -131,8 +131,10 @@
                 </div>
             </div>
         </div>
+        </div>
     </section>
 
+    <div id="admin_sales_detail_results" data-ajax-list-sync>
     <section class="row g-4 mb-4">
         <div class="col-xl-7">
             <div class="admin-report-shell p-2 p-lg-3 h-100">
@@ -274,4 +276,5 @@
             </div>
         </div>
     </section>
+    </div>
 @endsection

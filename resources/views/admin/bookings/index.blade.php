@@ -133,7 +133,7 @@
     </div>
 
     <section class="admin-bookings-shell p-3 p-lg-4 mb-4">
-        <form method="GET" action="{{ route('admin.bookings.index') }}">
+        <form method="GET" action="{{ route('admin.bookings.index') }}" data-ajax-list-form="#admin_booking_results">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-4">
                     <label class="form-label" for="admin_booking_search">Search guest or room</label>
@@ -158,8 +158,7 @@
                     </select>
                 </div>
                 <div class="col-lg-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-ta w-100">Apply filters</button>
-                    <a href="{{ route('admin.bookings.index') }}" class="btn btn-ta-outline">Reset</a>
+                    <a href="{{ route('admin.bookings.index') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
                 </div>
             </div>
         </form>
@@ -173,6 +172,7 @@
         @endif
     </section>
 
+    <div id="admin_booking_results" aria-live="polite">
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -224,5 +224,6 @@
 
     <div class="mt-3">
         {{ $bookings->links() }}
+    </div>
     </div>
 @endsection

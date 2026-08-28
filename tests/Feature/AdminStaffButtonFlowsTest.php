@@ -71,6 +71,9 @@ class AdminStaffButtonFlowsTest extends TestCase
             'data-room-update-url="'.route('admin.rooms.update', $room).'"',
             false
         );
+        $roomsIndexResponse->assertSee('id="admin_room_results"', false);
+        $roomsIndexResponse->assertSee('data-ajax-list-form="#admin_room_results"', false);
+        $roomsIndexResponse->assertDontSee('>Apply</button>', false);
         $roomsIndexResponse->assertDontSee('Cleaning Status');
         $roomsIndexResponse->assertDontSee('Needs Attention');
         $roomsIndexResponse->assertDontSee('Needs Cleaning');
@@ -78,12 +81,34 @@ class AdminStaffButtonFlowsTest extends TestCase
             ->assertOk()
             ->assertSee('data-submit-lock', false)
             ->assertSee('data-submitting-text="Creating account..."', false)
+            ->assertSee('id="admin_staff_results"', false)
+            ->assertSee('data-ajax-list-form="#admin_staff_results"', false)
+            ->assertDontSee('>Apply</button>', false)
             ->assertSee('data-staff-update-url="'.route('admin.staff.update', $staff).'"', false);
         $this->get(route('admin.users.index'))
             ->assertOk()
             ->assertSee('data-submit-lock', false)
             ->assertSee('data-submitting-text="Creating account..."', false)
+            ->assertSee('id="admin_customer_results"', false)
+            ->assertSee('data-ajax-list-form="#admin_customer_results"', false)
+            ->assertDontSee('>Apply</button>', false)
             ->assertSee('data-user-update-url="'.route('admin.users.update', $customer).'"', false);
+        $this->get(route('admin.bookings.index'))
+            ->assertOk()
+            ->assertSee('id="admin_booking_results"', false)
+            ->assertSee('data-ajax-list-form="#admin_booking_results"', false)
+            ->assertDontSee('Apply filters');
+        $this->get(route('admin.refunds.index'))
+            ->assertOk()
+            ->assertSee('id="admin_refund_results"', false)
+            ->assertSee('data-ajax-list-form="#admin_refund_results"', false)
+            ->assertDontSee('>Filter</button>', false);
+        $this->get(route('admin.sales-report'))
+            ->assertOk()
+            ->assertSee('id="admin_sales_results"', false)
+            ->assertSee('data-ajax-list-form="#admin_sales_results"', false)
+            ->assertSee('id="admin_sales_detail_results" data-ajax-list-sync', false)
+            ->assertDontSee('>Apply</button>', false);
         $this->get(route('admin.bookings.show', $pendingBooking))->assertOk();
 
         $this->post(route('admin.staff.store'), [

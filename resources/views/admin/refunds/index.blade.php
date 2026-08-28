@@ -28,7 +28,7 @@
 </div>
 
 <div class="soft-card p-3 mb-4">
-    <form method="GET" class="row g-2 align-items-end">
+    <form method="GET" action="{{ route('admin.refunds.index') }}" class="row g-2 align-items-end" data-ajax-list-form="#admin_refund_results">
         <div class="col-md-6">
             <label class="form-label">Search</label>
             <input type="search" name="q" value="{{ $keyword }}" class="form-control" placeholder="Refund, booking, customer, or reference">
@@ -43,12 +43,12 @@
             </select>
         </div>
         <div class="col-md-3 d-flex gap-2">
-            <button class="btn btn-primary flex-fill">Filter</button>
-            <a href="{{ route('admin.refunds.index') }}" class="btn btn-outline-secondary">Reset</a>
+            <a href="{{ route('admin.refunds.index') }}" class="btn btn-outline-secondary" data-ajax-list-reset>Reset</a>
         </div>
     </form>
 </div>
 
+<div id="admin_refund_results" aria-live="polite">
 <div class="table-shell">
     <div class="table-responsive">
         <table class="table align-middle">
@@ -86,4 +86,5 @@
     </div>
 </div>
 <div class="mt-3">{{ $refunds->links() }}</div>
+</div>
 @endsection

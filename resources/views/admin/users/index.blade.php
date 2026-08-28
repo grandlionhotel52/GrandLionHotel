@@ -133,11 +133,11 @@
     </div>
 
     <section class="admin-user-shell p-3 p-lg-4 mb-4">
-        <form method="GET" action="{{ route('admin.users.index') }}">
+        <form method="GET" action="{{ route('admin.users.index') }}" data-ajax-list-form="#admin_customer_results">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-4">
                     <label class="form-label">Search customer</label>
-                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Name, email, phone, city, province">
+                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Name, email, phone, city, province" data-ajax-search>
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label class="form-label">Profile status</label>
@@ -156,13 +156,13 @@
                     </select>
                 </div>
                 <div class="col-lg-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-ta w-100">Apply</button>
-                    <a href="{{ route('admin.users.index') }}" class="btn btn-ta-outline">Reset</a>
+                    <a href="{{ route('admin.users.index') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
                 </div>
             </div>
         </form>
     </section>
 
+    <div id="admin_customer_results" aria-live="polite">
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -252,6 +252,7 @@
 
     <div class="mt-3">
         {{ $customers->links() }}
+    </div>
     </div>
 
     <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">

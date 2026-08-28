@@ -98,14 +98,14 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
             <h1 class="h4 mb-1">Staff Accounts</h1>
-            <p class="text-secondary mb-0">Daily earnings shown for {{ $selectedDateLabel }}</p>
+            <p class="text-secondary mb-0" id="admin_staff_date_label" data-ajax-list-sync>Daily earnings shown for {{ $selectedDateLabel }}</p>
         </div>
         <button type="button" class="btn btn-ta" data-bs-toggle="modal" data-bs-target="#createStaffModal">
             <i class="bi bi-person-plus me-1"></i>Add Staff
         </button>
     </div>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4" id="admin_staff_stats" data-ajax-list-sync>
         <div class="col-sm-6 col-xl-2">
             <div class="admin-staff-stat">
                 <p class="label">Total Staff</p>
@@ -139,24 +139,24 @@
     </div>
 
     <section class="admin-staff-shell p-3 p-lg-4 mb-4">
-        <form method="GET" action="{{ route('admin.staff.index') }}">
+        <form method="GET" action="{{ route('admin.staff.index') }}" data-ajax-list-form="#admin_staff_results">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-5">
                     <label class="form-label">Search staff</label>
-                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Name, email, or phone">
+                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Name, email, or phone" data-ajax-search>
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label class="form-label">Earnings date</label>
                     <input type="date" class="form-control" name="earnings_date" value="{{ $selectedDateString }}">
                 </div>
                 <div class="col-lg-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-ta w-100">Apply</button>
-                    <a href="{{ route('admin.staff.index') }}" class="btn btn-ta-outline">Reset</a>
+                    <a href="{{ route('admin.staff.index') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
                 </div>
             </div>
         </form>
     </section>
 
+    <div id="admin_staff_results" aria-live="polite">
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -235,6 +235,7 @@
 
     <div class="mt-3">
         {{ $staffMembers->links() }}
+    </div>
     </div>
 
     <div class="modal fade" id="createStaffModal" tabindex="-1" aria-labelledby="createStaffModalLabel" aria-hidden="true">
