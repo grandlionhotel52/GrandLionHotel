@@ -26,6 +26,9 @@ class RoomAmenitiesTest extends TestCase
 
         $this->get(route('rooms.index'))
             ->assertSuccessful()
+            ->assertSee('id="public_room_results"', false)
+            ->assertSee('data-ajax-list-form="#public_room_results"', false)
+            ->assertDontSee('Apply filters')
             ->assertSee('Free Wi-Fi')
             ->assertSee('Air conditioning');
 

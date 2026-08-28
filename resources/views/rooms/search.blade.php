@@ -162,10 +162,10 @@
     @endphp
 
     <section class="search-filter-shell p-3 p-lg-4 mb-4">
-            <form method="GET" action="{{ route('rooms.index') }}" class="search-filter-grid" id="roomSearchForm">
+            <form method="GET" action="{{ route('rooms.index') }}" class="search-filter-grid" id="roomSearchForm" data-ajax-list-form="#public_room_results">
                 <div class="field-type">
                     <label class="form-label">Narrow by type or view</label>
-                    <input type="text" name="type" class="form-control" value="{{ request('type') }}" placeholder="Suite, Deluxe, Nature View">
+                    <input type="text" name="type" class="form-control" value="{{ request('type') }}" placeholder="Suite, Deluxe, Nature View" data-ajax-search>
                 </div>
                 <div class="field-check-in">
                     <label class="form-label">Check-in</label>
@@ -177,7 +177,7 @@
                 </div>
                 <div class="field-max-price">
                     <label class="form-label">Max &#8369;/night</label>
-                    <input type="number" name="max_price" min="0" step="100" class="form-control" value="{{ request('max_price') }}" placeholder="5000">
+                    <input type="number" name="max_price" min="0" step="100" class="form-control" value="{{ request('max_price') }}" placeholder="5000" data-ajax-search>
                 </div>
                 <div class="field-sort">
                     <label class="form-label">Sort by</label>
@@ -195,15 +195,13 @@
                             <label class="form-check-label" for="availableOnly">Available only</label>
                         </div>
                         <div class="search-filter-actions">
-                            <button type="submit" class="btn btn-ta">Apply filters</button>
-                            @if(request()->query())
-                                <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline">Reset</a>
-                            @endif
+                            <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
                         </div>
                     </div>
                 </div>
             </form>
 
+            <div id="public_room_filter_context" data-ajax-list-sync>
             @if($stay['is_valid'])
                 <div class="search-selected-stay mt-3">
                     <p class="meta mb-0">Selected Stay</p>
@@ -227,8 +225,10 @@
                     @endforeach
                 </div>
             @endif
+            </div>
     </section>
 
+    <div id="public_room_results" aria-live="polite">
     <div class="search-results-head">
         <h2 class="h5 mb-0">Search results</h2>
         <span class="search-count">{{ $rooms->total() }} room{{ $rooms->total() === 1 ? '' : 's' }} found</span>
@@ -248,7 +248,7 @@
                 @endphp
                 <article class="soft-card h-100 result-card overflow-hidden">
                     <a href="{{ route('rooms.show', $roomShowParameters) }}" aria-label="View {{ $room->name }} details">
-                        <img src="{{ $room->image_url }}" alt="{{ $room->name }}" class="w-100 object-cover" style="height: 220px;">
+                        <img src="{{ $room->image_url }}" alt="{{ $room->name }}" class="w-100 object-cover" style="height: 220px;" loading="lazy" decoding="async">
                     </a>
                     <div class="p-3 p-lg-4">
                         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -323,5 +323,6 @@
 
     <div class="mt-4">
         {{ $rooms->links() }}
+    </div>
     </div>
 @endsection

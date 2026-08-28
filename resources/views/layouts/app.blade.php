@@ -779,6 +779,7 @@
     @include('layouts.partials.unsaved-changes')
     @include('layouts.partials.submit-guard')
     @include('layouts.partials.realtime-validation')
+    @include('layouts.partials.ajax-list-filter')
     @stack('scripts')
     @include('layouts.partials.image-fallback')
 </body>

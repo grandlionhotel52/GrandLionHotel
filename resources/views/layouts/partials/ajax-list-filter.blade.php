@@ -9,9 +9,28 @@
 
             const getTarget = () => targetSelector ? document.querySelector(targetSelector) : null;
 
+            const syncFormFrom = (sourceForm) => {
+                if (!sourceForm) return;
+
+                form.querySelectorAll('input[name], select[name]').forEach((control) => {
+                    const sourceControl = sourceForm.elements.namedItem(control.name);
+                    if (!(sourceControl instanceof HTMLElement)) return;
+
+                    if (control instanceof HTMLInputElement && (control.type === 'checkbox' || control.type === 'radio')) {
+                        control.checked = sourceControl.checked;
+                    } else {
+                        control.value = sourceControl.value;
+                    }
+                });
+            };
+
             const syncForm = (url) => {
                 form.querySelectorAll('input[name], select[name]').forEach((control) => {
-                    control.value = url.searchParams.get(control.name) ?? '';
+                    if (control instanceof HTMLInputElement && (control.type === 'checkbox' || control.type === 'radio')) {
+                        control.checked = url.searchParams.getAll(control.name).includes(control.value);
+                    } else {
+                        control.value = url.searchParams.get(control.name) ?? '';
+                    }
                 });
             };
 
@@ -40,6 +59,7 @@
                     if (!nextTarget) throw new Error('Updated list results were not found.');
 
                     target.innerHTML = nextTarget.innerHTML;
+                    syncFormFrom(documentCopy.querySelector(`[data-ajax-list-form="${targetSelector}"]`));
                     document.querySelectorAll('[data-ajax-list-sync][id]').forEach((currentElement) => {
                         const nextElement = documentCopy.getElementById(currentElement.id);
                         if (nextElement) currentElement.innerHTML = nextElement.innerHTML;
@@ -70,7 +90,7 @@
                 load(url);
             });
 
-            form.querySelectorAll('select, input[type="date"]').forEach((control) => {
+            form.querySelectorAll('select, input[type="date"], input[type="checkbox"], input[type="radio"]').forEach((control) => {
                 control.addEventListener('change', () => form.requestSubmit());
             });
 
