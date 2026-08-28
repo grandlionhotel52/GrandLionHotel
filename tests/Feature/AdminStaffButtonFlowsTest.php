@@ -274,7 +274,10 @@ class AdminStaffButtonFlowsTest extends TestCase
             ->assertOk()
             ->assertSee('Showing arrivals for '.Carbon::parse($selectedDate)->format('M d, Y'))
             ->assertSee('#'.$arrival->id)
-            ->assertSee('value="'.$selectedDate.'"', false);
+            ->assertSee('value="'.$selectedDate.'"', false)
+            ->assertSee('id="arrival_date_form"', false)
+            ->assertSee("arrivalDateInput.form?.requestSubmit()", false)
+            ->assertDontSee('Show arrivals');
     }
 
     public function test_staff_pages_and_operational_actions_work(): void

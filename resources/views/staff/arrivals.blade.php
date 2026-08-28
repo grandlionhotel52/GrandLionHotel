@@ -191,12 +191,11 @@
                 <h1 class="h4 mb-1">Arrivals Board</h1>
                 <p class="text-secondary mb-0">Showing arrivals for {{ $selectedDateLabel }}</p>
             </div>
-            <form method="GET" action="{{ route('staff.arrivals') }}" class="d-flex flex-wrap align-items-end gap-2">
+            <form method="GET" action="{{ route('staff.arrivals') }}" class="d-flex flex-wrap align-items-end gap-2" id="arrival_date_form">
                 <div>
                     <label for="arrival_date" class="form-label small fw-semibold mb-1">Arrival date</label>
                     <input id="arrival_date" type="date" name="date" class="form-control" value="{{ $selectedDate }}" required>
                 </div>
-                <button type="submit" class="btn btn-staff">Show arrivals</button>
                 @if($selectedDate !== now()->toDateString())
                     <a href="{{ route('staff.arrivals') }}" class="btn btn-staff-outline">Today</a>
                 @endif
@@ -415,6 +414,14 @@
 @push('scripts')
     <script>
         (() => {
+            const arrivalDateInput = document.getElementById('arrival_date');
+
+            arrivalDateInput?.addEventListener('change', () => {
+                if (arrivalDateInput.value !== '') {
+                    arrivalDateInput.form?.requestSubmit();
+                }
+            });
+
             const openButtons = document.querySelectorAll('.js-open-gcash-qr');
             const modalElement = document.getElementById('gcashQrModal');
             const qrImage = document.getElementById('gcash_qr_image');
