@@ -194,7 +194,9 @@
             const phoneHelp = document.getElementById('register_phone_help');
 
             if (phoneInput) {
-                const validatePhone = () => {
+                let validationAttempted = phoneInput.classList.contains('is-invalid');
+
+                const validatePhone = (showFeedback = false) => {
                     let value = phoneInput.value;
                     const hasInternationalPrefix = value.startsWith('+');
 
@@ -210,11 +212,16 @@
                         if (phoneHelp) phoneHelp.textContent = 'Use 09 followed by 9 digits (11 digits total), or +639 followed by 9 digits.';
                     } else if (!/^(?:09\d{9}|\+639\d{9})$/.test(phoneInput.value)) {
                         phoneInput.setCustomValidity('Phone number must be exactly 11 digits starting with 09, or +639 followed by 9 digits.');
-                        phoneInput.classList.add('is-invalid');
                         phoneInput.classList.remove('is-valid');
-                        phoneHelp?.classList.add('text-danger');
                         phoneHelp?.classList.remove('text-success');
-                        if (phoneHelp) phoneHelp.textContent = `${phoneInput.value.length} character(s) entered. Complete a valid 09XXXXXXXXX or +639XXXXXXXXX number.`;
+                        if (showFeedback) {
+                            phoneInput.classList.add('is-invalid');
+                            phoneHelp?.classList.add('text-danger');
+                            if (phoneHelp) phoneHelp.textContent = `${phoneInput.value.length} character(s) entered. Complete a valid 09XXXXXXXXX or +639XXXXXXXXX number.`;
+                        } else {
+                            phoneInput.classList.remove('is-invalid');
+                            phoneHelp?.classList.remove('text-danger');
+                        }
                     } else {
                         phoneInput.setCustomValidity('');
                         phoneInput.classList.add('is-valid');
@@ -225,9 +232,19 @@
                     }
                 };
 
-                phoneInput.addEventListener('input', validatePhone);
-                phoneInput.addEventListener('blur', () => phoneInput.reportValidity());
-                validatePhone();
+                phoneInput.addEventListener('input', () => validatePhone(validationAttempted));
+                phoneInput.addEventListener('blur', () => {
+                    if (validationAttempted) validatePhone(true);
+                });
+                phoneInput.addEventListener('invalid', () => {
+                    validationAttempted = true;
+                    validatePhone(true);
+                });
+                phoneInput.form?.addEventListener('submit', () => {
+                    validationAttempted = true;
+                    validatePhone(true);
+                });
+                validatePhone(false);
             }
 
             toggles.forEach((toggleButton) => {

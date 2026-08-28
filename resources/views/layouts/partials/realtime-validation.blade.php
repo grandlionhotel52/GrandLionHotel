@@ -5,6 +5,8 @@
         const attachEmailValidation = (input, index) => {
             if (input.readOnly || input.disabled || input.type !== 'email') return;
 
+            let validationAttempted = input.classList.contains('is-invalid');
+
             if (!input.id) input.id = `live-email-${index + 1}`;
             const feedback = document.createElement('small');
             feedback.id = `${input.id}-live-feedback`;
@@ -56,12 +58,20 @@
                 return true;
             };
 
-            input.addEventListener('input', () => validate(true));
-            input.addEventListener('blur', () => {
-                validate(true);
-                if (input.value !== '') input.reportValidity();
+            input.addEventListener('input', () => {
+                if (validationAttempted) validate(true);
             });
-            validate(false);
+            input.addEventListener('blur', () => {
+                if (validationAttempted) validate(true);
+            });
+            input.addEventListener('invalid', () => {
+                validationAttempted = true;
+                validate(true);
+            });
+            input.form?.addEventListener('submit', (event) => {
+                validationAttempted = true;
+                if (!validate(true)) event.preventDefault();
+            });
         };
 
         document.querySelectorAll('input[type="email"]').forEach(attachEmailValidation);

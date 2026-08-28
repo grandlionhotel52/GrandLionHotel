@@ -487,13 +487,13 @@
 
             <div class="carousel-inner">
                 <div class="carousel-item active">
-                    <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=2200&q=80" class="d-block w-100 hero-image" alt="Bright premium hotel bedroom">
+                    <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1600&q=80" srcset="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=960&q=80 960w, https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1600&q=80 1600w, https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=2200&q=80 2200w" sizes="100vw" class="d-block w-100 hero-image" alt="Bright premium hotel bedroom" fetchpriority="high" decoding="async">
                 </div>
                 <div class="carousel-item">
-                    <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=2200&q=80" class="d-block w-100 hero-image" alt="Comfortable modern hotel room interior">
+                    <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80" class="d-block w-100 hero-image" alt="Comfortable modern hotel room interior" loading="lazy" decoding="async">
                 </div>
                 <div class="carousel-item">
-                    <img src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=2200&q=80" class="d-block w-100 hero-image" alt="Elegant hotel suite bedroom interior">
+                    <img src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1600&q=80" class="d-block w-100 hero-image" alt="Elegant hotel suite bedroom interior" loading="lazy" decoding="async">
                 </div>
             </div>
             <div class="hero-overlay"></div>
@@ -621,7 +621,7 @@
         @forelse($roomsForDisplay as $room)
             <div class="col-md-6 col-xl-4">
                 <article class="soft-card h-100 result-card overflow-hidden" data-featured-room>
-                    <img src="{{ $room->image_url }}" alt="{{ $room->name }}" class="w-100 object-cover" style="height: 220px;">
+                    <img src="{{ $room->image_url }}" alt="{{ $room->name }}" class="w-100 object-cover" style="height: 220px;" loading="lazy" decoding="async">
                     <div class="p-3 p-lg-4">
                         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                             <div>
