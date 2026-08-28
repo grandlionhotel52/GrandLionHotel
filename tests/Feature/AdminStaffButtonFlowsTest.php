@@ -276,7 +276,9 @@ class AdminStaffButtonFlowsTest extends TestCase
             ->assertSee('#'.$arrival->id)
             ->assertSee('value="'.$selectedDate.'"', false)
             ->assertSee('id="arrival_date_form"', false)
-            ->assertSee("arrivalDateInput.form?.requestSubmit()", false)
+            ->assertSee('id="staff_arrival_results"', false)
+            ->assertSee('loadArrivalResults(url)', false)
+            ->assertSee('await fetch(url', false)
             ->assertDontSee('Show arrivals');
     }
 

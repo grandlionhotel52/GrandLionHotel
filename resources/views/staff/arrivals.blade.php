@@ -185,6 +185,7 @@
         ];
     @endphp
 
+    <div id="staff_arrival_results" aria-live="polite">
     <section class="mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
             <div>
@@ -197,7 +198,7 @@
                     <input id="arrival_date" type="date" name="date" class="form-control" value="{{ $selectedDate }}" required>
                 </div>
                 @if($selectedDate !== now()->toDateString())
-                    <a href="{{ route('staff.arrivals') }}" class="btn btn-staff-outline">Today</a>
+                    <a href="{{ route('staff.arrivals') }}" class="btn btn-staff-outline" data-arrivals-today>Today</a>
                 @endif
             </form>
         </div>
@@ -331,6 +332,7 @@
             @endif
         @endif
     </section>
+    </div>
 
     <div class="modal fade" id="gcashQrModal" tabindex="-1" aria-labelledby="gcashQrModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -414,12 +416,68 @@
 @push('scripts')
     <script>
         (() => {
-            const arrivalDateInput = document.getElementById('arrival_date');
+            let activeArrivalRequest;
 
-            arrivalDateInput?.addEventListener('change', () => {
-                if (arrivalDateInput.value !== '') {
-                    arrivalDateInput.form?.requestSubmit();
+            const loadArrivalResults = async (url, updateHistory = true) => {
+                const results = document.getElementById('staff_arrival_results');
+                if (!results) {
+                    window.location.assign(url);
+                    return;
                 }
+
+                activeArrivalRequest?.abort();
+                activeArrivalRequest = new AbortController();
+                const request = activeArrivalRequest;
+                results.setAttribute('aria-busy', 'true');
+                results.style.opacity = '0.55';
+
+                try {
+                    const response = await fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        signal: request.signal,
+                    });
+                    if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+
+                    const documentCopy = new DOMParser().parseFromString(await response.text(), 'text/html');
+                    const nextResults = documentCopy.getElementById('staff_arrival_results');
+                    if (!nextResults) throw new Error('Arrival results were not found.');
+
+                    results.innerHTML = nextResults.innerHTML;
+                    if (updateHistory) window.history.pushState({}, '', url);
+
+                    results.querySelectorAll('.table-responsive').forEach((tableRegion) => {
+                        tableRegion.setAttribute('tabindex', '0');
+                        tableRegion.setAttribute('role', 'region');
+                        tableRegion.setAttribute('aria-label', 'Scrollable data table');
+                    });
+                } catch (error) {
+                    if (error.name !== 'AbortError') window.location.assign(url);
+                } finally {
+                    if (activeArrivalRequest === request) {
+                        results.removeAttribute('aria-busy');
+                        results.style.opacity = '';
+                    }
+                }
+            };
+
+            document.addEventListener('change', (event) => {
+                if (event.target.id !== 'arrival_date' || event.target.value === '') return;
+
+                const url = new URL(event.target.form.action, window.location.origin);
+                url.search = new URLSearchParams(new FormData(event.target.form)).toString();
+                loadArrivalResults(url);
+            });
+
+            document.addEventListener('click', (event) => {
+                const navigationLink = event.target.closest('#staff_arrival_results [data-arrivals-today], #staff_arrival_results .pagination a');
+                if (!navigationLink) return;
+
+                event.preventDefault();
+                loadArrivalResults(new URL(navigationLink.href));
+            });
+
+            window.addEventListener('popstate', () => {
+                loadArrivalResults(new URL(window.location.href), false);
             });
 
             const openButtons = document.querySelectorAll('.js-open-gcash-qr');
