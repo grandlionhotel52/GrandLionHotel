@@ -308,7 +308,7 @@
             @endforeach
         </div>
 
-        <form method="GET" action="{{ route('staff.bookings.index') }}" class="ops-filter-row">
+        <form method="GET" action="{{ route('staff.bookings.index') }}" class="ops-filter-row" id="staff_booking_filter_form">
             <input type="hidden" name="queue" value="{{ $activeQueue }}">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-4">
@@ -334,7 +334,6 @@
                     </select>
                 </div>
                 <div class="col-lg-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-staff w-100">Apply filters</button>
                     <a href="{{ route('staff.bookings.index', $activeQueue === '' ? [] : ['queue' => $activeQueue]) }}" class="btn btn-staff-outline">Reset</a>
                 </div>
             </div>
@@ -492,3 +491,23 @@
         {{ $bookings->links() }}
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const filterForm = document.getElementById('staff_booking_filter_form');
+            const searchInput = document.getElementById('staff_booking_search');
+            const filterSelects = filterForm?.querySelectorAll('select') ?? [];
+            let searchTimer;
+
+            filterSelects.forEach((select) => {
+                select.addEventListener('change', () => filterForm?.requestSubmit());
+            });
+
+            searchInput?.addEventListener('input', () => {
+                window.clearTimeout(searchTimer);
+                searchTimer = window.setTimeout(() => filterForm?.requestSubmit(), 500);
+            });
+        })();
+    </script>
+@endpush
