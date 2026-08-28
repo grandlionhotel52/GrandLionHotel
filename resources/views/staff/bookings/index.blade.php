@@ -334,20 +334,23 @@
                     </select>
                 </div>
                 <div class="col-lg-2 d-flex gap-2">
-                    <a href="{{ route('staff.bookings.index', $activeQueue === '' ? [] : ['queue' => $activeQueue]) }}" class="btn btn-staff-outline">Reset</a>
+                    <a href="{{ route('staff.bookings.index', $activeQueue === '' ? [] : ['queue' => $activeQueue]) }}" class="btn btn-staff-outline" id="staff_booking_filter_reset">Reset</a>
                 </div>
             </div>
         </form>
 
-        @if(!empty($activeFilters))
-            <div class="ops-filter-chip-wrap">
-                @foreach($activeFilters as $filter)
-                    <span class="ops-filter-chip">{{ $filter['label'] }}: <strong>{{ $filter['value'] }}</strong></span>
-                @endforeach
-            </div>
-        @endif
+        <div id="staff_booking_filter_chips">
+            @if(!empty($activeFilters))
+                <div class="ops-filter-chip-wrap">
+                    @foreach($activeFilters as $filter)
+                        <span class="ops-filter-chip">{{ $filter['label'] }}: <strong>{{ $filter['value'] }}</strong></span>
+                    @endforeach
+                </div>
+            @endif
+        </div>
     </section>
 
+    <div id="staff_booking_results" aria-live="polite">
     <section class="ops-booking-table-shell p-2 p-lg-3">
         <div class="table-responsive">
             <table class="table ops-booking-table align-middle">
@@ -490,6 +493,7 @@
     <div class="mt-3">
         {{ $bookings->links() }}
     </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -497,8 +501,73 @@
         (() => {
             const filterForm = document.getElementById('staff_booking_filter_form');
             const searchInput = document.getElementById('staff_booking_search');
+            const resetLink = document.getElementById('staff_booking_filter_reset');
             const filterSelects = filterForm?.querySelectorAll('select') ?? [];
             let searchTimer;
+            let activeRequest;
+
+            const syncFiltersFromUrl = (url) => {
+                if (!filterForm) return;
+
+                const params = url.searchParams;
+                filterForm.querySelectorAll('input[name], select[name]').forEach((control) => {
+                    if (control.name !== 'queue') control.value = params.get(control.name) ?? '';
+                });
+            };
+
+            const loadResults = async (url, updateHistory = true) => {
+                const results = document.getElementById('staff_booking_results');
+                const chips = document.getElementById('staff_booking_filter_chips');
+                if (!results || !chips) {
+                    window.location.assign(url);
+                    return;
+                }
+
+                activeRequest?.abort();
+                activeRequest = new AbortController();
+                const request = activeRequest;
+                results.setAttribute('aria-busy', 'true');
+                results.style.opacity = '0.55';
+
+                try {
+                    const response = await fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        signal: request.signal,
+                    });
+                    if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+
+                    const documentCopy = new DOMParser().parseFromString(await response.text(), 'text/html');
+                    const nextResults = documentCopy.getElementById('staff_booking_results');
+                    const nextChips = documentCopy.getElementById('staff_booking_filter_chips');
+                    if (!nextResults || !nextChips) throw new Error('Filtered booking results were not found.');
+
+                    results.innerHTML = nextResults.innerHTML;
+                    chips.innerHTML = nextChips.innerHTML;
+                    if (updateHistory) window.history.pushState({}, '', url);
+
+                    results.querySelectorAll('.table-responsive').forEach((tableRegion) => {
+                        tableRegion.setAttribute('tabindex', '0');
+                        tableRegion.setAttribute('role', 'region');
+                        tableRegion.setAttribute('aria-label', 'Scrollable data table');
+                    });
+                } catch (error) {
+                    if (error.name !== 'AbortError') window.location.assign(url);
+                } finally {
+                    if (activeRequest === request) {
+                        results.removeAttribute('aria-busy');
+                        results.style.opacity = '';
+                    }
+                }
+            };
+
+            filterForm?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const url = new URL(filterForm.action, window.location.origin);
+                const params = new URLSearchParams(new FormData(filterForm));
+                params.delete('page');
+                url.search = params.toString();
+                loadResults(url);
+            });
 
             filterSelects.forEach((select) => {
                 select.addEventListener('change', () => filterForm?.requestSubmit());
@@ -507,6 +576,27 @@
             searchInput?.addEventListener('input', () => {
                 window.clearTimeout(searchTimer);
                 searchTimer = window.setTimeout(() => filterForm?.requestSubmit(), 500);
+            });
+
+            resetLink?.addEventListener('click', (event) => {
+                event.preventDefault();
+                const url = new URL(resetLink.href);
+                syncFiltersFromUrl(url);
+                loadResults(url);
+            });
+
+            document.addEventListener('click', (event) => {
+                const paginationLink = event.target.closest('#staff_booking_results .pagination a');
+                if (!paginationLink) return;
+
+                event.preventDefault();
+                loadResults(new URL(paginationLink.href));
+            });
+
+            window.addEventListener('popstate', () => {
+                const url = new URL(window.location.href);
+                syncFiltersFromUrl(url);
+                loadResults(url, false);
             });
         })();
     </script>

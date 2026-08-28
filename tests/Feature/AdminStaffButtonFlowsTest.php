@@ -337,6 +337,8 @@ class AdminStaffButtonFlowsTest extends TestCase
         $bookingsIndexResponse->assertSee(route('staff.bookings.create'), false);
         $bookingsIndexResponse->assertSee('id="staff_booking_filter_form"', false);
         $bookingsIndexResponse->assertSee("filterForm?.requestSubmit()", false);
+        $bookingsIndexResponse->assertSee('id="staff_booking_results"', false);
+        $bookingsIndexResponse->assertSee('await fetch(url', false);
         $bookingsIndexResponse->assertDontSee('Apply filters');
         $this->get(route('staff.bookings.show', [
             'booking' => $activeBooking,
