@@ -122,7 +122,7 @@
                     </ul>
                 </div>
                 <div class="bg-[#fff2f2] dark:bg-[#1D0002] relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden">
-                    <img src="{{ asset('brand/lion_logo.png') }}" alt="The Grand Lion Hotel" class="w-[300px] max-w-full mx-auto page-hero-logo transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 drop-shadow-2xl" loading="lazy">
+                    <img src="{{ asset('brand/lion_logo-600.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="(max-width: 340px) 90vw, 300px" width="600" height="501" alt="The Grand Lion Hotel" class="w-[300px] max-w-full mx-auto page-hero-logo transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 drop-shadow-2xl" decoding="async">
 
                     {{-- Light Mode 12 SVG --}}
                     <svg class="w-[448px] max-w-none relative -mt-[4.9rem] -ml-8 lg:ml-0 lg:-mt-[6.6rem] dark:hidden" viewBox="0 0 440 376" fill="none" xmlns="http://www.w3.org/2000/svg">

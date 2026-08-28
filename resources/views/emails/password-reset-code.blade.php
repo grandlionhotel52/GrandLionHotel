@@ -37,7 +37,7 @@
 <body>
     <div class="email-wrapper">
         <div class="email-header">
-            <img src="{{ asset('brand/lion_logo.png') }}" alt="The Grand Lion Hotel" class="logo" style="display: block;">
+            <img src="{{ asset('brand/lion_logo-160.png') }}" width="160" height="134" alt="The Grand Lion Hotel" class="logo" style="display: block;">
             <h1 class="email-hero-text">Password Reset Request</h1>
             <p class="email-subtext">Securely reset your account access</p>
         </div>

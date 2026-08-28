@@ -547,7 +547,7 @@
         <nav class="navbar navbar-expand-lg navbar-light border-bottom sticky-top {{ $isHomePage ? 'home-nav-overlay' : '' }}">
             <div class="container-xl py-1">
                 <a class="navbar-brand text-dark" href="{{ route('home') }}">
-                    <img src="{{ asset('brand/lion_logo.png') }}" alt="The Grand Lion Hotel" class="brand-logo">
+                    <img src="{{ asset('brand/lion_logo-160.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="46px" width="160" height="134" alt="The Grand Lion Hotel" class="brand-logo" decoding="async">
                     <span class="brand-wordmark">THE GRAND LION HOTEL</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -567,6 +567,10 @@
                                     @php
                                         $recentNotifications = auth()->user()->notifications()->latest()->take(8)->get();
                                         $unreadNotificationCount = auth()->user()->unreadNotifications()->count();
+                                        $notificationBookings = \App\Models\Booking::query()
+                                            ->whereKey($recentNotifications->pluck('data')->map(fn ($data) => data_get($data, 'booking_id'))->filter()->unique())
+                                            ->get()
+                                            ->keyBy(fn ($booking) => (string) $booking->getKey());
                                     @endphp
                                     <button class="nav-link position-relative border-0 bg-transparent" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Booking notifications">
                                         <i class="bi bi-bell"></i>
@@ -579,7 +583,7 @@
                                         <div style="max-height: min(360px, 55vh); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;">
                                             @forelse($recentNotifications as $notification)
                                                 @php
-                                                    $notificationBooking = \App\Models\Booking::query()->find(data_get($notification->data, 'booking_id'));
+                                                    $notificationBooking = $notificationBookings->get((string) data_get($notification->data, 'booking_id'));
                                                 @endphp
                                                 @if($notificationBooking)
                                                     <div class="d-flex align-items-start gap-1 rounded px-1 py-1 {{ $notification->read_at ? '' : 'bg-light' }}">
