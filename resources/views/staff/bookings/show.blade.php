@@ -242,6 +242,7 @@
         $currentOccupancyTotal = $currentAdults + $currentKids;
         $currentExtraBedding = max(0, $currentOccupancyTotal - $standardGuests);
         $pricingQuote = $booking->pricingQuote();
+        $billingQuote = $booking->billingQuote();
         $isAssignedStaff = (int) $booking->staff_id === (int) auth('staff')->id();
         $bookingChipClass = match ($booking->status) {
             'confirmed', 'completed' => 'success',
@@ -300,7 +301,7 @@
             </div>
             <div class="booking-command-item">
                 <p class="booking-info-label">Service (Breakfast Only) / Local / VAT</p>
-                <div class="booking-command-value">PHP {{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }} / PHP {{ number_format((float) ($pricingQuote['local_tax'] ?? 0), 2) }} / PHP {{ number_format((float) ($pricingQuote['vat'] ?? 0), 2) }}</div>
+                <div class="booking-command-value">PHP {{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }} / PHP {{ number_format((float) ($billingQuote['local_tax'] ?? 0), 2) }} / PHP {{ number_format((float) ($billingQuote['vat'] ?? 0), 2) }}</div>
             </div>
             <div class="booking-command-item">
                 <p class="booking-info-label">Amount Due</p>

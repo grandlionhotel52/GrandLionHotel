@@ -81,6 +81,7 @@
             default => 'text-bg-warning',
         };
         $pricingQuote = $booking->pricingQuote();
+        $billingQuote = $booking->billingQuote();
     @endphp
 
     <div class="booking-admin-head d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
@@ -133,12 +134,26 @@
                 <p class="booking-admin-value">PHP {{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }}</p>
             </div>
             <div class="booking-admin-item">
-                <p class="booking-admin-label">Local Tax (5%)</p>
-                <p class="booking-admin-value">PHP {{ number_format((float) ($pricingQuote['local_tax'] ?? 0), 2) }}</p>
+                <p class="booking-admin-label">Gross VAT-Inclusive Amount</p>
+                <p class="booking-admin-value">PHP {{ number_format((float) ($billingQuote['gross_amount'] ?? 0), 2) }}</p>
+            </div>
+            @if($billingQuote['vat_exempt'] ?? false)
+                <div class="booking-admin-item">
+                    <p class="booking-admin-label">VAT Exemption</p>
+                    <p class="booking-admin-value text-success">-PHP {{ number_format((float) ($billingQuote['vat_exemption'] ?? 0), 2) }}</p>
+                </div>
+            @endif
+            <div class="booking-admin-item">
+                <p class="booking-admin-label">Net Sales</p>
+                <p class="booking-admin-value">PHP {{ number_format((float) ($billingQuote['net_sales'] ?? 0), 2) }}</p>
             </div>
             <div class="booking-admin-item">
-                <p class="booking-admin-label">VAT (12%, Exclusive)</p>
-                <p class="booking-admin-value">PHP {{ number_format((float) ($pricingQuote['vat'] ?? 0), 2) }}</p>
+                <p class="booking-admin-label">Local Tax (5%)</p>
+                <p class="booking-admin-value">PHP {{ number_format((float) ($billingQuote['local_tax'] ?? 0), 2) }}</p>
+            </div>
+            <div class="booking-admin-item">
+                <p class="booking-admin-label">VAT {{ ($billingQuote['vat_exempt'] ?? false) ? '(Exempt)' : '(12/112)' }}</p>
+                <p class="booking-admin-value">PHP {{ number_format((float) ($billingQuote['vat'] ?? 0), 2) }}</p>
             </div>
             <div class="booking-admin-item">
                 <p class="booking-admin-label">Amount Due</p>

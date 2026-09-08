@@ -71,6 +71,7 @@
         $selectedMethod = $legacyMethodMap[$selectedMethod] ?? $selectedMethod;
         $onlineMethods = ['instapay'];
         $pricingQuote = $booking->pricingQuote();
+        $billingQuote = $booking->billingQuote();
         $billedUnits = max(1, $booking->nights());
         $subtotalAmount = (float) ($booking->payment?->amount ?? $booking->total_price);
         $roomSubtotal = (float) ($pricingQuote['room_total'] ?? $subtotalAmount);
@@ -80,9 +81,15 @@
         $extraBeddingTotal = (float) ($pricingQuote['extra_bedding_total'] ?? 0);
         $chargeableSubtotal = (float) ($pricingQuote['chargeable_subtotal'] ?? ($roomSubtotal + $extraBeddingTotal));
         $serviceFee = (float) ($pricingQuote['service_fee'] ?? 0);
-        $localTax = (float) ($pricingQuote['local_tax'] ?? 0);
-        $vat = (float) ($pricingQuote['vat'] ?? 0);
-        $discountAmount = (float) ($booking->payment?->discount_amount ?? 0);
+        $grossAmount = (float) ($billingQuote['gross_amount'] ?? 0);
+        $vatInclusiveAmount = (float) ($billingQuote['vat_inclusive_amount'] ?? $grossAmount);
+        $netSales = (float) ($billingQuote['net_sales'] ?? 0);
+        $localTax = (float) ($billingQuote['local_tax'] ?? 0);
+        $vat = (float) ($billingQuote['vat'] ?? 0);
+        $vatExemption = (float) ($billingQuote['vat_exemption'] ?? 0);
+        $vatExemptSales = (float) ($billingQuote['vat_exempt_sales'] ?? 0);
+        $isVatExempt = (bool) ($billingQuote['vat_exempt'] ?? false);
+        $discountAmount = (float) ($billingQuote['discount_amount_applied'] ?? $booking->payment?->discount_amount ?? 0);
         $merchantName = (string) config('services.qr_wallets.merchant_name', config('app.name'));
         $configuredQrUrl = trim((string) data_get(config('services.qr_wallets'), 'instapay.qr_image_url', ''));
         $instapayQrUrl = $configuredQrUrl;
@@ -142,19 +149,46 @@
                         <span class="checkout-summary-value">&#8369;{{ number_format($serviceFee, 2) }}</span>
                     </div>
                     <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">Gross VAT-inclusive amount</span>
+                        <span class="checkout-summary-value">&#8369;{{ number_format($grossAmount, 2) }}</span>
+                    </div>
+                    @if($isVatExempt)
+                        <div class="checkout-summary-item text-success">
+                            <span class="checkout-summary-label">Less: VAT exemption</span>
+                            <span class="checkout-summary-value">-&#8369;{{ number_format($vatExemption, 2) }}</span>
+                        </div>
+                        <div class="checkout-summary-item">
+                            <span class="checkout-summary-label">VAT-exempt sales</span>
+                            <span class="checkout-summary-value">&#8369;{{ number_format($vatExemptSales, 2) }}</span>
+                        </div>
+                    @elseif($discountAmount > 0)
+                        <div class="checkout-summary-item text-success">
+                            <span class="checkout-summary-label">Less: Discount</span>
+                            <span class="checkout-summary-value">-&#8369;{{ number_format($discountAmount, 2) }}</span>
+                        </div>
+                        <div class="checkout-summary-item">
+                            <span class="checkout-summary-label">VAT-inclusive amount after discount</span>
+                            <span class="checkout-summary-value">&#8369;{{ number_format($vatInclusiveAmount, 2) }}</span>
+                        </div>
+                    @endif
+                    <div class="checkout-summary-item">
+                        <span class="checkout-summary-label">Net sales</span>
+                        <span class="checkout-summary-value">&#8369;{{ number_format($netSales, 2) }}</span>
+                    </div>
+                    @if($isVatExempt && $discountAmount > 0)
+                        <div class="checkout-summary-item text-success">
+                            <span class="checkout-summary-label">Less: Senior/PWD discount (20%)</span>
+                            <span class="checkout-summary-value">-&#8369;{{ number_format($discountAmount, 2) }}</span>
+                        </div>
+                    @endif
+                    <div class="checkout-summary-item">
                         <span class="checkout-summary-label">Local tax (5%)</span>
                         <span class="checkout-summary-value">&#8369;{{ number_format($localTax, 2) }}</span>
                     </div>
                     <div class="checkout-summary-item">
-                        <span class="checkout-summary-label">VAT (12%, exclusive)</span>
+                        <span class="checkout-summary-label">VAT {{ $isVatExempt ? '(exempt)' : '(12/112)' }}</span>
                         <span class="checkout-summary-value">&#8369;{{ number_format($vat, 2) }}</span>
                     </div>
-                    @if($discountAmount > 0)
-                        <div class="checkout-summary-item text-success">
-                            <span class="checkout-summary-label">Discount</span>
-                            <span class="checkout-summary-value">-&#8369;{{ number_format($discountAmount, 2) }}</span>
-                        </div>
-                    @endif
                     <div class="checkout-summary-item total">
                         <span class="checkout-summary-label">Amount due</span>
                         <span class="checkout-summary-value fs-4">&#8369;{{ number_format($subtotalAmount, 2) }}</span>

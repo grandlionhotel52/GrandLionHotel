@@ -35,9 +35,9 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $response->assertJsonPath('pricing.average_nightly_rate', 1750);
         $response->assertJsonPath('pricing.chargeable_subtotal', 3500);
         $response->assertJsonPath('pricing.service_fee', 0);
-        $response->assertJsonPath('pricing.local_tax', 175);
-        $response->assertJsonPath('pricing.vat', 420);
-        $response->assertJsonPath('pricing.total', 4095);
+        $response->assertJsonPath('pricing.local_tax', 156.25);
+        $response->assertJsonPath('pricing.vat', 375);
+        $response->assertJsonPath('pricing.total', 3656.25);
         $response->assertJsonPath('pricing.discount_amount', 500);
         $response->assertJsonPath('pricing.discounted_nights', 1);
         $response->assertJsonPath('availability.stay_available', true);
@@ -52,7 +52,7 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $withBreakfast->assertOk();
         $withBreakfast->assertJsonPath('pricing.service_fee_applies', true);
         $withBreakfast->assertJsonPath('pricing.service_fee', 280);
-        $withBreakfast->assertJsonPath('pricing.total', 4375);
+        $withBreakfast->assertJsonPath('pricing.total', 3948.75);
     }
 
     public function test_room_search_displays_selected_stay_discounted_pricing(): void
@@ -77,8 +77,8 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $response->assertOk();
         $response->assertSee('Date Discount Room');
         $response->assertSee('1,750');
-        $response->assertSee('4,095 total for 2 nights');
-        $response->assertSee('Includes 5% local tax and 12% VAT. An 8% service charge applies only with breakfast.');
+        $response->assertSee('3,656.25 total for 2 nights');
+        $response->assertSee('VAT is included in the rate. Total includes 5% local tax; an 8% service charge applies only with breakfast.');
         $response->assertSee('Date discount on 1 night');
     }
 
@@ -110,10 +110,10 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('1,750');
-        $response->assertSee('4,095');
+        $response->assertSee('3,656.25');
         $response->assertSee('Service charge (8%, with breakfast only)');
         $response->assertSee('Local tax (5%)');
-        $response->assertSee('VAT (12%, exclusive)');
+        $response->assertSee('VAT (12/112, included)');
         $response->assertSee('Date discount on 1 night');
     }
 

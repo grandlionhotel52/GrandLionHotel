@@ -93,8 +93,13 @@ class DashboardController extends Controller
 
         $paymentsQuery = Payment::query()
             ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
+            ->leftJoin('booking_discounts', 'booking_discounts.booking_id', '=', 'bookings.booking_id')
             ->leftJoin('staff', 'staff.staff_id', '=', 'bookings.staff_id')
-            ->whereIn('payments.status', ['paid', 'refunded'])
+            // A refund request changes a previously paid payment to refund_pending.
+            // It must remain part of gross sales until (and after) the refund is
+            // processed, otherwise requesting a partial refund removes the whole
+            // sale from the report temporarily.
+            ->whereIn('payments.status', ['paid', 'refund_pending', 'refunded'])
             ->whereNotNull('payments.paid_at')
             ->whereDate('payments.paid_at', '>=', $from)
             ->whereDate('payments.paid_at', '<=', $to);
@@ -109,20 +114,47 @@ class DashboardController extends Controller
                 'payments.booking_id',
                 'payments.amount',
                 'payments.method',
+                'payments.status',
                 'payments.discount_amount',
+                'booking_discounts.discount_type',
                 'payments.paid_at',
                 'bookings.staff_id as assigned_staff_id',
                 'staff.name as assigned_staff_name',
             ])
             ->orderByDesc('payments.paid_at')
+            ->get()
+            ->each(function ($payment): void {
+                foreach ($this->paymentTaxComponents($payment) as $key => $value) {
+                    $payment->setAttribute($key, $value);
+                }
+            });
+
+        $refundsQuery = RefundRequest::query()
+            ->join('payments', 'payments.payment_id', '=', 'refund_requests.payment_id')
+            ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
+            ->leftJoin('staff', 'staff.staff_id', '=', 'bookings.staff_id')
+            ->where('refund_requests.status', RefundRequest::STATUS_PROCESSED)
+            ->whereNotNull('refund_requests.processed_at')
+            ->whereDate('refund_requests.processed_at', '>=', $from)
+            ->whereDate('refund_requests.processed_at', '<=', $to);
+
+        if ($method !== 'all') {
+            $refundsQuery->where('payments.method', $method);
+        }
+
+        $refunds = $refundsQuery
+            ->select([
+                'refund_requests.refund_request_id',
+                'refund_requests.amount',
+                'refund_requests.processed_at',
+                'payments.method as payment_method',
+                'bookings.staff_id as assigned_staff_id',
+                'staff.name as assigned_staff_name',
+            ])
             ->get();
 
         $grossRevenue = (float) $payments->sum(static fn ($payment): float => (float) $payment->amount);
-        $refundedTotal = (float) RefundRequest::query()
-            ->where('status', RefundRequest::STATUS_PROCESSED)
-            ->whereDate('processed_at', '>=', $from)
-            ->whereDate('processed_at', '<=', $to)
-            ->sum('amount');
+        $refundedTotal = (float) $refunds->sum(static fn ($refund): float => (float) $refund->amount);
         $totalRevenue = $grossRevenue - $refundedTotal;
         $paidBookings = $payments->count();
 
@@ -131,54 +163,96 @@ class DashboardController extends Controller
             'gross_revenue' => $grossRevenue,
             'refunded_total' => $refundedTotal,
             'paid_bookings' => $paidBookings,
-            'average_sale' => $paidBookings > 0 ? round($totalRevenue / $paidBookings, 2) : 0.0,
+            'average_sale' => $paidBookings > 0 ? round($grossRevenue / $paidBookings, 2) : 0.0,
             'total_discount' => (float) $payments->sum(static fn ($payment): float => (float) ($payment->discount_amount ?? 0)),
+            'net_sales_excluding_vat' => (float) $payments->sum('report_net_sales'),
+            'vat_exempt_sales' => (float) $payments->sum('report_vat_exempt_sales'),
+            'vat_total' => (float) $payments->sum('report_vat'),
+            'local_tax_total' => (float) $payments->sum('report_local_tax'),
             'online_payments' => $payments->filter(static fn ($payment): bool => Payment::isOnlineMethod((string) $payment->method))->count(),
             'cash_payments' => $payments->where('method', Payment::METHOD_CASH)->count(),
         ];
 
-        $dailySales = $payments
-            ->groupBy(static fn ($payment): string => Carbon::parse($payment->paid_at)->toDateString())
-            ->map(static function ($rows, string $date): object {
+        $paymentsByDate = $payments->groupBy(
+            static fn ($payment): string => Carbon::parse($payment->paid_at)->toDateString()
+        );
+        $refundsByDate = $refunds->groupBy(
+            static fn ($refund): string => Carbon::parse($refund->processed_at)->toDateString()
+        );
+
+        $dailySales = $paymentsByDate->keys()
+            ->merge($refundsByDate->keys())
+            ->unique()
+            ->map(static function (string $date) use ($paymentsByDate, $refundsByDate): object {
+                $paymentRows = $paymentsByDate->get($date, collect());
+                $refundRows = $refundsByDate->get($date, collect());
+                $gross = (float) $paymentRows->sum(static fn ($payment): float => (float) $payment->amount);
+                $refunded = (float) $refundRows->sum(static fn ($refund): float => (float) $refund->amount);
+
                 return (object) [
                     'date' => $date,
-                    'paid_bookings' => $rows->count(),
-                    'revenue' => (float) $rows->sum(static fn ($payment): float => (float) $payment->amount),
-                    'discount_total' => (float) $rows->sum(static fn ($payment): float => (float) ($payment->discount_amount ?? 0)),
+                    'paid_bookings' => $paymentRows->count(),
+                    'gross_revenue' => $gross,
+                    'refunded_total' => $refunded,
+                    'revenue' => $gross - $refunded,
+                    'discount_total' => (float) $paymentRows->sum(static fn ($payment): float => (float) ($payment->discount_amount ?? 0)),
+                    'net_sales_excluding_vat' => (float) $paymentRows->sum('report_net_sales'),
+                    'vat_total' => (float) $paymentRows->sum('report_vat'),
+                    'local_tax_total' => (float) $paymentRows->sum('report_local_tax'),
                 ];
             })
             ->sortByDesc(static fn (object $row): string => $row->date)
             ->values();
 
-        $methodBreakdown = $payments
-            ->groupBy(static fn ($payment): string => (string) $payment->method)
-            ->map(static function ($rows, string $methodName): object {
+        $paymentsByMethod = $payments->groupBy(static fn ($payment): string => (string) $payment->method);
+        $refundsByMethod = $refunds->groupBy(static fn ($refund): string => (string) $refund->payment_method);
+        $methodBreakdown = $paymentsByMethod->keys()
+            ->merge($refundsByMethod->keys())
+            ->unique()
+            ->map(static function (string $methodName) use ($paymentsByMethod, $refundsByMethod): object {
+                $paymentRows = $paymentsByMethod->get($methodName, collect());
+                $gross = (float) $paymentRows->sum(static fn ($payment): float => (float) $payment->amount);
+                $refunded = (float) $refundsByMethod->get($methodName, collect())
+                    ->sum(static fn ($refund): float => (float) $refund->amount);
+
                 return (object) [
                     'method' => $methodName,
-                    'paid_bookings' => $rows->count(),
-                    'revenue' => (float) $rows->sum(static fn ($payment): float => (float) $payment->amount),
+                    'paid_bookings' => $paymentRows->count(),
+                    'gross_revenue' => $gross,
+                    'refunded_total' => $refunded,
+                    'revenue' => $gross - $refunded,
                 ];
             })
             ->sortByDesc(static fn (object $row): float => $row->revenue)
             ->values();
 
-        $staffBreakdown = $payments
-            ->groupBy(static function ($payment): string {
-                $staffId = (int) ($payment->assigned_staff_id ?? 0);
-                $staffName = trim((string) ($payment->assigned_staff_name ?? ''));
+        $staffKey = static function ($row): string {
+            $staffId = (int) ($row->assigned_staff_id ?? 0);
+            $staffName = trim((string) ($row->assigned_staff_name ?? ''));
 
-                return $staffId > 0 ? 'staff:'.$staffId : 'staff:unassigned:'.($staffName !== '' ? $staffName : 'Unassigned');
-            })
-            ->map(static function ($rows): object {
-                $first = $rows->first();
+            return $staffId > 0 ? 'staff:'.$staffId : 'staff:unassigned:'.($staffName !== '' ? $staffName : 'Unassigned');
+        };
+        $paymentsByStaff = $payments->groupBy($staffKey);
+        $refundsByStaff = $refunds->groupBy($staffKey);
+        $staffBreakdown = $paymentsByStaff->keys()
+            ->merge($refundsByStaff->keys())
+            ->unique()
+            ->map(static function (string $key) use ($paymentsByStaff, $refundsByStaff): object {
+                $paymentRows = $paymentsByStaff->get($key, collect());
+                $refundRows = $refundsByStaff->get($key, collect());
+                $first = $paymentRows->first() ?? $refundRows->first();
                 $staffId = (int) ($first->assigned_staff_id ?? 0);
                 $staffName = trim((string) ($first->assigned_staff_name ?? ''));
+                $gross = (float) $paymentRows->sum(static fn ($payment): float => (float) $payment->amount);
+                $refunded = (float) $refundRows->sum(static fn ($refund): float => (float) $refund->amount);
 
                 return (object) [
                     'staff_id' => $staffId > 0 ? $staffId : null,
                     'staff_name' => $staffName !== '' ? $staffName : 'Unassigned',
-                    'paid_bookings' => $rows->count(),
-                    'revenue' => (float) $rows->sum(static fn ($payment): float => (float) $payment->amount),
+                    'paid_bookings' => $paymentRows->count(),
+                    'gross_revenue' => $gross,
+                    'refunded_total' => $refunded,
+                    'revenue' => $gross - $refunded,
                 ];
             })
             ->sortByDesc(static fn (object $row): float => $row->revenue)
@@ -264,5 +338,51 @@ class DashboardController extends Controller
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /**
+     * Split the stored amount actually charged into its accounting components.
+     * Stored payments remain the source of truth so historic reports do not
+     * change when room prices or discounts are edited later.
+     */
+    private function paymentTaxComponents(object $payment): array
+    {
+        $amount = round(max(0, (float) ($payment->amount ?? 0)), 2);
+        $discount = round(max(0, (float) ($payment->discount_amount ?? 0)), 2);
+        $discountType = strtolower(trim((string) ($payment->discount_type ?? '')));
+        $isVatExempt = in_array($discountType, ['pwd', 'senior'], true) && $discount > 0;
+        $localTaxRate = max(0, (float) config('pricing.local_tax_rate', 0.05));
+        $vatRate = max(0, (float) config('pricing.vat_rate', 0.12));
+
+        if ($isVatExempt) {
+            $localTaxApplies = filter_var(
+                config('pricing.local_tax_applies_to_vat_exempt_sales', true),
+                FILTER_VALIDATE_BOOL
+            );
+            $netSales = $localTaxApplies
+                ? round($amount / (1 + $localTaxRate), 2)
+                : $amount;
+            $localTax = round($amount - $netSales, 2);
+            $vatExemptSales = round($netSales + $discount, 2);
+
+            return [
+                'report_net_sales' => $netSales,
+                'report_vat_exempt_sales' => $vatExemptSales,
+                'report_vat' => 0.0,
+                'report_local_tax' => $localTax,
+            ];
+        }
+
+        $estimatedNetSales = round($amount / (1 + $vatRate + $localTaxRate), 2);
+        $localTax = round($estimatedNetSales * $localTaxRate, 2);
+        $vatInclusiveAmount = round($amount - $localTax, 2);
+        $netSales = round($vatInclusiveAmount / (1 + $vatRate), 2);
+
+        return [
+            'report_net_sales' => $netSales,
+            'report_vat_exempt_sales' => 0.0,
+            'report_vat' => round($vatInclusiveAmount - $netSales, 2),
+            'report_local_tax' => $localTax,
+        ];
     }
 }

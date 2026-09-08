@@ -679,9 +679,11 @@ class BookingController extends Controller
             default => 0.0,
         };
 
-        $originalAmount = round((float) ($booking->payment?->original_amount ?? $booking->total_price), 2);
-        $discountAmount = round($originalAmount * $discountRate, 2);
-        $payableAmount = round(max(0, $originalAmount - $discountAmount), 2);
+        $pricingQuote = $this->pricingService->quoteBooking($booking);
+        $billingQuote = $this->pricingService->applyDiscount($pricingQuote, $discountType, $discountRate);
+        $originalAmount = round((float) $pricingQuote['total'], 2);
+        $discountAmount = (float) $billingQuote['discount_amount_applied'];
+        $payableAmount = (float) $billingQuote['total'];
         $uploadedDiscountProofPath = trim((string) data_get($booking->reservation_meta, 'discount_id_photo_path', ''));
 
         if (in_array($discountType, ['pwd', 'senior'], true) && $discountRate > 0 && blank($validated['discount_id'] ?? null) && $uploadedDiscountProofPath === '') {
@@ -1198,6 +1200,16 @@ class BookingController extends Controller
     ): void {
         $normalizedType = strtolower(trim((string) $discountType));
         if ($normalizedType === '' || $normalizedType === 'none') {
+            if (Schema::hasTable('booking_discounts')) {
+                $booking->discount()->delete();
+            } elseif (Schema::hasColumn('booking_guest_details', 'discount_type')) {
+                $booking->guestDetail()->update([
+                    'discount_type' => null,
+                    'discount_id' => null,
+                    'discount_id_photo_path' => null,
+                ]);
+            }
+
             return;
         }
 

@@ -71,6 +71,7 @@
         $roomType = $booking->room->type ?? 'N/A';
         $roomView = $booking->room->view_type ?? 'Not specified';
         $pricingQuote = $booking->pricingQuote();
+        $billingQuote = $booking->billingQuote();
         $paidAmount = (float) ($booking->payment?->amount ?? $booking->total_price);
         $originalAmount = (float) ($booking->payment?->original_amount ?? ($pricingQuote['total'] ?? $booking->total_price));
         $discountType = (string) data_get($booking->reservation_meta, 'discount_type', '');
@@ -84,8 +85,13 @@
         $extraBeddingTotal = (float) ($pricingQuote['extra_bedding_total'] ?? 0);
         $chargeableSubtotal = (float) ($pricingQuote['chargeable_subtotal'] ?? ($roomSubtotal + $extraBeddingTotal));
         $serviceFee = (float) ($pricingQuote['service_fee'] ?? 0);
-        $localTax = (float) ($pricingQuote['local_tax'] ?? 0);
-        $vat = (float) ($pricingQuote['vat'] ?? 0);
+        $grossAmount = (float) ($billingQuote['gross_amount'] ?? 0);
+        $netSales = (float) ($billingQuote['net_sales'] ?? 0);
+        $localTax = (float) ($billingQuote['local_tax'] ?? 0);
+        $vat = (float) ($billingQuote['vat'] ?? 0);
+        $vatExemption = (float) ($billingQuote['vat_exemption'] ?? 0);
+        $vatExemptSales = (float) ($billingQuote['vat_exempt_sales'] ?? 0);
+        $isVatExempt = (bool) ($billingQuote['vat_exempt'] ?? false);
         $hasDiscount = $discountType !== '' && $discountAmount > 0;
         $bookedSubtotal = $hasDiscount ? $originalAmount : (float) ($pricingQuote['total'] ?? $booking->total_price);
         $transactionReference = strtoupper(trim((string) ($booking->payment?->transaction_reference ?? '')));
@@ -190,16 +196,24 @@
         @endif
         <tr><th>Accommodation Subtotal</th><td>&#8369;{{ number_format($chargeableSubtotal, 2) }}</td></tr>
         <tr><th>Service Charge (8%, Breakfast Only)</th><td>&#8369;{{ number_format($serviceFee, 2) }}</td></tr>
+        <tr><th>Gross VAT-Inclusive Amount</th><td>&#8369;{{ number_format($grossAmount, 2) }}</td></tr>
+        @if($isVatExempt)
+            <tr><th>Less: VAT Exemption</th><td>-&#8369;{{ number_format($vatExemption, 2) }}</td></tr>
+            <tr><th>VAT-Exempt Sales</th><td>&#8369;{{ number_format($vatExemptSales, 2) }}</td></tr>
+        @elseif($hasDiscount)
+            <tr><th>Less: {{ strtoupper($discountType) }} Discount</th><td>-&#8369;{{ number_format($discountAmount, 2) }}</td></tr>
+            <tr><th>VAT-Inclusive Amount After Discount</th><td>&#8369;{{ number_format((float) ($billingQuote['vat_inclusive_amount'] ?? 0), 2) }}</td></tr>
+        @endif
+        @if($isVatExempt && $hasDiscount)
+            <tr><th>Less: {{ strtoupper($discountType) }} Discount (20%)</th><td>-&#8369;{{ number_format($discountAmount, 2) }}</td></tr>
+        @endif
+        <tr><th>Net Sales</th><td>&#8369;{{ number_format($netSales, 2) }}</td></tr>
         <tr><th>Local Tax (5%)</th><td>&#8369;{{ number_format($localTax, 2) }}</td></tr>
-        <tr><th>VAT (12%, Exclusive)</th><td>&#8369;{{ number_format($vat, 2) }}</td></tr>
+        <tr><th>VAT {{ $isVatExempt ? '(Exempt)' : '(12/112)' }}</th><td>&#8369;{{ number_format($vat, 2) }}</td></tr>
         @if($hasDiscount)
             <tr>
                 <th>Original Amount</th>
                 <td>&#8369;{{ number_format($originalAmount, 2) }}</td>
-            </tr>
-            <tr>
-                <th>Discount</th>
-                <td>{{ strtoupper($discountType) }} (&#8369;{{ number_format($discountAmount, 2) }})</td>
             </tr>
         @endif
         <tr>

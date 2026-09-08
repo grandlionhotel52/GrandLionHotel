@@ -164,7 +164,7 @@ class BookingController extends Controller
                     ]);
                 }
 
-                $totalPrice = $this->pricingService->calculateTotal(
+                $pricingQuote = $this->pricingService->quoteStay(
                     $lockedRoom,
                     $checkIn,
                     $checkOut,
@@ -177,8 +177,10 @@ class BookingController extends Controller
                     'promo' => max(0, min(100, (float) data_get($reservationMeta, 'promo_discount_percent'))) / 100,
                     default => 0.0,
                 };
-                $discountAmount = round($totalPrice * $discountRate, 2);
-                $payableTotal = round(max(0, $totalPrice - $discountAmount), 2);
+                $billingQuote = $this->pricingService->applyDiscount($pricingQuote, $discountType, $discountRate);
+                $totalPrice = (float) $pricingQuote['total'];
+                $discountAmount = (float) $billingQuote['discount_amount_applied'];
+                $payableTotal = (float) $billingQuote['total'];
 
                 $booking = Booking::create([
                     'customer_id' => $request->user()->id,

@@ -65,7 +65,7 @@
             <div class="audit-detail-item">
                 <small class="text-secondary d-block">Actor</small>
                 <strong>{{ $actorName ?: ($activityLog->actor_type ?: 'System') }}</strong>
-                <div class="small text-secondary">{{ $activityLog->actor_type ? $activityLog->actor_type.' #'.$activityLog->actor_id : 'Automated process' }}</div>
+                <div class="small text-secondary">{{ $activityLog->actor_type ?: 'Automated process' }}</div>
             </div>
             <div class="audit-detail-item">
                 <small class="text-secondary d-block">Target record</small>

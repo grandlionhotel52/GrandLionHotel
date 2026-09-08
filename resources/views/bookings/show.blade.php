@@ -176,6 +176,7 @@
         $isCompleted = $booking->status === 'completed';
         $billedUnits = $booking->nights();
         $pricingQuote = $booking->pricingQuote();
+        $billingQuote = $booking->billingQuote();
         $bookingStatusClass = match ($booking->status) {
             'confirmed', 'completed' => 'success',
             'cancelled' => 'danger',
@@ -618,11 +619,20 @@
                     <p class="mb-1"><small class="text-secondary">Extra bedding total</small><br><strong>&#8369;{{ number_format((float) $pricingQuote['extra_bedding_total'], 2) }}</strong></p>
                 @endif
                 <p class="mb-1"><small class="text-secondary">Service charge (8%, with breakfast only)</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }}</strong></p>
-                <p class="mb-1"><small class="text-secondary">Local tax (5%)</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['local_tax'] ?? 0), 2) }}</strong></p>
-                <p class="mb-1"><small class="text-secondary">VAT (12%, exclusive)</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['vat'] ?? 0), 2) }}</strong></p>
-                @if((float) ($booking->payment?->discount_amount ?? 0) > 0)
-                    <p class="mb-1 text-success"><small>Discount</small><br><strong>-&#8369;{{ number_format((float) $booking->payment->discount_amount, 2) }}</strong></p>
+                <p class="mb-1"><small class="text-secondary">Gross VAT-inclusive amount</small><br><strong>&#8369;{{ number_format((float) ($billingQuote['gross_amount'] ?? 0), 2) }}</strong></p>
+                @if($billingQuote['vat_exempt'] ?? false)
+                    <p class="mb-1 text-success"><small>Less: VAT exemption</small><br><strong>-&#8369;{{ number_format((float) ($billingQuote['vat_exemption'] ?? 0), 2) }}</strong></p>
+                    <p class="mb-1"><small class="text-secondary">VAT-exempt sales</small><br><strong>&#8369;{{ number_format((float) ($billingQuote['vat_exempt_sales'] ?? 0), 2) }}</strong></p>
+                @elseif((float) ($booking->payment?->discount_amount ?? 0) > 0)
+                    <p class="mb-1 text-success"><small>Less: Discount</small><br><strong>-&#8369;{{ number_format((float) $booking->payment->discount_amount, 2) }}</strong></p>
+                    <p class="mb-1"><small class="text-secondary">VAT-inclusive amount after discount</small><br><strong>&#8369;{{ number_format((float) ($billingQuote['vat_inclusive_amount'] ?? 0), 2) }}</strong></p>
                 @endif
+                <p class="mb-1"><small class="text-secondary">Net sales</small><br><strong>&#8369;{{ number_format((float) ($billingQuote['net_sales'] ?? 0), 2) }}</strong></p>
+                @if(($billingQuote['vat_exempt'] ?? false) && (float) ($booking->payment?->discount_amount ?? 0) > 0)
+                    <p class="mb-1 text-success"><small>Less: Senior/PWD discount (20%)</small><br><strong>-&#8369;{{ number_format((float) $booking->payment->discount_amount, 2) }}</strong></p>
+                @endif
+                <p class="mb-1"><small class="text-secondary">Local tax (5%)</small><br><strong>&#8369;{{ number_format((float) ($billingQuote['local_tax'] ?? 0), 2) }}</strong></p>
+                <p class="mb-1"><small class="text-secondary">VAT {{ ($billingQuote['vat_exempt'] ?? false) ? '(exempt)' : '(12/112)' }}</small><br><strong>&#8369;{{ number_format((float) ($billingQuote['vat'] ?? 0), 2) }}</strong></p>
                 <p class="mb-3"><small class="text-secondary">Total amount due</small><br><strong>&#8369;{{ number_format((float) ($booking->payment?->amount ?? $booking->total_price), 2) }}</strong></p>
 
                 <div class="booking-next-card mb-3">

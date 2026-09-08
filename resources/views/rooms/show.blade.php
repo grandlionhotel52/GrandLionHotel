@@ -134,7 +134,7 @@
                     &#8369;{{ \App\Support\Money::display($pricingPreview['average_nightly_rate'] ?? $room->price_per_night) }}
                 </div>
                 <small class="text-secondary d-block" id="room_price_caption">
-                    {{ $pricingPreview ? 'average per night' : 'per night' }} &middot; taxes and fees excluded
+                    {{ $pricingPreview ? 'average per night' : 'per night' }} &middot; VAT-inclusive; local tax excluded
                 </small>
                 <p class="small mb-3 {{ $pricingPreview && $pricingPreview['has_date_discount'] ? '' : 'd-none' }}" id="room_base_rate_wrap">
                     <span class="text-secondary text-decoration-line-through" id="room_base_rate">
@@ -165,7 +165,7 @@
                     <li class="mb-2">Accommodation subtotal: <strong class="text-dark" id="room_chargeable_subtotal">&#8369;{{ \App\Support\Money::display($pricingPreview['chargeable_subtotal'] ?? 0) }}</strong></li>
                     <li class="mb-2">Service charge (8%, with breakfast only): <strong class="text-dark" id="room_service_fee">&#8369;{{ \App\Support\Money::display($pricingPreview['service_fee'] ?? 0) }}</strong></li>
                     <li class="mb-2">Local tax (5%): <strong class="text-dark" id="room_local_tax">&#8369;{{ \App\Support\Money::display($pricingPreview['local_tax'] ?? 0) }}</strong></li>
-                    <li class="mb-2">VAT (12%, exclusive): <strong class="text-dark" id="room_vat">&#8369;{{ \App\Support\Money::display($pricingPreview['vat'] ?? 0) }}</strong></li>
+                    <li class="mb-2">VAT (12/112, included): <strong class="text-dark" id="room_vat">&#8369;{{ \App\Support\Money::display($pricingPreview['vat'] ?? 0) }}</strong></li>
                     <li class="mb-2">
                         Total:
                         <strong class="text-dark" id="room_total_value">
@@ -335,7 +335,7 @@
                 }
 
                 if (priceCaption) {
-                    priceCaption.textContent = 'per night · taxes and fees excluded';
+                    priceCaption.textContent = 'per night · VAT-inclusive; local tax excluded';
                 }
 
                 if (baseRateWrap) {
@@ -362,7 +362,7 @@
                 }
 
                 if (priceCaption) {
-                    priceCaption.textContent = 'average per night · taxes and fees excluded';
+                    priceCaption.textContent = 'average per night · VAT-inclusive; local tax excluded';
                 }
 
                 if (baseRate) {

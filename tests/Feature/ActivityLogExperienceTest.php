@@ -40,6 +40,7 @@ class ActivityLogExperienceTest extends TestCase
             ->assertOk()
             ->assertSee('Activity Logs')
             ->assertSee('Audit Administrator')
+            ->assertDontSee('Admin #'.$admin->getKey())
             ->assertSee('Updated')
             ->assertSee('Room');
 
@@ -48,7 +49,8 @@ class ActivityLogExperienceTest extends TestCase
             ->assertSee('Before and after')
             ->assertSee('Original Room Name')
             ->assertSee('Updated Room Name')
-            ->assertSee('Audit Administrator');
+            ->assertSee('Audit Administrator')
+            ->assertDontSee('Admin #'.$admin->getKey());
     }
 
     public function test_activity_log_redacts_sensitive_values(): void

@@ -94,6 +94,9 @@ class PricingService
             'service_fee_rate' => $charges['service_fee_rate'],
             'service_fee' => $charges['service_fee'],
             'service_fee_applies' => $includeServiceFee,
+            'gross_amount' => $charges['gross_amount'],
+            'vat_inclusive_amount' => $charges['vat_inclusive_amount'],
+            'net_sales' => $charges['net_sales'],
             'local_tax_rate' => $charges['local_tax_rate'],
             'local_tax' => $charges['local_tax'],
             'vat_rate' => $charges['vat_rate'],
@@ -146,6 +149,9 @@ class PricingService
                 'service_fee_rate' => $this->serviceFeeRate(),
                 'service_fee' => 0.0,
                 'service_fee_applies' => false,
+                'gross_amount' => 0.0,
+                'vat_inclusive_amount' => 0.0,
+                'net_sales' => 0.0,
                 'local_tax_rate' => $this->localTaxRate(),
                 'local_tax' => 0.0,
                 'vat_rate' => $this->vatRate(),
@@ -186,19 +192,102 @@ class PricingService
         $localTaxRate = $this->localTaxRate();
         $vatRate = $this->vatRate();
         $serviceFee = $includeServiceFee ? round($subtotal * $serviceFeeRate, 2) : 0.0;
-        $localTax = round($subtotal * $localTaxRate, 2);
-        $vat = round($subtotal * $vatRate, 2);
+        $grossAmount = round($subtotal + $serviceFee, 2);
+        $netSales = round($grossAmount / (1 + $vatRate), 2);
+        $vat = round($grossAmount - $netSales, 2);
+        $localTax = round($netSales * $localTaxRate, 2);
 
         return [
             'subtotal' => $subtotal,
             'service_fee_rate' => $serviceFeeRate,
             'service_fee' => $serviceFee,
+            'gross_amount' => $grossAmount,
+            'vat_inclusive_amount' => $grossAmount,
+            'net_sales' => $netSales,
             'local_tax_rate' => $localTaxRate,
             'local_tax' => $localTax,
             'vat_rate' => $vatRate,
             'vat' => $vat,
-            'total' => round($subtotal + $serviceFee + $localTax + $vat, 2),
+            'total' => round($grossAmount + $localTax, 2),
         ];
+    }
+
+    /**
+     * Apply the checkout discount to a VAT-inclusive quote.
+     *
+     * Promotional discounts reduce the VAT-inclusive gross amount before VAT
+     * is extracted and local tax is computed. Senior/PWD transactions remove
+     * the embedded VAT first, then apply the statutory 20% discount to the
+     * VAT-exempt sales amount.
+     */
+    public function applyDiscount(array $quote, ?string $discountType, float $discountRate): array
+    {
+        $type = strtolower(trim((string) $discountType));
+        $rate = max(0, min(1, $discountRate));
+        $grossAmount = round(max(0, (float) ($quote['gross_amount'] ?? $quote['vat_inclusive_amount'] ?? 0)), 2);
+        $vatRate = max(0, (float) ($quote['vat_rate'] ?? $this->vatRate()));
+        $localTaxRate = max(0, (float) ($quote['local_tax_rate'] ?? $this->localTaxRate()));
+        $isVatExempt = in_array($type, ['pwd', 'senior'], true) && $rate > 0;
+
+        if ($isVatExempt) {
+            $vatExemption = round($grossAmount * $vatRate / (1 + $vatRate), 2);
+            $vatExemptSales = round($grossAmount - $vatExemption, 2);
+            $discountAmount = round($vatExemptSales * $rate, 2);
+            $netSales = round(max(0, $vatExemptSales - $discountAmount), 2);
+            $localTax = $this->localTaxAppliesToVatExemptSales()
+                ? round($netSales * $localTaxRate, 2)
+                : 0.0;
+
+            return array_merge($quote, [
+                'discount_type' => $type,
+                'discount_rate' => $rate,
+                'discount_amount_applied' => $discountAmount,
+                'vat_exempt' => true,
+                'vat_exemption' => $vatExemption,
+                'vat_exempt_sales' => $vatExemptSales,
+                'vat_inclusive_amount' => $grossAmount,
+                'net_sales' => $netSales,
+                'vat' => 0.0,
+                'local_tax' => $localTax,
+                'total' => round($netSales + $localTax, 2),
+            ]);
+        }
+
+        $discountAmount = round($grossAmount * $rate, 2);
+        $vatInclusiveAmount = round(max(0, $grossAmount - $discountAmount), 2);
+        $netSales = round($vatInclusiveAmount / (1 + $vatRate), 2);
+        $vat = round($vatInclusiveAmount - $netSales, 2);
+        $localTax = round($netSales * $localTaxRate, 2);
+
+        return array_merge($quote, [
+            'discount_type' => $rate > 0 ? $type : null,
+            'discount_rate' => $rate,
+            'discount_amount_applied' => $discountAmount,
+            'vat_exempt' => false,
+            'vat_exemption' => 0.0,
+            'vat_exempt_sales' => 0.0,
+            'vat_inclusive_amount' => $vatInclusiveAmount,
+            'net_sales' => $netSales,
+            'vat' => $vat,
+            'local_tax' => $localTax,
+            'total' => round($vatInclusiveAmount + $localTax, 2),
+        ]);
+    }
+
+    public function quoteBookingBill(Booking $booking): array
+    {
+        $quote = $this->quoteBooking($booking);
+        $type = strtolower(trim((string) data_get($booking->reservation_meta, 'discount_type', '')));
+        $storedRate = $booking->payment?->discount_rate;
+        $rate = is_numeric($storedRate)
+            ? (float) $storedRate
+            : match ($type) {
+                'pwd', 'senior' => 0.20,
+                'promo' => max(0, min(100, (float) data_get($booking->reservation_meta, 'promo_discount_percent'))) / 100,
+                default => 0.0,
+            };
+
+        return $this->applyDiscount($quote, $type, $rate);
     }
 
     public function serviceFeeRate(): float
@@ -209,6 +298,14 @@ class PricingService
     public function localTaxRate(): float
     {
         return max(0, (float) config('pricing.local_tax_rate', 0.05));
+    }
+
+    public function localTaxAppliesToVatExemptSales(): bool
+    {
+        return filter_var(
+            config('pricing.local_tax_applies_to_vat_exempt_sales', true),
+            FILTER_VALIDATE_BOOL
+        );
     }
 
     public function vatRate(): float

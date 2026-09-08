@@ -140,7 +140,7 @@
                             <td>
                                 <strong>{{ $actorName ?: ($log->actor_type ?: 'System') }}</strong>
                                 <small class="d-block text-secondary">
-                                    {{ $log->actor_type ? $log->actor_type.' #'.$log->actor_id : 'Automated process' }}
+                                    {{ $log->actor_type ?: 'Automated process' }}
                                 </small>
                             </td>
                             <td>

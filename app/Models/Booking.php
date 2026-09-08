@@ -421,6 +421,11 @@ class Booking extends Model
         return app(PricingService::class)->quoteBooking($this);
     }
 
+    public function billingQuote(): array
+    {
+        return app(PricingService::class)->quoteBookingBill($this);
+    }
+
     private function guestDetailRecord(): ?BookingGuestDetail
     {
         $detail = $this->getRelationValue('guestDetail');

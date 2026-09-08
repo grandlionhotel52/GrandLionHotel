@@ -53,8 +53,8 @@ class BookingWorkflowImprovementsTest extends TestCase
         $this->assertSame('pending', $booking->status);
         $this->assertSame('unpaid', $booking->payment_status);
         $this->assertSame('breakfast_included', $booking->fresh('guestDetail')->guestDetail->meal_plan);
-        $this->assertSame('3000.00', $booking->fresh('payment')->payment->amount);
-        $this->assertSame('750.00', $booking->payment->discount_amount);
+        $this->assertSame('2430.00', $booking->fresh('payment')->payment->amount);
+        $this->assertSame('578.57', $booking->payment->discount_amount);
     }
 
     public function test_active_admin_promo_code_is_validated_and_applied_to_booking_total(): void
@@ -83,8 +83,8 @@ class BookingWorkflowImprovementsTest extends TestCase
         ])->assertSessionHasNoErrors();
 
         $booking = Booking::query()->latest('booking_id')->firstOrFail()->load(['payment', 'discount.promoCode']);
-        $this->assertSame('1989.00', $booking->payment->amount);
-        $this->assertSame('351.00', $booking->payment->discount_amount);
+        $this->assertSame('1775.89', $booking->payment->amount);
+        $this->assertSame('300.00', $booking->payment->discount_amount);
         $this->assertTrue($booking->discount->promoCode->is($promo));
 
         $booking->update(['status' => 'confirmed']);
@@ -92,7 +92,7 @@ class BookingWorkflowImprovementsTest extends TestCase
             'method' => 'cash',
         ])->assertSessionHasNoErrors();
 
-        $this->assertSame('1989.00', $booking->fresh('payment')->payment->amount);
+        $this->assertSame('1775.89', $booking->fresh('payment')->payment->amount);
     }
 
     public function test_admin_cannot_transition_pending_booking_directly_to_completed(): void

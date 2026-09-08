@@ -96,13 +96,13 @@
         <div class="row g-3 mb-4">
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
-                    <p class="label">Net Sales</p>
+                    <p class="label">Net Collected</p>
                     <p class="value">&#8369;{{ number_format((float) $summary['total_revenue'], 2) }}</p>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
-                    <p class="label">Gross Sales</p>
+                    <p class="label">Gross Collected</p>
                     <p class="value">&#8369;{{ number_format((float) $summary['gross_revenue'], 2) }}</p>
                 </div>
             </div>
@@ -131,6 +131,21 @@
                 </div>
             </div>
         </div>
+        <div class="row g-3 mb-4">
+            @foreach([
+                ['label' => 'Net Sales (Excl. VAT)', 'value' => $summary['net_sales_excluding_vat'], 'class' => 'text-primary'],
+                ['label' => 'VAT-Exempt Sales', 'value' => $summary['vat_exempt_sales'], 'class' => 'text-success'],
+                ['label' => 'VAT (12/112)', 'value' => $summary['vat_total'], 'class' => ''],
+                ['label' => 'Local Tax (5%)', 'value' => $summary['local_tax_total'], 'class' => ''],
+            ] as $taxMetric)
+                <div class="col-sm-6 col-xl-3">
+                    <div class="admin-report-stat">
+                        <p class="label">{{ $taxMetric['label'] }}</p>
+                        <p class="value {{ $taxMetric['class'] }}">&#8369;{{ number_format((float) $taxMetric['value'], 2) }}</p>
+                    </div>
+                </div>
+            @endforeach
+        </div>
         </div>
     </section>
 
@@ -149,7 +164,12 @@
                                 <th>Date</th>
                                 <th>Paid Bookings</th>
                                 <th>Discount Total</th>
-                                <th class="text-end">Sales</th>
+                                <th class="text-end">Net Sales</th>
+                                <th class="text-end">VAT</th>
+                                <th class="text-end">Local Tax</th>
+                                <th class="text-end">Gross</th>
+                                <th class="text-end">Refunded</th>
+                                <th class="text-end">Net Collected</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -158,11 +178,16 @@
                                     <td>{{ \Carbon\Carbon::parse($day->date)->format('M d, Y') }}</td>
                                     <td>{{ $day->paid_bookings }}</td>
                                     <td>&#8369;{{ number_format((float) $day->discount_total, 2) }}</td>
+                                    <td class="text-end">&#8369;{{ number_format((float) $day->net_sales_excluding_vat, 2) }}</td>
+                                    <td class="text-end">&#8369;{{ number_format((float) $day->vat_total, 2) }}</td>
+                                    <td class="text-end">&#8369;{{ number_format((float) $day->local_tax_total, 2) }}</td>
+                                    <td class="text-end">&#8369;{{ number_format((float) $day->gross_revenue, 2) }}</td>
+                                    <td class="text-end text-danger">&#8369;{{ number_format((float) $day->refunded_total, 2) }}</td>
                                     <td class="text-end fw-semibold">&#8369;{{ number_format((float) $day->revenue, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-4 text-secondary">No paid sales found for this filter.</td>
+                                    <td colspan="9" class="text-center py-4 text-secondary">No paid sales found for this filter.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -183,7 +208,9 @@
                             <tr>
                                 <th>Method</th>
                                 <th>Paid Bookings</th>
-                                <th class="text-end">Sales</th>
+                                <th class="text-end">Gross</th>
+                                <th class="text-end">Refunded</th>
+                                <th class="text-end">Net Collected</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -191,11 +218,13 @@
                                 <tr>
                                     <td>{{ $methodLabel((string) $row->method) }}</td>
                                     <td>{{ $row->paid_bookings }}</td>
+                                    <td class="text-end">&#8369;{{ number_format((float) $row->gross_revenue, 2) }}</td>
+                                    <td class="text-end text-danger">&#8369;{{ number_format((float) $row->refunded_total, 2) }}</td>
                                     <td class="text-end fw-semibold">&#8369;{{ number_format((float) $row->revenue, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="text-center py-4 text-secondary">No payment method totals yet.</td>
+                                    <td colspan="5" class="text-center py-4 text-secondary">No payment method totals yet.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -218,7 +247,9 @@
                             <tr>
                                 <th>Staff</th>
                                 <th>Paid Bookings</th>
-                                <th class="text-end">Sales</th>
+                                <th class="text-end">Gross</th>
+                                <th class="text-end">Refunded</th>
+                                <th class="text-end">Net Collected</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -226,11 +257,13 @@
                                 <tr>
                                     <td>{{ $row->staff_name }}</td>
                                     <td>{{ $row->paid_bookings }}</td>
+                                    <td class="text-end">&#8369;{{ number_format((float) $row->gross_revenue, 2) }}</td>
+                                    <td class="text-end text-danger">&#8369;{{ number_format((float) $row->refunded_total, 2) }}</td>
                                     <td class="text-end fw-semibold">&#8369;{{ number_format((float) $row->revenue, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="text-center py-4 text-secondary">No staff sales data yet.</td>
+                                    <td colspan="5" class="text-center py-4 text-secondary">No staff sales data yet.</td>
                                 </tr>
                             @endforelse
                         </tbody>

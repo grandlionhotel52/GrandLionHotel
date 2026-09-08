@@ -49,9 +49,10 @@ class PricingServiceExtraBeddingTest extends TestCase
         $this->assertSame(1000.0, $quote['extra_bedding_total']);
         $this->assertSame(5000.0, $quote['chargeable_subtotal']);
         $this->assertSame(400.0, $quote['service_fee']);
-        $this->assertSame(250.0, $quote['local_tax']);
-        $this->assertSame(600.0, $quote['vat']);
-        $this->assertSame(6250.0, $quote['total']);
+        $this->assertSame(4821.43, $quote['net_sales']);
+        $this->assertSame(241.07, $quote['local_tax']);
+        $this->assertSame(578.57, $quote['vat']);
+        $this->assertSame(5641.07, $quote['total']);
         $this->assertSame(2500.0, $quote['average_nightly_rate']);
     }
 
@@ -79,7 +80,7 @@ class PricingServiceExtraBeddingTest extends TestCase
         $this->assertSame(3500.0, $quote['room_total']);
         $this->assertSame(500.0, $quote['discount_amount']);
         $this->assertSame(1000.0, $quote['extra_bedding_total']);
-        $this->assertSame(5625.0, $quote['total']);
+        $this->assertSame(5076.96, $quote['total']);
     }
 
     public function test_service_charge_only_applies_when_breakfast_is_selected(): void
@@ -93,10 +94,40 @@ class PricingServiceExtraBeddingTest extends TestCase
 
         $this->assertFalse($roomOnly['service_fee_applies']);
         $this->assertSame(0.0, $roomOnly['service_fee']);
-        $this->assertSame(2340.0, $roomOnly['total']);
+        $this->assertSame(2089.29, $roomOnly['total']);
         $this->assertTrue($withBreakfast['service_fee_applies']);
         $this->assertSame(160.0, $withBreakfast['service_fee']);
-        $this->assertSame(2500.0, $withBreakfast['total']);
+        $this->assertSame(2256.43, $withBreakfast['total']);
+    }
+
+    public function test_vat_inclusive_formula_extracts_vat_and_adds_local_tax(): void
+    {
+        $charges = app(PricingService::class)->statutoryCharges(1008);
+
+        $this->assertSame(1008.0, $charges['vat_inclusive_amount']);
+        $this->assertSame(108.0, $charges['vat']);
+        $this->assertSame(900.0, $charges['net_sales']);
+        $this->assertSame(45.0, $charges['local_tax']);
+        $this->assertSame(1053.0, $charges['total']);
+    }
+
+    public function test_senior_and_pwd_formula_removes_vat_before_twenty_percent_discount(): void
+    {
+        $pricing = app(PricingService::class);
+        $quote = $pricing->statutoryCharges(1008);
+
+        foreach (['senior', 'pwd'] as $type) {
+            $bill = $pricing->applyDiscount($quote, $type, 0.20);
+
+            $this->assertTrue($bill['vat_exempt']);
+            $this->assertSame(108.0, $bill['vat_exemption']);
+            $this->assertSame(900.0, $bill['vat_exempt_sales']);
+            $this->assertSame(180.0, $bill['discount_amount_applied']);
+            $this->assertSame(720.0, $bill['net_sales']);
+            $this->assertSame(0.0, $bill['vat']);
+            $this->assertSame(36.0, $bill['local_tax']);
+            $this->assertSame(756.0, $bill['total']);
+        }
     }
 
     private function createRoom(array $overrides = []): Room
