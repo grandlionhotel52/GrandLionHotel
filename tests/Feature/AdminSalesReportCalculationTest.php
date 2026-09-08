@@ -89,6 +89,7 @@ class AdminSalesReportCalculationTest extends TestCase
             'to' => '2026-09-08',
         ]))->assertOk()->assertViewHas('summary', function (array $summary): bool {
             return $summary['gross_revenue'] === 1926.0
+                && $summary['gross_sales_before_discount'] === 2128.0
                 && $summary['net_sales_excluding_vat'] === 1720.0
                 && $summary['vat_exempt_sales'] === 900.0
                 && $summary['vat_total'] === 120.0

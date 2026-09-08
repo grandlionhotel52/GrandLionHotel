@@ -161,6 +161,7 @@ class DashboardController extends Controller
         $summary = [
             'total_revenue' => $totalRevenue,
             'gross_revenue' => $grossRevenue,
+            'gross_sales_before_discount' => (float) $payments->sum('report_gross_sales'),
             'refunded_total' => $refundedTotal,
             'paid_bookings' => $paidBookings,
             'average_sale' => $paidBookings > 0 ? round($grossRevenue / $paidBookings, 2) : 0.0,
@@ -366,6 +367,7 @@ class DashboardController extends Controller
             $vatExemptSales = round($netSales + $discount, 2);
 
             return [
+                'report_gross_sales' => round($vatExemptSales * (1 + $vatRate), 2),
                 'report_net_sales' => $netSales,
                 'report_vat_exempt_sales' => $vatExemptSales,
                 'report_vat' => 0.0,
@@ -379,6 +381,7 @@ class DashboardController extends Controller
         $netSales = round($vatInclusiveAmount / (1 + $vatRate), 2);
 
         return [
+            'report_gross_sales' => round($vatInclusiveAmount + $discount, 2),
             'report_net_sales' => $netSales,
             'report_vat_exempt_sales' => 0.0,
             'report_vat' => round($vatInclusiveAmount - $netSales, 2),

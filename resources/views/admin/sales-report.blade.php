@@ -96,20 +96,20 @@
         <div class="row g-3 mb-4">
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
-                    <p class="label">Net Collected</p>
-                    <p class="value">&#8369;{{ number_format((float) $summary['total_revenue'], 2) }}</p>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-2">
-                <div class="admin-report-stat">
-                    <p class="label">Gross Collected</p>
+                    <p class="label">Total Sales</p>
                     <p class="value">&#8369;{{ number_format((float) $summary['gross_revenue'], 2) }}</p>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
-                    <p class="label">Refunded</p>
-                    <p class="value text-danger">&#8369;{{ number_format((float) $summary['refunded_total'], 2) }}</p>
+                    <p class="label">Gross Sales</p>
+                    <p class="value">&#8369;{{ number_format((float) $summary['gross_sales_before_discount'], 2) }}</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <div class="admin-report-stat">
+                    <p class="label">Net Collected</p>
+                    <p class="value">&#8369;{{ number_format((float) $summary['total_revenue'], 2) }}</p>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
@@ -120,14 +120,14 @@
             </div>
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
-                    <p class="label">Average Sale</p>
-                    <p class="value text-success">&#8369;{{ number_format((float) $summary['average_sale'], 2) }}</p>
+                    <p class="label">Discount Total</p>
+                    <p class="value text-warning">&#8369;{{ number_format((float) $summary['total_discount'], 2) }}</p>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
-                    <p class="label">Discount Total</p>
-                    <p class="value text-warning">&#8369;{{ number_format((float) $summary['total_discount'], 2) }}</p>
+                    <p class="label">Refunded</p>
+                    <p class="value text-danger">&#8369;{{ number_format((float) $summary['refunded_total'], 2) }}</p>
                 </div>
             </div>
         </div>
