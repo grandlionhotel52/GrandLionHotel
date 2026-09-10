@@ -117,6 +117,37 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $response->assertSee('Date discount on 1 night');
     }
 
+    public function test_room_details_hide_calculation_from_guests_until_sign_in(): void
+    {
+        $room = $this->createRoom([
+            'price_per_night' => 2000,
+        ]);
+
+        $guestResponse = $this->get(route('rooms.show', [
+            'room' => $room,
+            'check_in' => now()->addDay()->toDateString(),
+            'check_out' => now()->addDays(3)->toDateString(),
+        ]));
+
+        $guestResponse->assertOk();
+        $guestResponse->assertSee('Price breakdown available after sign-in');
+        $guestResponse->assertDontSee('Accommodation subtotal:');
+        $guestResponse->assertDontSee('Local tax (5%):');
+
+        $customer = Customer::factory()->create();
+
+        $customerResponse = $this->actingAs($customer, 'customer')->get(route('rooms.show', [
+            'room' => $room,
+            'check_in' => now()->addDay()->toDateString(),
+            'check_out' => now()->addDays(3)->toDateString(),
+        ]));
+
+        $customerResponse->assertOk();
+        $customerResponse->assertSee('Accommodation subtotal:');
+        $customerResponse->assertSee('Local tax (5%):');
+        $customerResponse->assertDontSee('Price breakdown available after sign-in');
+    }
+
     private function createRoom(array $overrides = []): Room
     {
         $cleanStatusId = (int) RoomStatus::query()->where('slug', 'clean')->value('room_status_id');

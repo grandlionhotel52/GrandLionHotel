@@ -45,6 +45,20 @@
             position: static;
             z-index: 1;
         }
+        .room-pricing-locked {
+            display: flex;
+            gap: .7rem;
+            margin: 1rem 0 1.25rem;
+            padding: .85rem;
+            border: 1px solid #dfd1ba;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .72);
+            color: #4b5563;
+        }
+        .room-pricing-locked i {
+            color: #87662f;
+            font-size: 1.05rem;
+        }
         @media (min-width: 992px) {
             .room-booking-panel {
                 position: sticky;
@@ -85,6 +99,7 @@
         }
         $minimumCheckOut = now()->addDay()->toDateString();
         $viewer = request()->user();
+        $showDetailedPricing = (bool) $viewer;
         $canStartCustomerBooking = !$viewer || $viewer->isCustomer();
         $bookingButtonLabel = $viewer ? 'Continue' : 'Sign in and continue';
     @endphp
@@ -131,11 +146,16 @@
             <aside class="room-booking-panel p-4">
                 <p class="ta-eyebrow mb-1">Start Reservation</p>
                 <div class="price-tag mb-1" id="room_headline_rate">
-                    &#8369;{{ \App\Support\Money::display($pricingPreview['average_nightly_rate'] ?? $room->price_per_night) }}
+                    &#8369;{{ \App\Support\Money::display($showDetailedPricing ? ($pricingPreview['average_nightly_rate'] ?? $room->price_per_night) : $room->price_per_night) }}
                 </div>
                 <small class="text-secondary d-block" id="room_price_caption">
-                    {{ $pricingPreview ? 'average per night' : 'per night' }} &middot; VAT-inclusive; local tax excluded
+                    @if($showDetailedPricing)
+                        {{ $pricingPreview ? 'average per night' : 'per night' }} &middot; VAT-inclusive; local tax excluded
+                    @else
+                        per night &middot; full stay total shown after sign-in
+                    @endif
                 </small>
+                @if($showDetailedPricing)
                 <p class="small mb-3 {{ $pricingPreview && $pricingPreview['has_date_discount'] ? '' : 'd-none' }}" id="room_base_rate_wrap">
                     <span class="text-secondary text-decoration-line-through" id="room_base_rate">
                         &#8369;{{ \App\Support\Money::display($room->price_per_night) }}
@@ -187,6 +207,18 @@
                         </strong>
                     </li>
                 </ul>
+                @else
+                    <div class="room-pricing-locked" role="note">
+                        <i class="bi bi-lock" aria-hidden="true"></i>
+                        <div>
+                            <strong class="d-block text-dark">Price breakdown available after sign-in</strong>
+                            <span class="small">Choose your dates to check availability, then sign in to see the subtotal, taxes, discounts, and final total.</span>
+                        </div>
+                    </div>
+                    <p class="small text-secondary mb-3">
+                        Status: <strong class="text-dark" id="room_availability_status">{{ $room->is_available ? 'Available' : 'Unavailable' }}</strong>
+                    </p>
+                @endif
 
                 @if($room->is_available)
                     @if($canStartCustomerBooking)
@@ -196,6 +228,7 @@
                             class="d-grid gap-2"
                             id="room_quick_booking_form"
                             data-preview-url="{{ route('rooms.pricing-preview', $room) }}"
+                            data-show-detailed-pricing="{{ $showDetailedPricing ? '1' : '0' }}"
                         >
                             <div>
                                 <label class="form-label small mb-1" for="room_check_in_input">Check-in</label>
@@ -262,6 +295,7 @@
             const bookingFeedback = document.getElementById('room_booking_feedback');
             const bookingSubmit = document.getElementById('room_booking_submit');
             const baseNightlyRate = Number.parseFloat('{{ number_format((float) $room->price_per_night, 2, '.', '') }}') || 0;
+            const showDetailedPricing = form?.dataset.showDetailedPricing === '1';
 
             if (!form || !checkInInput || !checkOutInput) {
                 return;
@@ -330,11 +364,11 @@
             };
 
             const setFallbackPricing = (message = 'Select valid dates to preview.') => {
-                if (headlineRate) {
+                if (showDetailedPricing && headlineRate) {
                     headlineRate.textContent = formatCurrency(baseNightlyRate);
                 }
 
-                if (priceCaption) {
+                if (showDetailedPricing && priceCaption) {
                     priceCaption.textContent = 'per night · VAT-inclusive; local tax excluded';
                 }
 
@@ -357,11 +391,11 @@
             };
 
             const setPricingPreview = (pricing, availability) => {
-                if (headlineRate) {
+                if (showDetailedPricing && headlineRate) {
                     headlineRate.textContent = formatCurrency(pricing.average_nightly_rate);
                 }
 
-                if (priceCaption) {
+                if (showDetailedPricing && priceCaption) {
                     priceCaption.textContent = 'average per night · VAT-inclusive; local tax excluded';
                 }
 
