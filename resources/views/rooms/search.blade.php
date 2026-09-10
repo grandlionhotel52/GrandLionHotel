@@ -58,6 +58,9 @@
             gap: 0.45rem;
         }
         .search-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
             border-radius: 999px;
             border: 1px solid var(--line);
             background: #faf5ed;
@@ -65,10 +68,16 @@
             font-size: 0.75rem;
             font-weight: 700;
             padding: 0.24rem 0.66rem;
+            text-decoration: none;
         }
         .search-chip strong {
             color: #1f2937;
             font-weight: 800;
+        }
+        .search-chip:hover {
+            border-color: #b89254;
+            background: #fff;
+            color: #172132;
         }
         .search-results-head {
             display: flex;
@@ -133,6 +142,15 @@
                 grid-template-columns: 1fr 1fr;
             }
             .search-filter-actions .btn { min-width: 0; }
+            .search-card-footer {
+                align-items: stretch !important;
+                flex-direction: column;
+            }
+            .search-card-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            .search-card-actions .btn { width: 100%; }
         }
     </style>
 @endpush
@@ -148,20 +166,29 @@
         $standardGuests = \App\Models\Room::standardGuestCapacity();
         $activeFilters = [];
         if (filled(request('type'))) {
-            $activeFilters[] = ['label' => 'Type', 'value' => request('type')];
+            $activeFilters[] = ['name' => 'type', 'label' => 'Type', 'value' => request('type')];
         }
         if (filled(request('max_price'))) {
-            $activeFilters[] = ['label' => 'Max Price', 'value' => 'PHP '.number_format((int) request('max_price'))];
+            $activeFilters[] = ['name' => 'max_price', 'label' => 'Max Price', 'value' => 'PHP '.number_format((int) request('max_price'))];
         }
         if (filled(request('sort'))) {
-            $activeFilters[] = ['label' => 'Sort', 'value' => ucfirst(str_replace('_', ' ', (string) request('sort')))];
+            $activeFilters[] = ['name' => 'sort', 'label' => 'Sort', 'value' => ucfirst(str_replace('_', ' ', (string) request('sort')))];
         }
         if (request('available_only')) {
-            $activeFilters[] = ['label' => 'Availability', 'value' => 'Available only'];
+            $activeFilters[] = ['name' => 'available_only', 'label' => 'Availability', 'value' => 'Available only'];
         }
     @endphp
 
-    <section class="search-filter-shell p-3 p-lg-4 mb-4">
+    <header class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+        <div>
+            <p class="ta-eyebrow mb-1">Plan your stay</p>
+            <h1 class="h2 mb-1">Find a room that fits your trip</h1>
+            <p class="text-secondary mb-0">Choose your dates, compare rates, and check live availability.</p>
+        </div>
+    </header>
+
+    <section class="search-filter-shell p-3 p-lg-4 mb-4" aria-labelledby="room_filter_title">
+            <h2 class="h5 mb-3" id="room_filter_title">Filter rooms</h2>
             <form method="GET" action="{{ route('rooms.index') }}" class="search-filter-grid" id="roomSearchForm" data-ajax-list-form="#public_room_results">
                 <div class="field-type">
                     <label class="form-label">Narrow by type or view</label>
@@ -195,6 +222,9 @@
                             <label class="form-check-label" for="availableOnly">Available only</label>
                         </div>
                         <div class="search-filter-actions">
+                            <span class="small text-secondary d-inline-flex align-items-center me-1">
+                                <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Results update automatically
+                            </span>
                             <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
                         </div>
                     </div>
@@ -221,7 +251,15 @@
             @if(!empty($activeFilters))
                 <div class="search-active-wrap">
                     @foreach($activeFilters as $filter)
-                        <span class="search-chip">{{ $filter['label'] }}: <strong>{{ $filter['value'] }}</strong></span>
+                        <a
+                            class="search-chip"
+                            href="{{ route('rooms.index', request()->except([$filter['name'], 'page'])) }}"
+                            title="Remove {{ strtolower($filter['label']) }} filter"
+                            aria-label="Remove {{ $filter['label'] }} filter: {{ $filter['value'] }}"
+                        >
+                            {{ $filter['label'] }}: <strong>{{ $filter['value'] }}</strong>
+                            <span aria-hidden="true">&times;</span>
+                        </a>
                     @endforeach
                 </div>
             @endif
@@ -270,7 +308,7 @@
                                 <li class="ta-chip"><i class="bi {{ $amenity['icon'] }}" aria-hidden="true"></i>{{ $amenity['label'] }}</li>
                             @endforeach
                         </ul>
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-between align-items-center gap-3 search-card-footer">
                             <div>
                                 @if($stayPricing)
                                     <div class="price-tag">&#8369;{{ \App\Support\Money::display($stayPricing['average_nightly_rate']) }}</div>
@@ -326,3 +364,36 @@
     </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const form = document.getElementById('roomSearchForm');
+            const checkIn = form?.querySelector('[name="check_in"]');
+            const checkOut = form?.querySelector('[name="check_out"]');
+
+            if (!(checkIn instanceof HTMLInputElement) || !(checkOut instanceof HTMLInputElement)) return;
+
+            const nextDay = (value) => {
+                const date = new Date(`${value}T00:00:00Z`);
+                date.setUTCDate(date.getUTCDate() + 1);
+                return date.toISOString().slice(0, 10);
+            };
+
+            const syncDates = () => {
+                if (!checkIn.value) return;
+
+                const minimumCheckout = nextDay(checkIn.value);
+                checkOut.min = minimumCheckout;
+
+                if (checkOut.value && checkOut.value < minimumCheckout) {
+                    checkOut.value = minimumCheckout;
+                    checkOut.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            };
+
+            checkIn.addEventListener('change', syncDates);
+            syncDates();
+        })();
+    </script>
+@endpush

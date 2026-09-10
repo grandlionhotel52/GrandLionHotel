@@ -756,5 +756,6 @@
     @include('layouts.partials.ajax-list-filter')
     @stack('scripts')
     @include('layouts.partials.image-fallback')
+    @include('layouts.partials.ux-enhancements')
 </body>
 </html>

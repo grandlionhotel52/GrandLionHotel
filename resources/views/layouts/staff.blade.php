@@ -659,5 +659,6 @@
     @include('layouts.partials.realtime-validation')
     @stack('scripts')
     @include('layouts.partials.image-fallback')
+    @include('layouts.partials.ux-enhancements')
 </body>
 </html>
