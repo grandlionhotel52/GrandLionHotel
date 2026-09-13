@@ -27,6 +27,30 @@
             margin: 0;
             color: #b89254;
         }
+        .booking-guide-group {
+            min-width: 0;
+        }
+        .booking-guide-label {
+            display: block;
+            margin-bottom: .55rem;
+            color: #344054;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+        .booking-guide-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem 1rem;
+        }
+        .booking-guide-item {
+            display: inline-flex;
+            align-items: center;
+            color: #667085;
+            font-size: .82rem;
+            line-height: 1.35;
+        }
     </style>
 @endpush
 
@@ -64,10 +88,25 @@
 
     <div class="alert alert-light border mb-4" role="note">
         <strong class="d-block mb-2">How your booking works</strong>
-        <div class="d-flex flex-wrap gap-3 small text-secondary">
-            <span><span class="badge text-bg-warning me-1">Pre-book</span> Waiting for hotel approval</span>
-            <span><span class="badge text-bg-success me-1">Confirmed</span> Ready for payment</span>
-            <span><span class="badge text-bg-primary me-1">Paid</span> Ready for arrival</span>
+        <div class="row g-3">
+            <div class="col-12 col-xl-7 booking-guide-group">
+                <span class="booking-guide-label">Booking status</span>
+                <div class="booking-guide-items">
+                    <span class="booking-guide-item"><span class="badge text-bg-secondary me-1">Pre-book</span> Waiting for hotel approval</span>
+                    <span class="booking-guide-item"><span class="badge text-bg-success me-1">Confirmed</span> Hotel approved</span>
+                    <span class="booking-guide-item"><span class="badge text-bg-primary me-1">Completed</span> Stay finished</span>
+                    <span class="booking-guide-item"><span class="badge text-bg-danger me-1">Cancelled</span> Booking cancelled</span>
+                </div>
+            </div>
+            <div class="col-12 col-xl-5 booking-guide-group">
+                <span class="booking-guide-label">Payment status</span>
+                <div class="booking-guide-items">
+                    <span class="booking-guide-item"><span class="badge text-bg-warning me-1">Unpaid</span> Payment needed after approval</span>
+                    <span class="booking-guide-item"><span class="badge text-bg-info me-1">Pending verification</span> Being checked</span>
+                    <span class="booking-guide-item"><span class="badge text-bg-success me-1">Paid</span> Payment confirmed</span>
+                    <span class="booking-guide-item"><span class="badge text-bg-info me-1">Refund pending</span> Refund processing</span>
+                </div>
+            </div>
         </div>
     </div>
 

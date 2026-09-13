@@ -94,6 +94,9 @@
         .promo-code-box .input-group .form-control {
             min-width: 0;
         }
+        .booking-meal-option {
+            max-width: 520px;
+        }
         .promo-code-feedback.is-success {
             color: #167347 !important;
             font-weight: 700;
@@ -451,7 +454,7 @@
 
                     <div class="col-12">
                         <label class="form-label" for="meal_plan_select">Meal option</label>
-                        <select class="form-select" name="meal_plan" id="meal_plan_select" required>
+                        <select class="form-select booking-meal-option" name="meal_plan" id="meal_plan_select" required>
                             <option value="room_only" @selected(old('meal_plan', 'room_only') === 'room_only')>Room Only — No Breakfast</option>
                             <option value="breakfast_included" @selected(old('meal_plan') === 'breakfast_included')>Breakfast Included</option>
                         </select>

@@ -78,9 +78,15 @@ class Booking extends Model
                 && $booking->getOriginal('status') !== 'confirmed'
                 && is_null($booking->payment_due_at)) {
                 $hours = max(1, (int) config('booking_automation.payment_due_hours', 24));
-                $deadline = now()->addHours($hours);
+                $cutoffHour = min(23, max(0, (int) config('booking_automation.payment_due_cutoff_hour', 14)));
+                $deadline = now()->addHours($hours)->setTime($cutoffHour, 0);
+
+                if ($deadline->isPast()) {
+                    $deadline->addDay();
+                }
+
                 if ($booking->check_in) {
-                    $checkInDeadline = Carbon::parse($booking->check_in)->startOfDay()->setTime(14, 0);
+                    $checkInDeadline = Carbon::parse($booking->check_in)->startOfDay()->setTime($cutoffHour, 0);
                     if ($checkInDeadline->isFuture()) {
                         $deadline = $deadline->min($checkInDeadline);
                     }
