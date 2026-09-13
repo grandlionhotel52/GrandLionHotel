@@ -564,6 +564,18 @@
     </section>
 
     @unless($hasSignedInAccess)
+        <section class="guest-final-cta d-md-none p-4 mb-4 text-center" aria-labelledby="guestMobileCtaTitle">
+            <p class="ta-eyebrow text-light mb-2">The Complete Experience</p>
+            <h2 id="guestMobileCtaTitle" class="h2 mb-3">Ready to turn your preview into a stay?</h2>
+            <p class="mx-auto mb-4">Sign in to unlock the full room collection, complete reservation tools, secure payment options, and your personal booking history.</p>
+            <div class="d-grid gap-2">
+                <a href="{{ route('login') }}" class="btn btn-light btn-lg">Sign in to continue</a>
+                <a href="{{ route('register') }}" class="btn btn-outline-light btn-lg">Create an account</a>
+            </div>
+        </section>
+    @endunless
+
+    @unless($hasSignedInAccess)
         <section class="guest-proof-strip px-3 py-2 mb-5" aria-label="Reservation highlights">
             <div class="row g-0">
                 <div class="col-12 col-md-4"><div class="guest-proof-item"><i class="bi bi-calendar-check"></i> Live availability</div></div>
@@ -848,7 +860,7 @@
         </div>
     </section>
     @else
-        <section class="guest-final-cta p-4 p-lg-5 mt-5 text-center" aria-labelledby="guestFinalCtaTitle">
+        <section class="guest-final-cta d-none d-md-block p-4 p-lg-5 mt-5 text-center" aria-labelledby="guestFinalCtaTitle">
             <p class="ta-eyebrow text-light mb-2">The Complete Experience</p>
             <h2 id="guestFinalCtaTitle" class="display-6 mb-3">Ready to turn your preview into a stay?</h2>
             <p class="mx-auto mb-4" style="max-width: 650px;">Sign in to unlock the full room collection, complete reservation tools, secure payment options, and your personal booking history.</p>
