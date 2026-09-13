@@ -171,6 +171,34 @@
         }
         .guest-final-cta h2,
         .guest-final-cta p { color: #fff; }
+        .guest-mobile-cta {
+            padding: clamp(1.35rem, 4vw, 2rem);
+        }
+        .guest-mobile-cta h2 {
+            max-width: 620px;
+            margin-inline: auto;
+            font-size: clamp(1.65rem, 5vw, 2rem);
+            line-height: 1.15;
+            text-wrap: balance;
+        }
+        .guest-mobile-cta > p:not(.ta-eyebrow) {
+            max-width: 590px;
+            font-size: clamp(0.92rem, 2.5vw, 1rem);
+            line-height: 1.55;
+        }
+        .guest-mobile-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.65rem;
+            max-width: 590px;
+            margin-inline: auto;
+        }
+        .guest-mobile-actions .btn {
+            flex: 1 1 0;
+            min-width: 0;
+            padding: 0.72rem 1rem;
+            font-size: 1rem;
+        }
         .home-gallery-grid {
             display: grid;
             grid-template-columns: 1.35fr 1fr 1fr;
@@ -413,6 +441,13 @@
             .hero-search .btn {
                 min-height: 50px;
             }
+            .guest-mobile-actions {
+                flex-direction: column;
+            }
+            .guest-mobile-actions .btn {
+                flex-basis: auto;
+                width: 100%;
+            }
         }
     </style>
 @endpush
@@ -513,11 +548,11 @@
     </section>
 
     @unless($hasSignedInAccess)
-        <section class="guest-final-cta d-md-none p-4 mb-4 text-center" aria-labelledby="guestMobileCtaTitle">
+        <section class="guest-final-cta guest-mobile-cta d-md-none mb-4 text-center" aria-labelledby="guestMobileCtaTitle">
             <p class="ta-eyebrow text-light mb-2">The Complete Experience</p>
             <h2 id="guestMobileCtaTitle" class="h2 mb-3">Ready to turn your preview into a stay?</h2>
             <p class="mx-auto mb-4">Sign in to unlock the full room collection, complete reservation tools, secure payment options, and your personal booking history.</p>
-            <div class="d-grid gap-2">
+            <div class="guest-mobile-actions">
                 <a href="{{ route('login') }}" class="btn btn-light btn-lg">Sign in to continue</a>
                 <a href="{{ route('register') }}" class="btn btn-outline-light btn-lg">Create an account</a>
             </div>
