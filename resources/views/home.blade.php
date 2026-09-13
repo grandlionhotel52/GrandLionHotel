@@ -53,15 +53,13 @@
         .hero-carousel .carousel-indicators {
             z-index: 3;
         }
-        .hero-carousel .carousel-control-prev,
-        .hero-carousel .carousel-control-next {
+        .hero-carousel .carousel-control-prev {
             z-index: 3;
         }
         .hero-carousel .ta-eyebrow {
             color: rgba(255, 255, 255, 0.85);
         }
-        .hero-carousel .carousel-control-prev,
-        .hero-carousel .carousel-control-next {
+        .hero-carousel .carousel-control-prev {
             width: auto;
             top: 50%;
             bottom: auto;
@@ -71,11 +69,7 @@
         .hero-carousel .carousel-control-prev {
             left: 1.4rem;
         }
-        .hero-carousel .carousel-control-next {
-            right: 1.4rem;
-        }
-        .hero-carousel .carousel-control-prev-icon,
-        .hero-carousel .carousel-control-next-icon {
+        .hero-carousel .carousel-control-prev-icon {
             width: 2.8rem;
             height: 2.8rem;
             border-radius: 999px;
@@ -84,8 +78,7 @@
             background-size: 1rem 1rem;
             backdrop-filter: blur(2px);
         }
-        .hero-carousel .carousel-control-prev:hover .carousel-control-prev-icon,
-        .hero-carousel .carousel-control-next:hover .carousel-control-next-icon {
+        .hero-carousel .carousel-control-prev:hover .carousel-control-prev-icon {
             background-color: rgba(16, 24, 40, 0.62);
         }
         .hero-overlay {
@@ -448,11 +441,7 @@
             .hero-carousel .carousel-control-prev {
                 left: 0.8rem;
             }
-            .hero-carousel .carousel-control-next {
-                right: 0.8rem;
-            }
-            .hero-carousel .carousel-control-prev-icon,
-            .hero-carousel .carousel-control-next-icon {
+            .hero-carousel .carousel-control-prev-icon {
                 width: 2.45rem;
                 height: 2.45rem;
             }
@@ -555,10 +544,6 @@
             <button class="carousel-control-prev" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
             </button>
         </div>
     </section>
