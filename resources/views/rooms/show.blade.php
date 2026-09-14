@@ -183,9 +183,7 @@
                         </strong>
                     </li>
                     <li class="mb-2">Accommodation subtotal: <strong class="text-dark" id="room_chargeable_subtotal">&#8369;{{ \App\Support\Money::display($pricingPreview['chargeable_subtotal'] ?? 0) }}</strong></li>
-                    <li class="mb-2">Service charge (8%): <strong class="text-dark" id="room_service_fee">&#8369;{{ \App\Support\Money::display($pricingPreview['service_fee'] ?? 0) }}</strong></li>
-                    <li class="mb-2">Breakfast (optional): <strong class="text-dark">&#8369;{{ \App\Support\Money::display(config('pricing.breakfast_fee', 1200)) }}</strong></li>
-                    <li class="mb-2">Taxes excluded from this summary: <strong class="text-dark">VAT and local tax</strong>. Full breakdown appears on your receipt.</li>
+                    <li class="mb-2">Charges excluded from this summary: <strong class="text-dark">VAT, local tax, and service charge</strong>. Full breakdown appears on your receipt.</li>
                     <li class="mb-2">
                         Total:
                         <strong class="text-dark" id="room_total_value">
@@ -288,7 +286,6 @@
             const stayValue = document.getElementById('room_stay_value');
             const totalValue = document.getElementById('room_total_value');
             const chargeableSubtotalValue = document.getElementById('room_chargeable_subtotal');
-            const serviceFeeValue = document.getElementById('room_service_fee');
             const availabilityStatus = document.getElementById('room_availability_status');
             const bookingFeedback = document.getElementById('room_booking_feedback');
             const bookingSubmit = document.getElementById('room_booking_submit');
@@ -381,7 +378,7 @@
                 if (totalValue) {
                     totalValue.textContent = 'Select dates to preview';
                 }
-                [chargeableSubtotalValue, serviceFeeValue].forEach((value) => {
+                [chargeableSubtotalValue].forEach((value) => {
                     if (value) value.textContent = '--';
                 });
 
@@ -423,7 +420,6 @@
                     totalValue.textContent = formatCurrency(pricing.total);
                 }
                 if (chargeableSubtotalValue) chargeableSubtotalValue.textContent = formatCurrency(pricing.chargeable_subtotal);
-                if (serviceFeeValue) serviceFeeValue.textContent = formatCurrency(pricing.service_fee);
 
                 setAvailabilityState(availability, 'Select valid dates to preview.');
             };
