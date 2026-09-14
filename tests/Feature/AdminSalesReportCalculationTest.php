@@ -22,6 +22,7 @@ class AdminSalesReportCalculationTest extends TestCase
         $staff = Staff::factory()->create();
 
         $pendingRefundPayment = $this->createPayment($staff, 1000, Payment::METHOD_CASH, 'refund_pending', '2026-09-05 10:00:00');
+        $pendingRefundPayment->booking->guestDetail()->update(['meal_plan' => 'breakfast_included']);
         $cashRefundedPayment = $this->createPayment($staff, 2000, Payment::METHOD_CASH, 'refunded', '2026-09-06 10:00:00');
         $gcashRefundedPayment = $this->createPayment($staff, 3000, Payment::METHOD_GCASH, 'refunded', '2026-09-06 11:00:00');
 
@@ -36,6 +37,8 @@ class AdminSalesReportCalculationTest extends TestCase
         $response->assertOk()
             ->assertViewHas('summary', function (array $summary): bool {
                 return $summary['gross_revenue'] === 6000.0
+                    && $summary['room_sales'] === 5000.0
+                    && $summary['food_sales'] === 1000.0
                     && $summary['refunded_total'] === 1200.0
                     && $summary['total_revenue'] === 4800.0
                     && $summary['paid_bookings'] === 3
@@ -57,6 +60,8 @@ class AdminSalesReportCalculationTest extends TestCase
             'method' => Payment::METHOD_CASH,
         ]))->assertOk()->assertViewHas('summary', function (array $summary): bool {
             return $summary['gross_revenue'] === 3000.0
+                && $summary['room_sales'] === 2000.0
+                && $summary['food_sales'] === 1000.0
                 && $summary['refunded_total'] === 500.0
                 && $summary['total_revenue'] === 2500.0
                 && $summary['paid_bookings'] === 2

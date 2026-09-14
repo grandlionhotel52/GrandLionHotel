@@ -19,6 +19,7 @@ class PricingServiceExtraBeddingTest extends TestCase
         parent::setUp();
 
         config(['pricing.extra_bedding_fee_per_night' => 500]);
+        config(['pricing.breakfast_fee' => 1200]);
 
         DB::table('room_status')->updateOrInsert(
             ['slug' => 'clean'],
@@ -48,11 +49,12 @@ class PricingServiceExtraBeddingTest extends TestCase
         $this->assertSame(1, $quote['extra_bedding_count']);
         $this->assertSame(1000.0, $quote['extra_bedding_total']);
         $this->assertSame(5000.0, $quote['chargeable_subtotal']);
+        $this->assertSame(1200.0, $quote['breakfast_fee']);
         $this->assertSame(400.0, $quote['service_fee']);
-        $this->assertSame(4821.43, $quote['net_sales']);
-        $this->assertSame(241.07, $quote['local_tax']);
-        $this->assertSame(578.57, $quote['vat']);
-        $this->assertSame(5641.07, $quote['total']);
+        $this->assertSame(5892.86, $quote['net_sales']);
+        $this->assertSame(294.64, $quote['local_tax']);
+        $this->assertSame(707.14, $quote['vat']);
+        $this->assertSame(6894.64, $quote['total']);
         $this->assertSame(2500.0, $quote['average_nightly_rate']);
     }
 
@@ -80,7 +82,8 @@ class PricingServiceExtraBeddingTest extends TestCase
         $this->assertSame(3500.0, $quote['room_total']);
         $this->assertSame(500.0, $quote['discount_amount']);
         $this->assertSame(1000.0, $quote['extra_bedding_total']);
-        $this->assertSame(5076.96, $quote['total']);
+        $this->assertSame(1200.0, $quote['breakfast_fee']);
+        $this->assertSame(6330.54, $quote['total']);
     }
 
     public function test_service_charge_only_applies_when_breakfast_is_selected(): void
@@ -93,11 +96,13 @@ class PricingServiceExtraBeddingTest extends TestCase
         $withBreakfast = app(PricingService::class)->quoteStay($room, $checkIn, $checkOut, 2, true);
 
         $this->assertFalse($roomOnly['service_fee_applies']);
+        $this->assertSame(0.0, $roomOnly['breakfast_fee']);
         $this->assertSame(0.0, $roomOnly['service_fee']);
         $this->assertSame(2089.29, $roomOnly['total']);
         $this->assertTrue($withBreakfast['service_fee_applies']);
+        $this->assertSame(1200.0, $withBreakfast['breakfast_fee']);
         $this->assertSame(160.0, $withBreakfast['service_fee']);
-        $this->assertSame(2256.43, $withBreakfast['total']);
+        $this->assertSame(3510.0, $withBreakfast['total']);
     }
 
     public function test_vat_inclusive_formula_extracts_vat_and_adds_local_tax(): void

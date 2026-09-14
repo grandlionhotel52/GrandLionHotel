@@ -27,30 +27,6 @@
             margin: 0;
             color: #b89254;
         }
-        .booking-guide-group {
-            min-width: 0;
-        }
-        .booking-guide-label {
-            display: block;
-            margin-bottom: .55rem;
-            color: #344054;
-            font-size: .72rem;
-            font-weight: 800;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-        }
-        .booking-guide-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .6rem 1rem;
-        }
-        .booking-guide-item {
-            display: inline-flex;
-            align-items: center;
-            color: #667085;
-            font-size: .82rem;
-            line-height: 1.35;
-        }
     </style>
 @endpush
 
@@ -78,36 +54,11 @@
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
         <div>
             <p class="ta-eyebrow mb-1">Your stays</p>
-            <h1 class="h2 mb-1">My bookings</h1>
-            <p class="text-secondary mb-0">View status, payment, and stay details.</p>
+            <h1 class="h2 mb-0">My bookings</h1>
         </div>
         <a href="{{ route('rooms.index') }}" class="btn btn-ta">
             <i class="bi bi-search me-1"></i>Find a room
         </a>
-    </div>
-
-    <div class="alert alert-light border mb-4" role="note">
-        <strong class="d-block mb-2">How your booking works</strong>
-        <div class="row g-3">
-            <div class="col-12 col-xl-7 booking-guide-group">
-                <span class="booking-guide-label">Booking status</span>
-                <div class="booking-guide-items">
-                    <span class="booking-guide-item"><span class="badge text-bg-secondary me-1">Pre-book</span> Waiting for hotel approval</span>
-                    <span class="booking-guide-item"><span class="badge text-bg-success me-1">Confirmed</span> Hotel approved</span>
-                    <span class="booking-guide-item"><span class="badge text-bg-primary me-1">Completed</span> Stay finished</span>
-                    <span class="booking-guide-item"><span class="badge text-bg-danger me-1">Cancelled</span> Booking cancelled</span>
-                </div>
-            </div>
-            <div class="col-12 col-xl-5 booking-guide-group">
-                <span class="booking-guide-label">Payment status</span>
-                <div class="booking-guide-items">
-                    <span class="booking-guide-item"><span class="badge text-bg-warning me-1">Unpaid</span> Payment needed after approval</span>
-                    <span class="booking-guide-item"><span class="badge text-bg-info me-1">Pending verification</span> Being checked</span>
-                    <span class="booking-guide-item"><span class="badge text-bg-success me-1">Paid</span> Payment confirmed</span>
-                    <span class="booking-guide-item"><span class="badge text-bg-info me-1">Refund pending</span> Refund processing</span>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="row g-3 mb-4">
@@ -169,24 +120,12 @@
                             <td><span class="badge {{ $statusClass($booking->status) }}">{{ \App\Models\Booking::statusLabel($booking->status) }}</span></td>
                             <td>
                                 <span class="badge {{ $paymentClass($booking->payment_status) }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span>
-                                @if($isOnlineAwaitingVerification)
-                                    <div><small class="text-secondary">Proof submitted, waiting for staff verification</small></div>
-                                @endif
-                                @if($isCashAwaitingVerification)
-                                    <div><small class="text-secondary">Waiting for staff cash confirmation</small></div>
-                                @endif
                             </td>
                             <td>&#8369;{{ number_format($booking->total_price, 2) }}</td>
                             <td class="text-end">
                                 <a href="{{ route('bookings.show', $booking) }}" class="btn btn-sm btn-ta-outline">View details</a>
-                                @if($isOnlineAwaitingVerification)
-                                    <span class="small text-secondary d-inline-block ms-2">Under verification</span>
-                                @elseif($isCashAwaitingVerification)
-                                    <span class="small text-secondary d-inline-block ms-2">Cash selected</span>
-                                @elseif($booking->payment_status !== 'paid' && $booking->status === 'confirmed')
+                                @if(!$isOnlineAwaitingVerification && !$isCashAwaitingVerification && $booking->payment_status !== 'paid' && $booking->status === 'confirmed')
                                     <a href="{{ route('payments.checkout', $booking) }}" class="btn btn-sm btn-ta">Pay now</a>
-                                @elseif($booking->status === 'pending')
-                                    <span class="small text-secondary d-inline-block ms-2">Not yet confirmed</span>
                                 @elseif($booking->payment_status === 'paid')
                                     <a href="{{ route('bookings.receipt', $booking) }}" class="btn btn-sm btn-ta">Receipt</a>
                                 @endif

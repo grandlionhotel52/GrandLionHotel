@@ -296,7 +296,7 @@
                         &#8369;{{ number_format($pricingPreview['average_nightly_rate'] ?? $room->price_per_night, 2) }}
                     </div>
                     <small class="text-secondary d-block" id="summary_price_caption">
-                        {{ $pricingPreview ? 'average per night' : 'per night' }} &middot; VAT-inclusive; local tax excluded
+                        {{ $pricingPreview ? 'average per night' : 'per night' }}
                     </small>
                     <p class="small mt-1 mb-0 {{ $pricingPreview && $pricingPreview['has_date_discount'] ? '' : 'd-none' }}" id="summary_base_rate_wrap">
                         <span class="text-secondary text-decoration-line-through" id="summary_base_rate">
@@ -316,9 +316,9 @@
                         <div class="booking-estimate-row"><span>Rate</span><strong id="summary_rate">{{ $initialSummaryRate }}</strong></div>
                         <div class="booking-estimate-row"><span>Standard occupancy</span><strong id="summary_guests">{{ $initialGuests }} guests</strong></div>
                         <div class="booking-estimate-row"><span>Accommodation subtotal</span><strong id="summary_chargeable_subtotal">&#8369;{{ number_format((float) ($pricingPreview['chargeable_subtotal'] ?? $room->price_per_night), 2) }}</strong></div>
-                        <div class="booking-estimate-row"><span>Service charge (8%, with breakfast only)</span><strong id="summary_service_fee">&#8369;{{ number_format((float) ($pricingPreview['service_fee'] ?? 0), 2) }}</strong></div>
-                        <div class="booking-estimate-row"><span>Local tax (5%)</span><strong id="summary_local_tax">&#8369;{{ number_format((float) ($pricingPreview['local_tax'] ?? 0), 2) }}</strong></div>
-                        <div class="booking-estimate-row"><span>VAT (12/112, included)</span><strong id="summary_vat">&#8369;{{ number_format((float) ($pricingPreview['vat'] ?? 0), 2) }}</strong></div>
+                        <div class="booking-estimate-row"><span>Service charge (8%)</span><strong id="summary_service_fee">&#8369;{{ number_format((float) ($pricingPreview['service_fee'] ?? 0), 2) }}</strong></div>
+                        <div class="booking-estimate-row"><span>Breakfast</span><strong id="summary_breakfast">&#8369;{{ number_format((float) ($pricingPreview['breakfast_fee'] ?? 0), 2) }}</strong></div>
+                        <p class="small text-secondary mb-2">Taxes excluded from this summary: <strong>VAT and local tax</strong>. Full breakdown appears on your receipt.</p>
                         <div class="booking-estimate-row"><span>Discount</span><strong id="summary_discount">{{ $initialSummaryDiscount }}</strong></div>
                         <div class="booking-estimate-row"><span>Availability</span><strong id="summary_availability">{{ $initialSummaryAvailability }}</strong></div>
                         <div class="booking-estimate-row booking-estimate-total mb-0">
@@ -572,8 +572,7 @@
             const summaryGuests = document.getElementById('summary_guests');
             const summaryChargeableSubtotal = document.getElementById('summary_chargeable_subtotal');
             const summaryServiceFee = document.getElementById('summary_service_fee');
-            const summaryLocalTax = document.getElementById('summary_local_tax');
-            const summaryVat = document.getElementById('summary_vat');
+            const summaryBreakfast = document.getElementById('summary_breakfast');
             const mealPlanSelect = document.getElementById('meal_plan_select');
             const summaryDiscount = document.getElementById('summary_discount');
             const summaryDiscountNote = document.getElementById('summary_discount_note');
@@ -872,7 +871,7 @@
                 }
 
                 if (summaryPriceCaption) {
-                    summaryPriceCaption.textContent = `${pricing ? 'average per night' : 'per night'} · VAT-inclusive; local tax excluded`;
+                    summaryPriceCaption.textContent = pricing ? 'average per night' : 'per night';
                 }
 
                 if (summaryBaseRate) {
@@ -895,8 +894,7 @@
 
                 if (summaryChargeableSubtotal) summaryChargeableSubtotal.textContent = formatCurrency(pricing?.chargeable_subtotal || 0);
                 if (summaryServiceFee) summaryServiceFee.textContent = formatCurrency(pricing?.service_fee || 0);
-                if (summaryLocalTax) summaryLocalTax.textContent = formatCurrency(bill.localTax);
-                if (summaryVat) summaryVat.textContent = formatCurrency(bill.vat);
+                if (summaryBreakfast) summaryBreakfast.textContent = formatCurrency(pricing?.breakfast_fee || 0);
 
                 updateSummaryDiscountText();
                 updateAvailabilityState(availability, nights > 0

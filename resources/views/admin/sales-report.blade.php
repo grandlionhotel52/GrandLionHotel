@@ -43,6 +43,23 @@
             vertical-align: middle;
             border-color: #edf2f7;
             font-size: 0.9rem;
+            white-space: nowrap;
+            overflow-wrap: normal;
+        }
+        .admin-report-table {
+            width: 100%;
+        }
+        .admin-report-table--daily {
+            min-width: 960px;
+        }
+        .admin-report-table--summary {
+            min-width: 640px;
+        }
+        .admin-report-table--transactions {
+            min-width: 760px;
+        }
+        .admin-report-shell .table-responsive {
+            overflow-y: hidden;
         }
     </style>
 @endpush
@@ -102,14 +119,14 @@
             </div>
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
-                    <p class="label">Gross Sales</p>
-                    <p class="value">&#8369;{{ number_format((float) $summary['gross_sales_before_discount'], 2) }}</p>
+                    <p class="label">Room Sales</p>
+                    <p class="value">&#8369;{{ number_format((float) $summary['room_sales'], 2) }}</p>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
-                    <p class="label">Net Collected</p>
-                    <p class="value">&#8369;{{ number_format((float) $summary['total_revenue'], 2) }}</p>
+                    <p class="label">Food Sales</p>
+                    <p class="value">&#8369;{{ number_format((float) $summary['food_sales'], 2) }}</p>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
@@ -151,13 +168,13 @@
 
     <div id="admin_sales_detail_results" data-ajax-list-sync>
     <section class="row g-4 mb-4">
-        <div class="col-xl-7">
+        <div class="col-12">
             <div class="admin-report-shell p-2 p-lg-3 h-100">
                 <div class="d-flex justify-content-between align-items-center px-2 pt-1 mb-2">
                     <h2 class="h5 mb-0">Daily Sales</h2>
                 </div>
                 <div class="table-responsive">
-                    <table class="table admin-report-table align-middle mb-0">
+                    <table class="table admin-report-table admin-report-table--daily align-middle mb-0">
                         <caption class="visually-hidden">Paid sales grouped by day</caption>
                         <thead>
                             <tr>
@@ -196,13 +213,13 @@
             </div>
         </div>
 
-        <div class="col-xl-5">
+        <div class="col-12">
             <div class="admin-report-shell p-2 p-lg-3 h-100">
                 <div class="d-flex justify-content-between align-items-center px-2 pt-1 mb-2">
                     <h2 class="h5 mb-0">Payment Methods</h2>
                 </div>
                 <div class="table-responsive">
-                    <table class="table admin-report-table align-middle mb-0">
+                    <table class="table admin-report-table admin-report-table--summary align-middle mb-0">
                         <caption class="visually-hidden">Paid sales grouped by payment method</caption>
                         <thead>
                             <tr>
@@ -235,13 +252,13 @@
     </section>
 
     <section class="row g-4">
-        <div class="col-xl-5">
+        <div class="col-12">
             <div class="admin-report-shell p-2 p-lg-3 h-100">
                 <div class="d-flex justify-content-between align-items-center px-2 pt-1 mb-2">
                     <h2 class="h5 mb-0">Staff Performance</h2>
                 </div>
                 <div class="table-responsive">
-                    <table class="table admin-report-table align-middle mb-0">
+                    <table class="table admin-report-table admin-report-table--summary align-middle mb-0">
                         <caption class="visually-hidden">Paid sales attributed to staff</caption>
                         <thead>
                             <tr>
@@ -272,13 +289,13 @@
             </div>
         </div>
 
-        <div class="col-xl-7">
+        <div class="col-12">
             <div class="admin-report-shell p-2 p-lg-3 h-100">
                 <div class="d-flex justify-content-between align-items-center px-2 pt-1 mb-2">
                     <h2 class="h5 mb-0">Recent Paid Transactions</h2>
                 </div>
                 <div class="table-responsive">
-                    <table class="table admin-report-table align-middle mb-0">
+                    <table class="table admin-report-table admin-report-table--transactions align-middle mb-0">
                         <caption class="visually-hidden">Most recent paid transactions</caption>
                         <thead>
                             <tr>

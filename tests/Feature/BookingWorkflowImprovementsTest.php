@@ -53,8 +53,8 @@ class BookingWorkflowImprovementsTest extends TestCase
         $this->assertSame('pending', $booking->status);
         $this->assertSame('unpaid', $booking->payment_status);
         $this->assertSame('breakfast_included', $booking->fresh('guestDetail')->guestDetail->meal_plan);
-        $this->assertSame('2430.00', $booking->fresh('payment')->payment->amount);
-        $this->assertSame('578.57', $booking->payment->discount_amount);
+        $this->assertSame('3330.00', $booking->fresh('payment')->payment->amount);
+        $this->assertSame('792.86', $booking->payment->discount_amount);
     }
 
     public function test_active_admin_promo_code_is_validated_and_applied_to_booking_total(): void

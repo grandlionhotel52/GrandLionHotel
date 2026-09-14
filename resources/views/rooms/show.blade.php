@@ -150,7 +150,7 @@
                 </div>
                 <small class="text-secondary d-block" id="room_price_caption">
                     @if($showDetailedPricing)
-                        {{ $pricingPreview ? 'average per night' : 'per night' }} &middot; VAT-inclusive; local tax excluded
+                        {{ $pricingPreview ? 'average per night' : 'per night' }}
                     @else
                         per night &middot; full stay total shown after sign-in
                     @endif
@@ -183,9 +183,9 @@
                         </strong>
                     </li>
                     <li class="mb-2">Accommodation subtotal: <strong class="text-dark" id="room_chargeable_subtotal">&#8369;{{ \App\Support\Money::display($pricingPreview['chargeable_subtotal'] ?? 0) }}</strong></li>
-                    <li class="mb-2">Service charge (8%, with breakfast only): <strong class="text-dark" id="room_service_fee">&#8369;{{ \App\Support\Money::display($pricingPreview['service_fee'] ?? 0) }}</strong></li>
-                    <li class="mb-2">Local tax (5%): <strong class="text-dark" id="room_local_tax">&#8369;{{ \App\Support\Money::display($pricingPreview['local_tax'] ?? 0) }}</strong></li>
-                    <li class="mb-2">VAT (12/112, included): <strong class="text-dark" id="room_vat">&#8369;{{ \App\Support\Money::display($pricingPreview['vat'] ?? 0) }}</strong></li>
+                    <li class="mb-2">Service charge (8%): <strong class="text-dark" id="room_service_fee">&#8369;{{ \App\Support\Money::display($pricingPreview['service_fee'] ?? 0) }}</strong></li>
+                    <li class="mb-2">Breakfast (optional): <strong class="text-dark">&#8369;{{ \App\Support\Money::display(config('pricing.breakfast_fee', 1200)) }}</strong></li>
+                    <li class="mb-2">Taxes excluded from this summary: <strong class="text-dark">VAT and local tax</strong>. Full breakdown appears on your receipt.</li>
                     <li class="mb-2">
                         Total:
                         <strong class="text-dark" id="room_total_value">
@@ -289,8 +289,6 @@
             const totalValue = document.getElementById('room_total_value');
             const chargeableSubtotalValue = document.getElementById('room_chargeable_subtotal');
             const serviceFeeValue = document.getElementById('room_service_fee');
-            const localTaxValue = document.getElementById('room_local_tax');
-            const vatValue = document.getElementById('room_vat');
             const availabilityStatus = document.getElementById('room_availability_status');
             const bookingFeedback = document.getElementById('room_booking_feedback');
             const bookingSubmit = document.getElementById('room_booking_submit');
@@ -369,7 +367,7 @@
                 }
 
                 if (showDetailedPricing && priceCaption) {
-                    priceCaption.textContent = 'per night · VAT-inclusive; local tax excluded';
+                    priceCaption.textContent = 'per night';
                 }
 
                 if (baseRateWrap) {
@@ -383,7 +381,7 @@
                 if (totalValue) {
                     totalValue.textContent = 'Select dates to preview';
                 }
-                [chargeableSubtotalValue, serviceFeeValue, localTaxValue, vatValue].forEach((value) => {
+                [chargeableSubtotalValue, serviceFeeValue].forEach((value) => {
                     if (value) value.textContent = '--';
                 });
 
@@ -396,7 +394,7 @@
                 }
 
                 if (showDetailedPricing && priceCaption) {
-                    priceCaption.textContent = 'average per night · VAT-inclusive; local tax excluded';
+                    priceCaption.textContent = 'average per night';
                 }
 
                 if (baseRate) {
@@ -426,8 +424,6 @@
                 }
                 if (chargeableSubtotalValue) chargeableSubtotalValue.textContent = formatCurrency(pricing.chargeable_subtotal);
                 if (serviceFeeValue) serviceFeeValue.textContent = formatCurrency(pricing.service_fee);
-                if (localTaxValue) localTaxValue.textContent = formatCurrency(pricing.local_tax);
-                if (vatValue) vatValue.textContent = formatCurrency(pricing.vat);
 
                 setAvailabilityState(availability, 'Select valid dates to preview.');
             };

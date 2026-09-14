@@ -85,6 +85,7 @@
         $extraBeddingTotal = (float) ($pricingQuote['extra_bedding_total'] ?? 0);
         $chargeableSubtotal = (float) ($pricingQuote['chargeable_subtotal'] ?? ($roomSubtotal + $extraBeddingTotal));
         $serviceFee = (float) ($pricingQuote['service_fee'] ?? 0);
+        $breakfastFee = (float) ($pricingQuote['breakfast_fee'] ?? 0);
         $grossAmount = (float) ($billingQuote['gross_amount'] ?? 0);
         $netSales = (float) ($billingQuote['net_sales'] ?? 0);
         $localTax = (float) ($billingQuote['local_tax'] ?? 0);
@@ -195,7 +196,8 @@
             </tr>
         @endif
         <tr><th>Accommodation Subtotal</th><td>&#8369;{{ number_format($chargeableSubtotal, 2) }}</td></tr>
-        <tr><th>Service Charge (8%, Breakfast Only)</th><td>&#8369;{{ number_format($serviceFee, 2) }}</td></tr>
+        <tr><th>Service Charge (8%)</th><td>&#8369;{{ number_format($serviceFee, 2) }}</td></tr>
+        <tr><th>Breakfast</th><td>&#8369;{{ number_format($breakfastFee, 2) }}</td></tr>
         <tr><th>Gross VAT-Inclusive Amount</th><td>&#8369;{{ number_format($grossAmount, 2) }}</td></tr>
         @if($isVatExempt)
             <tr><th>Less: VAT Exemption</th><td>-&#8369;{{ number_format($vatExemption, 2) }}</td></tr>

@@ -52,7 +52,8 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $withBreakfast->assertOk();
         $withBreakfast->assertJsonPath('pricing.service_fee_applies', true);
         $withBreakfast->assertJsonPath('pricing.service_fee', 280);
-        $withBreakfast->assertJsonPath('pricing.total', 3948.75);
+        $withBreakfast->assertJsonPath('pricing.breakfast_fee', 1200);
+        $withBreakfast->assertJsonPath('pricing.total', 5202.32);
     }
 
     public function test_room_search_displays_selected_stay_discounted_pricing(): void
@@ -78,7 +79,7 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $response->assertSee('Date Discount Room');
         $response->assertSee('1,750');
         $response->assertSee('3,656.25 total for 2 nights');
-        $response->assertSee('VAT is included in the rate. Total includes 5% local tax; an 8% service charge applies only with breakfast.');
+        $response->assertSee('Tax details are excluded from this summary and itemized on your receipt.');
         $response->assertSee('Date discount on 1 night');
     }
 
@@ -111,9 +112,14 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $response->assertOk();
         $response->assertSee('1,750');
         $response->assertSee('3,656.25');
-        $response->assertSee('Service charge (8%, with breakfast only)');
-        $response->assertSee('Local tax (5%)');
-        $response->assertSee('VAT (12/112, included)');
+        $response->assertSee('Service charge (8%)');
+        $response->assertSee('Breakfast');
+        $response->assertSee('summary_breakfast', false);
+        $response->assertDontSee('Service charge (8%, with breakfast only)');
+        $response->assertSee('Taxes excluded from this summary:');
+        $response->assertSee('VAT and local tax');
+        $response->assertDontSee('Local tax (5%)');
+        $response->assertDontSee('VAT (12/112, included)');
         $response->assertSee('Date discount on 1 night');
     }
 
@@ -144,7 +150,8 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
 
         $customerResponse->assertOk();
         $customerResponse->assertSee('Accommodation subtotal:');
-        $customerResponse->assertSee('Local tax (5%):');
+        $customerResponse->assertSee('Taxes excluded from this summary:');
+        $customerResponse->assertDontSee('Local tax (5%):');
         $customerResponse->assertDontSee('Price breakdown available after sign-in');
     }
 

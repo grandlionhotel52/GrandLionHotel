@@ -93,6 +93,7 @@ class DashboardController extends Controller
 
         $paymentsQuery = Payment::query()
             ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
+            ->leftJoin('booking_guest_details', 'booking_guest_details.booking_id', '=', 'bookings.booking_id')
             ->leftJoin('booking_discounts', 'booking_discounts.booking_id', '=', 'bookings.booking_id')
             ->leftJoin('staff', 'staff.staff_id', '=', 'bookings.staff_id')
             // A refund request changes a previously paid payment to refund_pending.
@@ -116,6 +117,7 @@ class DashboardController extends Controller
                 'payments.method',
                 'payments.status',
                 'payments.discount_amount',
+                'booking_guest_details.meal_plan',
                 'booking_discounts.discount_type',
                 'payments.paid_at',
                 'bookings.staff_id as assigned_staff_id',
@@ -127,6 +129,14 @@ class DashboardController extends Controller
                 foreach ($this->paymentTaxComponents($payment) as $key => $value) {
                     $payment->setAttribute($key, $value);
                 }
+
+                $amount = round(max(0, (float) $payment->amount), 2);
+                $foodSales = $payment->meal_plan === 'breakfast_included'
+                    ? min($amount, round(max(0, (float) config('pricing.breakfast_fee', 1200)), 2))
+                    : 0.0;
+
+                $payment->setAttribute('report_food_sales', $foodSales);
+                $payment->setAttribute('report_room_sales', round($amount - $foodSales, 2));
             });
 
         $refundsQuery = RefundRequest::query()
@@ -161,6 +171,8 @@ class DashboardController extends Controller
         $summary = [
             'total_revenue' => $totalRevenue,
             'gross_revenue' => $grossRevenue,
+            'room_sales' => (float) $payments->sum('report_room_sales'),
+            'food_sales' => (float) $payments->sum('report_food_sales'),
             'gross_sales_before_discount' => (float) $payments->sum('report_gross_sales'),
             'refunded_total' => $refundedTotal,
             'paid_bookings' => $paidBookings,

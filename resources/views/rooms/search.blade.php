@@ -321,10 +321,10 @@
                                     <small class="text-secondary d-block">
                                         &#8369;{{ \App\Support\Money::display($stayPricing['total']) }} total for {{ $stayPricing['nights'] }} night{{ $stayPricing['nights'] === 1 ? '' : 's' }}
                                     </small>
-                                    <small class="text-secondary d-block">VAT is included in the rate. Total includes 5% local tax; an 8% service charge applies only with breakfast.</small>
+                                    <small class="text-secondary d-block">Tax details are excluded from this summary and itemized on your receipt.</small>
                                 @else
                                     <div class="price-tag">&#8369;{{ \App\Support\Money::display($room->price_per_night) }}</div>
-                                    <small class="text-secondary">/ night &middot; VAT-inclusive; local tax excluded</small>
+                                    <small class="text-secondary">/ night &middot; tax details shown on receipt</small>
                                 @endif
                             </div>
                             <div class="search-card-actions">

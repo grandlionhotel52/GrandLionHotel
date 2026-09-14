@@ -15,7 +15,7 @@ class PricingService
         string $checkIn,
         string $checkOut,
         ?int $guests = null,
-        bool $includeServiceFee = false
+        bool $includeBreakfast = false
     ): array
     {
         $start = Carbon::parse($checkIn)->startOfDay();
@@ -74,7 +74,8 @@ class PricingService
         $discountAmount = round($discountAmount, 2);
         $extraBeddingTotal = round($extraBeddingCount * $extraBeddingFeePerNight * $nights, 2);
         $chargeableSubtotal = round($roomTotal + $extraBeddingTotal, 2);
-        $charges = $this->statutoryCharges($chargeableSubtotal, $includeServiceFee);
+        $breakfastFee = $includeBreakfast ? $this->breakfastFee() : 0.0;
+        $charges = $this->statutoryCharges($chargeableSubtotal, $includeBreakfast, $breakfastFee);
         $grandTotal = $charges['total'];
 
         return [
@@ -91,9 +92,11 @@ class PricingService
             'extra_bedding_fee_per_night' => $extraBeddingFeePerNight,
             'extra_bedding_total' => $extraBeddingTotal,
             'chargeable_subtotal' => $chargeableSubtotal,
+            'breakfast_included' => $includeBreakfast,
+            'breakfast_fee' => $breakfastFee,
             'service_fee_rate' => $charges['service_fee_rate'],
             'service_fee' => $charges['service_fee'],
-            'service_fee_applies' => $includeServiceFee,
+            'service_fee_applies' => $includeBreakfast,
             'gross_amount' => $charges['gross_amount'],
             'vat_inclusive_amount' => $charges['vat_inclusive_amount'],
             'net_sales' => $charges['net_sales'],
@@ -114,10 +117,10 @@ class PricingService
         string $checkIn,
         string $checkOut,
         ?int $guests = null,
-        bool $includeServiceFee = false
+        bool $includeBreakfast = false
     ): float
     {
-        return $this->quoteStay($room, $checkIn, $checkOut, $guests, $includeServiceFee)['total'];
+        return $this->quoteStay($room, $checkIn, $checkOut, $guests, $includeBreakfast)['total'];
     }
 
     public function quoteBooking(Booking $booking): array
@@ -146,6 +149,8 @@ class PricingService
                 'extra_bedding_fee_per_night' => $this->extraBeddingFeePerNight(),
                 'extra_bedding_total' => 0.0,
                 'chargeable_subtotal' => 0.0,
+                'breakfast_included' => false,
+                'breakfast_fee' => 0.0,
                 'service_fee_rate' => $this->serviceFeeRate(),
                 'service_fee' => 0.0,
                 'service_fee_applies' => false,
@@ -185,14 +190,24 @@ class PricingService
         return round(max(0, (float) config('pricing.extra_bedding_fee_per_night', 0)), 2);
     }
 
-    public function statutoryCharges(float $subtotal, bool $includeServiceFee = false): array
+    public function breakfastFee(): float
+    {
+        return round(max(0, (float) config('pricing.breakfast_fee', 1200)), 2);
+    }
+
+    public function statutoryCharges(
+        float $subtotal,
+        bool $includeServiceFee = false,
+        float $additionalCharge = 0.0
+    ): array
     {
         $subtotal = round(max(0, $subtotal), 2);
+        $additionalCharge = round(max(0, $additionalCharge), 2);
         $serviceFeeRate = $this->serviceFeeRate();
         $localTaxRate = $this->localTaxRate();
         $vatRate = $this->vatRate();
         $serviceFee = $includeServiceFee ? round($subtotal * $serviceFeeRate, 2) : 0.0;
-        $grossAmount = round($subtotal + $serviceFee, 2);
+        $grossAmount = round($subtotal + $serviceFee + $additionalCharge, 2);
         $netSales = round($grossAmount / (1 + $vatRate), 2);
         $vat = round($grossAmount - $netSales, 2);
         $localTax = round($netSales * $localTaxRate, 2);
