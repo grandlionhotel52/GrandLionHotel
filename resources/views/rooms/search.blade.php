@@ -174,9 +174,6 @@
         if (filled(request('sort'))) {
             $activeFilters[] = ['name' => 'sort', 'label' => 'Sort', 'value' => ucfirst(str_replace('_', ' ', (string) request('sort')))];
         }
-        if (request('available_only')) {
-            $activeFilters[] = ['name' => 'available_only', 'label' => 'Availability', 'value' => 'Available only'];
-        }
     @endphp
 
     <header class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
@@ -217,14 +214,11 @@
                 </div>
                 <div class="field-toolbar">
                     <div class="search-filter-toolbar">
-                        <div class="form-check mb-0">
-                            <input class="form-check-input" type="checkbox" name="available_only" value="1" id="availableOnly" {{ request('available_only') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="availableOnly">Available only</label>
+                        <div class="small text-secondary">
+                            <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
+                            Only guest-ready rooms are shown. Dates exclude rooms that are already booked.
                         </div>
                         <div class="search-filter-actions">
-                            <span class="small text-secondary d-inline-flex align-items-center me-1">
-                                <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Results update automatically
-                            </span>
                             <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
                         </div>
                     </div>
