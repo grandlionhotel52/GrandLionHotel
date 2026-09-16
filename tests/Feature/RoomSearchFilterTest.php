@@ -11,7 +11,7 @@ class RoomSearchFilterTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_room_search_filters_by_type_view_and_maximum_price(): void
+    public function test_room_search_filters_by_type_or_view(): void
     {
         Room::factory()->create([
             'name' => 'Affordable Garden Suite',
@@ -34,11 +34,10 @@ class RoomSearchFilterTest extends TestCase
 
         $this->get(route('rooms.index', [
             'type' => 'Garden',
-            'max_price' => 5000,
         ]))
             ->assertOk()
             ->assertSee('Affordable Garden Suite')
-            ->assertDontSee('Expensive Garden Suite')
+            ->assertSee('Expensive Garden Suite')
             ->assertDontSee('Affordable Standard Room');
     }
 
@@ -70,6 +69,7 @@ class RoomSearchFilterTest extends TestCase
         $this->get(route('rooms.index'))
             ->assertOk()
             ->assertDontSee('name="available_only"', false)
+            ->assertDontSee('name="max_price"', false)
             ->assertSee('Only guest-ready rooms are shown.')
             ->assertDontSee('Apply filters');
     }

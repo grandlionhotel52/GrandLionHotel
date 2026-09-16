@@ -13,12 +13,11 @@
         .search-filter-grid {
             display: grid;
             gap: 0.8rem;
-            grid-template-columns: repeat(15, minmax(0, 1fr));
+            grid-template-columns: repeat(12, minmax(0, 1fr));
         }
         .search-filter-grid .field-type { grid-column: span 3; }
         .search-filter-grid .field-check-in { grid-column: span 3; }
         .search-filter-grid .field-check-out { grid-column: span 3; }
-        .search-filter-grid .field-max-price { grid-column: span 3; }
         .search-filter-grid .field-sort { grid-column: span 3; }
         .search-filter-grid .field-toolbar { grid-column: 1 / -1; }
         .search-filter-toolbar {
@@ -102,25 +101,10 @@
             gap: 0.45rem;
             justify-content: flex-end;
         }
-        @media (max-width: 1199.98px) {
-            .search-filter-grid {
-                grid-template-columns: repeat(12, minmax(0, 1fr));
-            }
-            .search-filter-grid .field-type {
-                grid-column: span 4;
-            }
-            .search-filter-grid .field-check-in,
-            .search-filter-grid .field-check-out,
-            .search-filter-grid .field-max-price,
-            .search-filter-grid .field-sort {
-                grid-column: span 2;
-            }
-        }
         @media (max-width: 991.98px) {
             .search-filter-grid .field-type,
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
-            .search-filter-grid .field-max-price,
             .search-filter-grid .field-sort {
                 grid-column: span 6;
             }
@@ -129,7 +113,6 @@
             .search-filter-grid .field-type,
             .search-filter-grid .field-check-in,
             .search-filter-grid .field-check-out,
-            .search-filter-grid .field-max-price,
             .search-filter-grid .field-sort {
                 grid-column: span 12;
             }
@@ -168,9 +151,6 @@
         if (filled(request('type'))) {
             $activeFilters[] = ['name' => 'type', 'label' => 'Type', 'value' => request('type')];
         }
-        if (filled(request('max_price'))) {
-            $activeFilters[] = ['name' => 'max_price', 'label' => 'Max Price', 'value' => 'PHP '.number_format((int) request('max_price'))];
-        }
         if (filled(request('sort'))) {
             $activeFilters[] = ['name' => 'sort', 'label' => 'Sort', 'value' => ucfirst(str_replace('_', ' ', (string) request('sort')))];
         }
@@ -198,10 +178,6 @@
                 <div class="field-check-out">
                     <label class="form-label">Check-out</label>
                     <input type="date" name="check_out" min="{{ now()->addDay()->toDateString() }}" class="form-control" value="{{ request('check_out') }}">
-                </div>
-                <div class="field-max-price">
-                    <label class="form-label">Max &#8369;/night</label>
-                    <input type="number" name="max_price" min="0" step="100" class="form-control" value="{{ request('max_price') }}" placeholder="5000" data-ajax-search>
                 </div>
                 <div class="field-sort">
                     <label class="form-label">Sort by</label>

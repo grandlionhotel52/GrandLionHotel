@@ -148,10 +148,6 @@ class RoomController extends Controller
                             ->orWhere('view_type', 'like', '%'.$keyword.'%');
                     });
                 }
-            )
-            ->when(
-                $request->filled('max_price') && is_numeric($request->input('max_price')),
-                fn (Builder $query) => $query->where('price_per_night', '<=', max(0, $request->integer('max_price')))
             );
 
         if ($stay['is_valid']) {
