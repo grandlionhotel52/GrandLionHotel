@@ -119,7 +119,7 @@
             }
             .search-filter-actions {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr;
             }
             .search-filter-actions .btn { min-width: 0; }
             .search-card-footer {
