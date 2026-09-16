@@ -70,6 +70,7 @@ class RoomSearchFilterTest extends TestCase
             ->assertOk()
             ->assertDontSee('name="available_only"', false)
             ->assertDontSee('name="max_price"', false)
+            ->assertDontSee('name="sort"', false)
             ->assertSee('Only guest-ready rooms are shown.')
             ->assertDontSee('Apply filters');
     }

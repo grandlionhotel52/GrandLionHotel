@@ -33,7 +33,7 @@ class RoomController extends Controller
 
         $this->applyFilters($roomsQuery, $request, $stay);
 
-        $this->applySort($roomsQuery, $request->string('sort', 'recommended')->toString());
+        $roomsQuery->orderByAvailability('desc')->orderBy('price_per_night');
 
         $rooms = $roomsQuery->paginate(9)->withQueryString();
         $this->attachStayPricing($rooms->getCollection(), $stay);
@@ -111,16 +111,6 @@ class RoomController extends Controller
                         : 'Unavailable for your selected dates.'),
             ],
         ]);
-    }
-
-    private function applySort(Builder $roomsQuery, string $sort): void
-    {
-        match ($sort) {
-            'price_low' => $roomsQuery->orderBy('price_per_night'),
-            'price_high' => $roomsQuery->orderByDesc('price_per_night'),
-            'newest' => $roomsQuery->latest(),
-            default => $roomsQuery->orderByAvailability('desc')->orderBy('price_per_night'),
-        };
     }
 
     private function applyFilters(Builder $roomsQuery, Request $request, array $stay): void

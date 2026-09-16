@@ -15,10 +15,9 @@
             gap: 0.8rem;
             grid-template-columns: repeat(12, minmax(0, 1fr));
         }
-        .search-filter-grid .field-type { grid-column: span 3; }
-        .search-filter-grid .field-check-in { grid-column: span 3; }
-        .search-filter-grid .field-check-out { grid-column: span 3; }
-        .search-filter-grid .field-sort { grid-column: span 3; }
+        .search-filter-grid .field-type { grid-column: span 4; }
+        .search-filter-grid .field-check-in { grid-column: span 4; }
+        .search-filter-grid .field-check-out { grid-column: span 4; }
         .search-filter-grid .field-toolbar { grid-column: 1 / -1; }
         .search-filter-toolbar {
             display: flex;
@@ -104,16 +103,14 @@
         @media (max-width: 991.98px) {
             .search-filter-grid .field-type,
             .search-filter-grid .field-check-in,
-            .search-filter-grid .field-check-out,
-            .search-filter-grid .field-sort {
+            .search-filter-grid .field-check-out {
                 grid-column: span 6;
             }
         }
         @media (max-width: 575.98px) {
             .search-filter-grid .field-type,
             .search-filter-grid .field-check-in,
-            .search-filter-grid .field-check-out,
-            .search-filter-grid .field-sort {
+            .search-filter-grid .field-check-out {
                 grid-column: span 12;
             }
             .search-filter-toolbar {
@@ -151,9 +148,6 @@
         if (filled(request('type'))) {
             $activeFilters[] = ['name' => 'type', 'label' => 'Type', 'value' => request('type')];
         }
-        if (filled(request('sort'))) {
-            $activeFilters[] = ['name' => 'sort', 'label' => 'Sort', 'value' => ucfirst(str_replace('_', ' ', (string) request('sort')))];
-        }
     @endphp
 
     <header class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
@@ -178,15 +172,6 @@
                 <div class="field-check-out">
                     <label class="form-label">Check-out</label>
                     <input type="date" name="check_out" min="{{ now()->addDay()->toDateString() }}" class="form-control" value="{{ request('check_out') }}">
-                </div>
-                <div class="field-sort">
-                    <label class="form-label">Sort by</label>
-                    <select class="form-select" name="sort">
-                        <option value="recommended" @selected(request('sort', 'recommended') === 'recommended')>Recommended</option>
-                        <option value="price_low" @selected(request('sort') === 'price_low')>Price: Low to High</option>
-                        <option value="price_high" @selected(request('sort') === 'price_high')>Price: High to Low</option>
-                        <option value="newest" @selected(request('sort') === 'newest')>Newest Listings</option>
-                    </select>
                 </div>
                 <div class="field-toolbar">
                     <div class="search-filter-toolbar">
