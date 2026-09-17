@@ -64,21 +64,6 @@ return new class extends Migration
             $table->index(['discount_date_start', 'discount_date_end'], 'room_date_discounts_range_index');
         });
 
-        Schema::table('refund_requests', function (Blueprint $table): void {
-            $this->dropForeignIfExists($table, 'refund_requests_booking_id_foreign');
-            $this->dropForeignIfExists($table, 'refund_requests_admin_id_foreign');
-            $this->dropForeignIfExists($table, 'refund_requests_customer_id_foreign');
-            $this->dropForeignIfExists($table, 'refund_requests_staff_id_foreign');
-        });
-
-        Schema::table('refund_requests', function (Blueprint $table): void {
-            foreach (['booking_id', 'admin_id', 'customer_id', 'staff_id'] as $column) {
-                if (Schema::hasColumn('refund_requests', $column)) {
-                    $table->dropColumn($column);
-                }
-            }
-        });
-
         Schema::table('payments', function (Blueprint $table): void {
             $this->dropForeignIfExists($table, 'payments_staff_id_foreign');
         });
@@ -118,36 +103,6 @@ return new class extends Migration
             }
         });
 
-        Schema::table('refund_requests', function (Blueprint $table): void {
-            if (!Schema::hasColumn('refund_requests', 'booking_id')) {
-                $table->foreignId('booking_id')->after('refund_request_id')
-                    ->constrained('bookings', 'booking_id')
-                    ->cascadeOnDelete();
-            }
-
-            if (!Schema::hasColumn('refund_requests', 'admin_id')) {
-                $table->foreignId('admin_id')->nullable()->after('payment_id')
-                    ->constrained('admins', 'admin_id')
-                    ->nullOnDelete();
-            }
-
-            if (!Schema::hasColumn('refund_requests', 'customer_id')) {
-                $table->foreignId('customer_id')->nullable()->after('admin_id')
-                    ->constrained('customers', 'customer_id')
-                    ->nullOnDelete();
-            }
-
-            if (!Schema::hasColumn('refund_requests', 'staff_id')) {
-                $table->foreignId('staff_id')->nullable()->after('customer_id')
-                    ->constrained('staff', 'staff_id')
-                    ->nullOnDelete();
-            }
-        });
-
-        DB::table('refund_requests')
-            ->join('payments', 'payments.payment_id', '=', 'refund_requests.payment_id')
-            ->update(['refund_requests.booking_id' => DB::raw('payments.booking_id')]);
-
         Schema::table('room_date_discounts', function (Blueprint $table): void {
             $this->dropIndexIfExists($table, 'room_date_discounts_room_range_unique', 'unique');
             $this->dropIndexIfExists($table, 'room_date_discounts_range_index');
@@ -180,10 +135,6 @@ return new class extends Migration
         if (\Illuminate\Support\Facades\DB::getDriverName() === 'sqlite') {
             $column = match ($constraintName) {
                 'room_date_discounts_admin_id_foreign' => 'admin_id',
-                'refund_requests_booking_id_foreign' => 'booking_id',
-                'refund_requests_admin_id_foreign' => 'admin_id',
-                'refund_requests_customer_id_foreign' => 'customer_id',
-                'refund_requests_staff_id_foreign' => 'staff_id',
                 'payments_staff_id_foreign' => 'staff_id',
                 'booking_guest_details_staff_id_foreign' => 'staff_id',
                 default => null,

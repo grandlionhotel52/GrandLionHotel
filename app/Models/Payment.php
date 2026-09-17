@@ -6,7 +6,6 @@ use App\Models\Concerns\HasLegacyIdAttribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Payment extends Model
@@ -65,11 +64,6 @@ class Payment extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class, 'booking_id', 'booking_id');
-    }
-
-    public function refundRequests(): HasMany
-    {
-        return $this->hasMany(RefundRequest::class, 'payment_id', 'payment_id');
     }
 
     public static function allowedMethods(): array

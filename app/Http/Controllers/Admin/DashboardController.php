@@ -7,7 +7,6 @@ use App\Models\Admin;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Payment;
-use App\Models\RefundRequest;
 use App\Models\Room;
 use App\Models\Staff;
 use Carbon\Carbon;
@@ -96,11 +95,7 @@ class DashboardController extends Controller
             ->leftJoin('booking_guest_details', 'booking_guest_details.booking_id', '=', 'bookings.booking_id')
             ->leftJoin('booking_discounts', 'booking_discounts.booking_id', '=', 'bookings.booking_id')
             ->leftJoin('staff', 'staff.staff_id', '=', 'bookings.staff_id')
-            // A refund request changes a previously paid payment to refund_pending.
-            // It must remain part of gross sales until (and after) the refund is
-            // processed, otherwise requesting a partial refund removes the whole
-            // sale from the report temporarily.
-            ->whereIn('payments.status', ['paid', 'refund_pending', 'refunded'])
+            ->where('payments.status', 'paid')
             ->whereNotNull('payments.paid_at')
             ->whereDate('payments.paid_at', '>=', $from)
             ->whereDate('payments.paid_at', '<=', $to);
@@ -139,42 +134,15 @@ class DashboardController extends Controller
                 $payment->setAttribute('report_room_sales', round($amount - $foodSales, 2));
             });
 
-        $refundsQuery = RefundRequest::query()
-            ->join('payments', 'payments.payment_id', '=', 'refund_requests.payment_id')
-            ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
-            ->leftJoin('staff', 'staff.staff_id', '=', 'bookings.staff_id')
-            ->where('refund_requests.status', RefundRequest::STATUS_PROCESSED)
-            ->whereNotNull('refund_requests.processed_at')
-            ->whereDate('refund_requests.processed_at', '>=', $from)
-            ->whereDate('refund_requests.processed_at', '<=', $to);
-
-        if ($method !== 'all') {
-            $refundsQuery->where('payments.method', $method);
-        }
-
-        $refunds = $refundsQuery
-            ->select([
-                'refund_requests.refund_request_id',
-                'refund_requests.amount',
-                'refund_requests.processed_at',
-                'payments.method as payment_method',
-                'bookings.staff_id as assigned_staff_id',
-                'staff.name as assigned_staff_name',
-            ])
-            ->get();
-
         $grossRevenue = (float) $payments->sum(static fn ($payment): float => (float) $payment->amount);
-        $refundedTotal = (float) $refunds->sum(static fn ($refund): float => (float) $refund->amount);
-        $totalRevenue = $grossRevenue - $refundedTotal;
         $paidBookings = $payments->count();
 
         $summary = [
-            'total_revenue' => $totalRevenue,
+            'total_revenue' => $grossRevenue,
             'gross_revenue' => $grossRevenue,
             'room_sales' => (float) $payments->sum('report_room_sales'),
             'food_sales' => (float) $payments->sum('report_food_sales'),
             'gross_sales_before_discount' => (float) $payments->sum('report_gross_sales'),
-            'refunded_total' => $refundedTotal,
             'paid_bookings' => $paidBookings,
             'average_sale' => $paidBookings > 0 ? round($grossRevenue / $paidBookings, 2) : 0.0,
             'total_discount' => (float) $payments->sum(static fn ($payment): float => (float) ($payment->discount_amount ?? 0)),
@@ -189,25 +157,16 @@ class DashboardController extends Controller
         $paymentsByDate = $payments->groupBy(
             static fn ($payment): string => Carbon::parse($payment->paid_at)->toDateString()
         );
-        $refundsByDate = $refunds->groupBy(
-            static fn ($refund): string => Carbon::parse($refund->processed_at)->toDateString()
-        );
-
         $dailySales = $paymentsByDate->keys()
-            ->merge($refundsByDate->keys())
-            ->unique()
-            ->map(static function (string $date) use ($paymentsByDate, $refundsByDate): object {
+            ->map(static function (string $date) use ($paymentsByDate): object {
                 $paymentRows = $paymentsByDate->get($date, collect());
-                $refundRows = $refundsByDate->get($date, collect());
                 $gross = (float) $paymentRows->sum(static fn ($payment): float => (float) $payment->amount);
-                $refunded = (float) $refundRows->sum(static fn ($refund): float => (float) $refund->amount);
 
                 return (object) [
                     'date' => $date,
                     'paid_bookings' => $paymentRows->count(),
                     'gross_revenue' => $gross,
-                    'refunded_total' => $refunded,
-                    'revenue' => $gross - $refunded,
+                    'revenue' => $gross,
                     'discount_total' => (float) $paymentRows->sum(static fn ($payment): float => (float) ($payment->discount_amount ?? 0)),
                     'net_sales_excluding_vat' => (float) $paymentRows->sum('report_net_sales'),
                     'vat_total' => (float) $paymentRows->sum('report_vat'),
@@ -218,22 +177,16 @@ class DashboardController extends Controller
             ->values();
 
         $paymentsByMethod = $payments->groupBy(static fn ($payment): string => (string) $payment->method);
-        $refundsByMethod = $refunds->groupBy(static fn ($refund): string => (string) $refund->payment_method);
         $methodBreakdown = $paymentsByMethod->keys()
-            ->merge($refundsByMethod->keys())
-            ->unique()
-            ->map(static function (string $methodName) use ($paymentsByMethod, $refundsByMethod): object {
+            ->map(static function (string $methodName) use ($paymentsByMethod): object {
                 $paymentRows = $paymentsByMethod->get($methodName, collect());
                 $gross = (float) $paymentRows->sum(static fn ($payment): float => (float) $payment->amount);
-                $refunded = (float) $refundsByMethod->get($methodName, collect())
-                    ->sum(static fn ($refund): float => (float) $refund->amount);
 
                 return (object) [
                     'method' => $methodName,
                     'paid_bookings' => $paymentRows->count(),
                     'gross_revenue' => $gross,
-                    'refunded_total' => $refunded,
-                    'revenue' => $gross - $refunded,
+                    'revenue' => $gross,
                 ];
             })
             ->sortByDesc(static fn (object $row): float => $row->revenue)
@@ -246,26 +199,20 @@ class DashboardController extends Controller
             return $staffId > 0 ? 'staff:'.$staffId : 'staff:unassigned:'.($staffName !== '' ? $staffName : 'Unassigned');
         };
         $paymentsByStaff = $payments->groupBy($staffKey);
-        $refundsByStaff = $refunds->groupBy($staffKey);
         $staffBreakdown = $paymentsByStaff->keys()
-            ->merge($refundsByStaff->keys())
-            ->unique()
-            ->map(static function (string $key) use ($paymentsByStaff, $refundsByStaff): object {
+            ->map(static function (string $key) use ($paymentsByStaff): object {
                 $paymentRows = $paymentsByStaff->get($key, collect());
-                $refundRows = $refundsByStaff->get($key, collect());
-                $first = $paymentRows->first() ?? $refundRows->first();
+                $first = $paymentRows->first();
                 $staffId = (int) ($first->assigned_staff_id ?? 0);
                 $staffName = trim((string) ($first->assigned_staff_name ?? ''));
                 $gross = (float) $paymentRows->sum(static fn ($payment): float => (float) $payment->amount);
-                $refunded = (float) $refundRows->sum(static fn ($refund): float => (float) $refund->amount);
 
                 return (object) [
                     'staff_id' => $staffId > 0 ? $staffId : null,
                     'staff_name' => $staffName !== '' ? $staffName : 'Unassigned',
                     'paid_bookings' => $paymentRows->count(),
                     'gross_revenue' => $gross,
-                    'refunded_total' => $refunded,
-                    'revenue' => $gross - $refunded,
+                    'revenue' => $gross,
                 ];
             })
             ->sortByDesc(static fn (object $row): float => $row->revenue)

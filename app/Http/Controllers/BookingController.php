@@ -10,7 +10,6 @@ use App\Models\PromoCode;
 use App\Models\Room;
 use App\Services\AvailabilityService;
 use App\Services\PricingService;
-use App\Services\RefundRequestService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -25,8 +24,7 @@ class BookingController extends Controller
 {
     public function __construct(
         private readonly AvailabilityService $availabilityService,
-        private readonly PricingService $pricingService,
-        private readonly RefundRequestService $refundRequestService
+        private readonly PricingService $pricingService
     ) {
     }
 
@@ -278,7 +276,7 @@ class BookingController extends Controller
     public function show(Booking $booking)
     {
         $this->authorizeOwner($booking);
-        $booking->loadMissing(['room', 'payment', 'guestDetail', 'latestRefundRequest']);
+        $booking->loadMissing(['room', 'payment', 'guestDetail']);
         $this->ensurePaidTransactionReference($booking);
 
         return view('bookings.show', compact('booking'));
@@ -302,30 +300,10 @@ class BookingController extends Controller
             'cancellation_confirmation.in' => 'Type CANCEL exactly to confirm this action.',
         ]);
 
-        $newPaymentStatus = $booking->payment_status === 'paid' ? 'refund_pending' : $booking->payment_status;
-        $refundMethodLabel = null;
-
         $booking->update([
             'status' => 'cancelled',
             'cancellation_reason' => trim((string) $validated['cancellation_reason']),
         ]);
-
-        if ($newPaymentStatus === 'refund_pending') {
-            $payment = $booking->payment()->updateOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'amount' => (float) ($booking->payment?->amount ?? $booking->total_price),
-                    'method' => $booking->payment?->method ?? 'pending',
-                    'status' => 'refund_pending',
-                ]
-            );
-            $refundMethodLabel = Payment::methodLabel((string) $payment->method);
-
-            $this->refundRequestService->createPendingForCancellation($booking, $payment, [
-                'reason' => trim((string) $validated['cancellation_reason']),
-                'notes' => 'Customer initiated the cancellation from the booking page. Refund request was created automatically from the cancellation flow.',
-            ]);
-        }
 
         $booking->loadMissing(['user', 'room', 'payment', 'assignedStaff', 'guestDetail']);
 
@@ -337,10 +315,7 @@ class BookingController extends Controller
 
         return redirect()
             ->route('bookings.show', $booking)
-            ->with('status', $newPaymentStatus === 'refund_pending'
-                ? 'Booking cancelled. Your refund request was submitted and will be processed through your original payment method'
-                    .($refundMethodLabel ? ': '.$refundMethodLabel.'.' : '.')
-                : 'Booking cancelled successfully.');
+            ->with('status', 'Booking cancelled successfully.');
     }
 
     public function requestReschedule(Request $request, Booking $booking)
@@ -350,7 +325,7 @@ class BookingController extends Controller
         if (!$booking->canRequestReschedule()) {
             return redirect()
                 ->route('bookings.show', $booking)
-                ->withErrors(['booking' => 'Schedule change requests are only available for confirmed unpaid bookings before check-in.']);
+                ->withErrors(['booking' => 'Schedule change requests are available only after payment for a confirmed booking before check-in.']);
         }
 
         $validated = $request->validate([

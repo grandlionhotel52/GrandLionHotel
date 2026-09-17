@@ -20,7 +20,7 @@ return new class extends Migration
                 $query->selectRaw('1')
                     ->from('payments')
                     ->whereColumn('payments.booking_id', 'bookings.booking_id')
-                    ->whereIn('payments.status', ['paid', 'pending_verification', 'refund_pending']);
+                    ->whereIn('payments.status', ['paid', 'pending_verification']);
             })
             ->update(['payment_due_at' => now()->addHours(24)]);
     }

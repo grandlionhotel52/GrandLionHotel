@@ -69,7 +69,6 @@
             return match ($status) {
                 'paid' => 'text-bg-success',
                 'pending_verification' => 'text-bg-info',
-                'refund_pending' => 'text-bg-info',
                 default => 'text-bg-warning',
             };
         };
@@ -152,7 +151,7 @@
                     <label class="form-label" for="admin_payment_status">Payment status</label>
                     <select id="admin_payment_status" class="form-select" name="payment_status">
                         <option value="">All</option>
-                        @foreach(['unpaid', 'pending_verification', 'paid', 'refund_pending'] as $paymentStatus)
+                        @foreach(['unpaid', 'pending_verification', 'paid'] as $paymentStatus)
                             <option value="{{ $paymentStatus }}" @selected(request('payment_status') === $paymentStatus)>{{ ucfirst(str_replace('_', ' ', $paymentStatus)) }}</option>
                         @endforeach
                     </select>

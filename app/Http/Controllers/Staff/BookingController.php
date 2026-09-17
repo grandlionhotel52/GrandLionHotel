@@ -13,7 +13,6 @@ use App\Models\RoomStatus;
 use App\Services\AvailabilityService;
 use App\Services\PaymentService;
 use App\Services\PricingService;
-use App\Services\RefundRequestService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -33,8 +32,7 @@ class BookingController extends Controller
     public function __construct(
         private readonly PaymentService $paymentService,
         private readonly AvailabilityService $availabilityService,
-        private readonly PricingService $pricingService,
-        private readonly RefundRequestService $refundRequestService
+        private readonly PricingService $pricingService
     ) {
     }
 
@@ -146,7 +144,6 @@ class BookingController extends Controller
             'payment',
             'guestDetail',
             'assignedStaff',
-            'latestRefundRequest',
         ]);
         $this->ensurePaidTransactionReference($booking);
         $returnTo = $this->resolveSafeReturnTo($request->query('return_to'));
@@ -214,22 +211,6 @@ class BookingController extends Controller
         }
 
         $booking->update($updatePayload);
-        if ($newStatus === 'cancelled' && $booking->payment_status === 'paid') {
-            $payment = $booking->payment()->updateOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'amount' => (float) ($booking->payment?->amount ?? $booking->total_price),
-                    'method' => $booking->payment?->method ?? 'pending',
-                    'status' => 'refund_pending',
-                ]
-            );
-
-            $this->refundRequestService->createPendingForCancellation($booking, $payment, [
-                'reason' => 'Staff cancelled the booking and marked the payment for refund processing.',
-                'notes' => 'Refund request was created automatically from the staff booking status flow.',
-            ]);
-        }
-
         $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
 
         if ($previousStatus !== $newStatus) {
@@ -269,29 +250,11 @@ class BookingController extends Controller
             return back()->withErrors(['booking' => 'Checked-in booking cannot be cancelled. Check-out instead.']);
         }
 
-        $newPaymentStatus = $booking->payment_status === 'paid' ? 'refund_pending' : $booking->payment_status;
-
         $booking->update($this->withAssignedStaff($booking, [
             'status' => 'cancelled',
             'actual_check_in_at' => null,
             'actual_check_out_at' => null,
         ]));
-
-        if ($newPaymentStatus === 'refund_pending') {
-            $payment = $booking->payment()->updateOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'amount' => (float) ($booking->payment?->amount ?? $booking->total_price),
-                    'method' => $booking->payment?->method ?? 'pending',
-                    'status' => 'refund_pending',
-                ]
-            );
-
-            $this->refundRequestService->createPendingForCancellation($booking, $payment, [
-                'reason' => 'Staff cancelled the booking and marked the payment for refund processing.',
-                'notes' => 'Refund request was created automatically from the staff cancellation flow.',
-            ]);
-        }
 
         $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
 
@@ -300,9 +263,7 @@ class BookingController extends Controller
         return $this->redirectAfterBookingAction(
             $request,
             $booking,
-            $newPaymentStatus === 'refund_pending'
-                ? 'Booking cancelled and refund marked for processing.'
-                : 'Booking cancelled successfully.'
+            'Booking cancelled successfully.'
         );
     }
 

@@ -7,7 +7,6 @@ use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Room;
 use App\Models\Payment;
-use App\Models\RefundRequest;
 use App\Models\Staff;
 use App\Observers\OperationalAuditObserver;
 use App\Services\AuditLogger;
@@ -38,7 +37,6 @@ class AppServiceProvider extends ServiceProvider
 
         Booking::observe(OperationalAuditObserver::class);
         Payment::observe(OperationalAuditObserver::class);
-        RefundRequest::observe(OperationalAuditObserver::class);
         Room::observe(OperationalAuditObserver::class);
         Admin::observe(OperationalAuditObserver::class);
         Staff::observe(OperationalAuditObserver::class);

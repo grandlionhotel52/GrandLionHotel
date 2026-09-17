@@ -100,7 +100,7 @@
                 <div class="border rounded-4 p-3 h-100 bg-light-subtle">
                     <p class="ta-eyebrow mb-1">Guest Care</p>
                     <h3 class="h5 mb-2">Support That Feels Human</h3>
-                    <p class="text-secondary mb-0 small">From payment verification to cancellation, refund review, reschedule requests, and room concerns, we keep the process practical and easy to follow.</p>
+                    <p class="text-secondary mb-0 small">From payment verification to cancellations, reschedule requests, and room concerns, we keep the process practical and easy to follow.</p>
                 </div>
             </div>
         </div>
@@ -167,7 +167,7 @@
                         <i class="bi bi-arrow-repeat"></i>
                         <h3 class="h5 mb-0">Booking Changes</h3>
                     </div>
-                    <p class="text-secondary mb-0 small">Reschedules, cancellations, and refund review follow the booking terms and operational approval flow.</p>
+                    <p class="text-secondary mb-0 small">Reschedules and cancellations follow the booking terms and operational approval flow.</p>
                 </div>
             </div>
         </div>

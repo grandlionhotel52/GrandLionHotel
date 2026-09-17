@@ -4,7 +4,6 @@ namespace App\Observers;
 
 use App\Models\Booking;
 use App\Models\Payment;
-use App\Models\RefundRequest;
 use App\Notifications\BookingActivityNotification;
 use App\Services\AuditLogger;
 use Illuminate\Database\Eloquent\Model;
@@ -49,7 +48,6 @@ class OperationalAuditObserver
         $booking = match (true) {
             $model instanceof Booking => $model,
             $model instanceof Payment => $model->booking,
-            $model instanceof RefundRequest => $model->payment?->booking,
             default => null,
         };
 

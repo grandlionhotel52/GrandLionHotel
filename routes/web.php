@@ -4,7 +4,6 @@ use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoomController as AdminRoomController;
-use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\PromoCodeController as AdminPromoCodeController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -89,11 +88,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::get('/occupancy-report', [DashboardController::class, 'occupancyReport'])->name('occupancy-report');
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('/activity-logs/{activityLog}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
-    Route::get('/refunds', [AdminRefundController::class, 'index'])->name('refunds.index');
-    Route::get('/refunds/{refund}', [AdminRefundController::class, 'show'])->name('refunds.show');
-    Route::patch('/refunds/{refund}/approve', [AdminRefundController::class, 'approve'])->name('refunds.approve');
-    Route::patch('/refunds/{refund}/reject', [AdminRefundController::class, 'reject'])->name('refunds.reject');
-    Route::patch('/refunds/{refund}/process', [AdminRefundController::class, 'process'])->name('refunds.process');
 
     Route::resource('rooms', AdminRoomController::class)->except(['show']);
     Route::patch('/rooms/{room}/room-status', [AdminRoomController::class, 'updateRoomStatus'])->name('rooms.update-room-status');
@@ -112,7 +106,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::patch('/bookings/{booking}/assign-staff', [AdminBookingController::class, 'assignStaff'])->name('bookings.assign-staff');
     Route::patch('/bookings/{booking}/approve-online-payment', [AdminBookingController::class, 'approveOnlinePayment'])->name('bookings.approve-online-payment');
     Route::patch('/bookings/{booking}/reject-online-payment', [AdminBookingController::class, 'rejectOnlinePayment'])->name('bookings.reject-online-payment');
-    Route::post('/bookings/{booking}/refund-request', [AdminBookingController::class, 'createRefundRequest'])->name('bookings.create-refund-request');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');

@@ -16,7 +16,7 @@ class ActivityLogController extends Controller
 {
     private const ACTIONS = ['created', 'updated', 'deleted', 'logged_in', 'logged_out'];
 
-    private const SUBJECT_TYPES = ['Booking', 'Payment', 'RefundRequest', 'Room', 'Admin', 'Staff', 'Customer'];
+    private const SUBJECT_TYPES = ['Booking', 'Payment', 'Room', 'Admin', 'Staff', 'Customer'];
 
     public function index(Request $request): View
     {

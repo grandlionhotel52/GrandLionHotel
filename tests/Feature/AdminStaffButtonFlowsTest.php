@@ -98,11 +98,6 @@ class AdminStaffButtonFlowsTest extends TestCase
             ->assertSee('id="admin_booking_results"', false)
             ->assertSee('data-ajax-list-form="#admin_booking_results"', false)
             ->assertDontSee('Apply filters');
-        $this->get(route('admin.refunds.index'))
-            ->assertOk()
-            ->assertSee('id="admin_refund_results"', false)
-            ->assertSee('data-ajax-list-form="#admin_refund_results"', false)
-            ->assertDontSee('>Filter</button>', false);
         $this->get(route('admin.sales-report'))
             ->assertOk()
             ->assertSee('id="admin_sales_results"', false)

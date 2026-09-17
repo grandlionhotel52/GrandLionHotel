@@ -9,23 +9,15 @@ use App\Mail\BookingPaidMail;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Staff;
-use App\Services\RefundRequestService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class BookingController extends Controller
 {
-    public function __construct(
-        private readonly RefundRequestService $refundRequestService
-    ) {
-    }
-
     public function index(Request $request)
     {
         $statusFilter = trim($request->string('status')->toString());
@@ -84,55 +76,13 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
-        $booking->load(['user', 'room', 'payment', 'guestDetail', 'assignedStaff', 'latestRefundRequest']);
+        $booking->load(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
         $this->ensurePaidTransactionReference($booking);
         $staffMembers = Staff::query()
             ->orderBy('name')
             ->get(['staff_id', 'name', 'email']);
 
         return view('admin.bookings.show', compact('booking', 'staffMembers'));
-    }
-
-    public function createRefundRequest(Request $request, Booking $booking)
-    {
-        $booking->loadMissing(['payment', 'latestRefundRequest']);
-        $payment = $booking->payment;
-
-        if ($booking->status !== 'cancelled' || ! $payment || $payment->status !== 'paid') {
-            return back()->withErrors(['refund' => 'A refund request can only be created for a cancelled booking with a paid payment.']);
-        }
-
-        if ($booking->latestRefundRequest && $booking->latestRefundRequest->status !== 'rejected') {
-            return redirect()->route('admin.refunds.show', $booking->latestRefundRequest)
-                ->with('status', 'This booking already has an active refund request.');
-        }
-
-        $validated = $request->validate([
-            'refund_amount' => ['required', 'numeric', 'min:0.01', 'max:'.$payment->amount],
-            'refund_reason' => ['required', 'string', 'max:1000'],
-        ]);
-
-        $refund = DB::transaction(function () use ($booking, $payment, $validated) {
-            $lockedPayment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
-            if ($lockedPayment->status !== 'paid') {
-                throw ValidationException::withMessages(['refund' => 'The payment status changed. Refresh the page and try again.']);
-            }
-
-            $lockedPayment->update(['status' => 'refund_pending']);
-            $refund = $this->refundRequestService->createPendingForCancellation($booking, $lockedPayment, [
-                'reason' => trim($validated['refund_reason']),
-                'notes' => 'Admin created this refund request for a cancelled or no-show booking.',
-            ]);
-            $refund->update([
-                'amount' => round((float) $validated['refund_amount'], 2),
-                'refund_method' => $lockedPayment->method,
-            ]);
-
-            return $refund;
-        }, 3);
-
-        return redirect()->route('admin.refunds.show', $refund)
-            ->with('status', 'Refund request created. Review and approve it before returning the money.');
     }
 
     public function assignStaff(Request $request, Booking $booking)
@@ -208,22 +158,6 @@ class BookingController extends Controller
         }
 
         $booking->update($updatePayload);
-        if ($newStatus === 'cancelled' && $booking->payment_status === 'paid') {
-            $payment = $booking->payment()->updateOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'amount' => (float) ($booking->payment?->amount ?? $booking->total_price),
-                    'method' => $booking->payment?->method ?? 'pending',
-                    'status' => 'refund_pending',
-                ]
-            );
-
-            $this->refundRequestService->createPendingForCancellation($booking, $payment, [
-                'reason' => 'Admin cancelled the booking and marked the payment for refund processing.',
-                'notes' => 'Refund request was created automatically from the admin booking status flow.',
-            ]);
-        }
-
         $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
 
         if ($previousStatus !== $newStatus) {

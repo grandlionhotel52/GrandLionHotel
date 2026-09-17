@@ -157,16 +157,7 @@
         $canRequestRoomTransfer = $booking->canRequestRoomTransfer();
         $hasPendingRoomTransferRequest = $booking->hasPendingRoomTransferRequest();
         $isPaid = $booking->payment_status === 'paid';
-        $isRefundPending = $booking->payment_status === 'refund_pending';
-        $latestRefundRequest = $booking->latestRefundRequest;
-        $refundStatusLabel = $latestRefundRequest
-            ? ucfirst(str_replace('_', ' ', (string) $latestRefundRequest->status))
-            : null;
-        $refundMethodLabel = $booking->payment
-            ? \App\Models\Payment::methodLabel((string) $booking->payment->method)
-            : null;
-        $canRequestPaidRefund = $booking->canBeCancelled() && $booking->payment_status === 'paid';
-        $canCancelWithoutRefund = $booking->canBeCancelled() && $booking->payment_status !== 'paid';
+        $canCancel = $booking->canBeCancelled();
         $isCashAwaitingVerification = $booking->status === 'confirmed'
             && $booking->payment_status !== 'paid'
             && strtolower((string) ($booking->payment?->method ?? '')) === 'cash';
@@ -185,7 +176,6 @@
         $bookingStatusLabel = \App\Models\Booking::statusLabel($booking->status);
         $paymentStatusClass = match ($booking->payment_status) {
             'paid' => 'success',
-            'refund_pending' => 'warning',
             default => $isCancelled ? 'danger' : 'warning',
         };
         $requestedReturnTo = (string) request('return_to', '');
@@ -195,8 +185,6 @@
             : route('bookings.my');
 
         $nextAction = match (true) {
-            $isRefundPending => 'Your refund is under review and will be returned through your original payment method'
-                .($refundMethodLabel ? ': '.$refundMethodLabel.'.' : '.'),
             $isCancelled => 'This reservation has been cancelled. If you still plan to stay, create a new booking.',
             $booking->status === 'pending' => 'Wait for staff confirmation. Payment becomes available right after approval.',
             $isOnlineAwaitingVerification => 'Your online payment proof was submitted. Please wait for staff to verify your transfer.',
@@ -468,9 +456,9 @@
                                 <button type="submit" class="btn btn-ta">Send reschedule request</button>
                             </div>
                         </form>
-                        <p class="small text-secondary mt-2 mb-0">This is available only for confirmed unpaid bookings before check-in.</p>
+                        <p class="small text-secondary mt-2 mb-0">Choose your preferred new dates. Staff will review availability before approving the change.</p>
                     @else
-                        <p class="small text-secondary mb-0">Schedule change requests are available only for confirmed unpaid bookings before check-in.</p>
+                        <p class="small text-secondary mb-0">Schedule change requests are available only after payment for a confirmed booking before check-in.</p>
                     @endif
                 @endif
 
@@ -518,70 +506,6 @@
                     @endif
                 @endif
 
-                @if($canRequestPaidRefund || $latestRefundRequest)
-                    <hr>
-                    <div id="refund-request"></div>
-                    <h3 class="h6 mb-3">Refund Request</h3>
-
-                    @if($latestRefundRequest)
-                        <div class="alert alert-light border small">
-                            <p class="mb-1">Status: <strong>{{ $refundStatusLabel }}</strong></p>
-                            <p class="mb-1">Submitted: <strong>{{ optional($latestRefundRequest->requested_at)->format('M d, Y h:i A') ?? '-' }}</strong></p>
-                            <p class="mb-0">Reason: <strong>{{ $latestRefundRequest->reason ?: 'No reason submitted yet.' }}</strong></p>
-                            @if($latestRefundRequest->amount)
-                                <p class="mb-0">Refund amount: <strong>₱{{ number_format((float) $latestRefundRequest->amount, 2) }}</strong></p>
-                            @endif
-                            @if($latestRefundRequest->refund_method)
-                                <p class="mb-0">Refund method: <strong>{{ \App\Models\Payment::methodLabel($latestRefundRequest->refund_method) }}</strong></p>
-                            @endif
-                            @if($latestRefundRequest->transaction_reference)
-                                <p class="mb-0">Reference: <strong>{{ $latestRefundRequest->transaction_reference }}</strong></p>
-                            @endif
-                            @if($latestRefundRequest->rejection_reason)
-                                <p class="mb-0 text-danger">Decision: <strong>{{ $latestRefundRequest->rejection_reason }}</strong></p>
-                            @endif
-                        </div>
-                    @endif
-
-                    @if($canRequestPaidRefund)
-                        <form method="POST" action="{{ route('bookings.cancel', $booking) }}" class="row g-3">
-                            @csrf
-                            @method('PATCH')
-                            <div class="col-12">
-                                <label class="form-label">Reason for cancellation and refund</label>
-                                <textarea
-                                    name="cancellation_reason"
-                                    class="form-control @error('cancellation_reason') is-invalid @enderror"
-                                    rows="3"
-                                    placeholder="Tell us why you are cancelling this paid booking."
-                                    required
-                                >{{ old('cancellation_reason', $latestRefundRequest?->reason) }}</textarea>
-                                @error('cancellation_reason')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Type CANCEL to confirm</label>
-                                <input name="cancellation_confirmation" class="form-control @error('cancellation_confirmation') is-invalid @enderror" autocomplete="off" required>
-                                @error('cancellation_confirmation')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-                            <div class="col-12">
-                                <button
-                                    type="submit"
-                                    class="btn btn-outline-danger"
-                                    onclick="return confirm('Cancel this booking and submit a refund request?')"
-                                >
-                                    Cancel booking and request refund
-                                </button>
-                            </div>
-                        </form>
-                        <p class="small text-secondary mt-2 mb-0">
-                            Refunds are returned through the original payment method{{ $refundMethodLabel ? ': '.$refundMethodLabel : '' }}.
-                        </p>
-                    @elseif($isRefundPending)
-                        <p class="small text-secondary mb-0">Staff is currently reviewing this refund request.</p>
-                    @endif
-                @endif
             </section>
         </div>
 
@@ -610,9 +534,6 @@
                 @endif
                 @if($paymentProofUrl !== '')
                     <p class="small text-secondary mb-1">Submitted Proof: <a href="{{ $paymentProofUrl }}" target="_blank" rel="noopener">View uploaded screenshot</a></p>
-                @endif
-                @if($isRefundPending && $refundMethodLabel)
-                    <p class="small text-secondary mb-1">Refund method: <strong>{{ $refundMethodLabel }}</strong></p>
                 @endif
                 <p class="mb-1"><small class="text-secondary">Room subtotal</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['room_total'] ?? $booking->total_price), 2) }}</strong></p>
                 @if(($pricingQuote['extra_bedding_total'] ?? 0) > 0)
@@ -649,11 +570,7 @@
                         <a href="{{ route('bookings.receipt', $booking) }}" class="btn btn-ta-outline">Download receipt (PDF)</a>
                     @endif
 
-                    @if($canRequestPaidRefund)
-                        <a href="#refund-request" class="btn btn-outline-danger">Go to refund request</a>
-                    @endif
-
-                    @if($canCancelWithoutRefund)
+                    @if($canCancel)
                         <form method="POST" action="{{ route('bookings.cancel', $booking) }}" class="d-grid gap-2">
                             @csrf
                             @method('PATCH')

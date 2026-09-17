@@ -159,12 +159,11 @@
                     <label class="form-label" for="adminRoomQuickSearch">Quick search</label>
                     <div class="admin-room-search-wrap">
                         <i class="bi bi-search admin-room-search-icon" aria-hidden="true"></i>
-                        <input type="search" class="form-control" id="adminRoomQuickSearch" name="q" value="{{ request('q') }}" placeholder="Room name, type, or view" autocomplete="off" aria-describedby="adminRoomSearchHelp">
+                        <input type="search" class="form-control" id="adminRoomQuickSearch" name="q" value="{{ request('q') }}" placeholder="Room name, type, or view" autocomplete="off">
                         <button type="button" class="admin-room-search-clear {{ filled(request('q')) ? '' : 'd-none' }}" id="adminRoomSearchClear" aria-label="Clear room search">
                             <i class="bi bi-x-lg" aria-hidden="true"></i>
                         </button>
                     </div>
-                    <div class="form-text" id="adminRoomSearchHelp" aria-live="polite">Results update as you type.</div>
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label class="form-label">Availability</label>

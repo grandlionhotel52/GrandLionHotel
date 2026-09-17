@@ -206,13 +206,6 @@
         $paymentProofUrl = $paymentProofPath !== ''
             ? \Illuminate\Support\Facades\Storage::disk('public')->url($paymentProofPath)
             : '';
-        $latestRefundRequest = $booking->latestRefundRequest;
-        $refundRequestStatusLabel = $latestRefundRequest
-            ? ucfirst(str_replace('_', ' ', (string) $latestRefundRequest->status))
-            : null;
-        $refundMethodLabel = $booking->payment
-            ? \App\Models\Payment::methodLabel((string) $booking->payment->method)
-            : null;
         $profileAddress = trim(collect([
             $booking->user?->address_line,
             $booking->user?->city,
@@ -251,11 +244,10 @@
         };
         $paymentChipClass = match ($booking->payment_status) {
             'paid' => 'success',
-            'refund_pending' => 'warning',
             default => $booking->status === 'cancelled' ? 'danger' : 'warning',
         };
         $nextStep = match (true) {
-            $booking->status === 'cancelled' => 'No arrival action is required. Review refund information if a payment was collected.',
+            $booking->status === 'cancelled' => 'No arrival action is required for this cancelled booking.',
             $booking->status === 'completed' => 'Stay completed. Confirm the receipt and internal notes are complete.',
             $isOnlineAwaitingVerification => 'Verify the submitted online payment proof before continuing.',
             $booking->status === 'pending' => 'Review the reservation details and confirm the booking.',
@@ -863,38 +855,6 @@
                 </form>
             </section>
 
-            @if($latestRefundRequest)
-                <section class="booking-shell p-3 p-lg-4 mb-4" id="refund-request">
-                    <h2 class="h5 mb-2">Refund Request</h2>
-                    <p class="booking-note mb-3">Review the submitted refund reason here before coordinating refund approval or payment return.</p>
-                    <div class="booking-info-grid mb-3">
-                        <div class="booking-info-item">
-                            <p class="booking-info-label">Request Status</p>
-                            <p class="booking-info-value">{{ $refundRequestStatusLabel }}</p>
-                        </div>
-                        <div class="booking-info-item">
-                            <p class="booking-info-label">Requested At</p>
-                            <p class="booking-info-value">{{ optional($latestRefundRequest->requested_at)->format('M d, Y h:i A') ?? '-' }}</p>
-                        </div>
-                        <div class="booking-info-item">
-                            <p class="booking-info-label">Refund Method</p>
-                            <p class="booking-info-value">{{ $refundMethodLabel ?? '-' }}</p>
-                        </div>
-                        <div class="booking-info-item">
-                            <p class="booking-info-label">Refund Amount</p>
-                            <p class="booking-info-value">PHP {{ number_format((float) ($booking->payment?->amount ?? 0), 2) }}</p>
-                        </div>
-                    </div>
-                    <div class="booking-info-item mb-3">
-                        <p class="booking-info-label">Refund Reason</p>
-                        <p class="booking-info-value">{{ $latestRefundRequest->reason ?: 'No refund reason submitted.' }}</p>
-                    </div>
-                    @if(filled($latestRefundRequest->notes))
-                        <p class="booking-note mb-0"><strong>System Note:</strong> {{ $latestRefundRequest->notes }}</p>
-                    @endif
-                </section>
-            @endif
-
             <section class="booking-shell p-3 p-lg-4 mb-4" id="internal-staff-notes">
                 <h2 class="h5 mb-3">Internal Staff Notes</h2>
                 <form method="POST" action="{{ route('staff.bookings.staff-notes', $booking) }}" class="row g-3">
@@ -980,12 +940,6 @@
                 </div>
 
                 @if($booking->payment)
-                    @if($latestRefundRequest)
-                        <div class="booking-meta-line">
-                            <span class="booking-meta-label">Refund Request</span>
-                            <span class="booking-meta-value">{{ $refundRequestStatusLabel }}</span>
-                        </div>
-                    @endif
                     <div class="booking-meta-line">
                         <span class="booking-meta-label">Method</span>
                         <span class="booking-meta-value">{{ \App\Models\Payment::methodLabel($booking->payment->method) }}</span>
@@ -994,12 +948,6 @@
                         <span class="booking-meta-label">Status</span>
                         <span class="booking-meta-value">{{ ucfirst($booking->payment->status) }}</span>
                     </div>
-                    @if($booking->payment_status === 'refund_pending' && $refundMethodLabel)
-                        <div class="booking-meta-line">
-                            <span class="booking-meta-label">Refund Method</span>
-                            <span class="booking-meta-value">{{ $refundMethodLabel }}</span>
-                        </div>
-                    @endif
                     @if(filled($booking->payment->customer_reference))
                         <div class="booking-meta-line">
                             <span class="booking-meta-label">Customer Ref No.</span>
@@ -1066,11 +1014,6 @@
                             <span class="booking-meta-label">PayMongo Payment ID</span>
                             <span class="booking-meta-value">{{ $booking->payment->provider_payment_id }}</span>
                         </div>
-                    @endif
-                    @if($booking->payment_status === 'refund_pending' && $refundMethodLabel)
-                        <p class="booking-note mb-0 mt-3">
-                            Refund should be processed using the guest's original payment method: <strong>{{ $refundMethodLabel }}</strong>.
-                        </p>
                     @endif
                 @else
                     <p class="text-secondary mb-0">No payment record yet.</p>

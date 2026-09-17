@@ -114,7 +114,6 @@
             return match ($status) {
                 'paid' => 'text-bg-success',
                 'pending_verification' => 'text-bg-info',
-                'refund_pending' => 'text-bg-info',
                 default => 'text-bg-warning',
             };
         };
@@ -246,9 +245,6 @@
                     </a>
                     <a href="{{ route('admin.users.index', ['profile' => 'incomplete']) }}" class="btn btn-ta-outline">
                         <i class="bi bi-person-exclamation me-1"></i>Review Incomplete Profiles
-                    </a>
-                    <a href="{{ route('admin.bookings.index', ['payment_status' => 'refund_pending']) }}" class="btn btn-ta-outline">
-                        <i class="bi bi-receipt-cutoff me-1"></i>Check Refund Queue
                     </a>
                 </div>
             </div>

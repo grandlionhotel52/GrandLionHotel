@@ -12,9 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Schema;
 
 class Booking extends Model
@@ -120,31 +118,6 @@ class Booking extends Model
         return $this->hasOne(Payment::class, 'booking_id', 'booking_id');
     }
 
-    public function refundRequests(): HasManyThrough
-    {
-        return $this->hasManyThrough(
-            RefundRequest::class,
-            Payment::class,
-            'booking_id',
-            'payment_id',
-            'booking_id',
-            'payment_id'
-        );
-    }
-
-    public function latestRefundRequest(): HasOneThrough
-    {
-        return $this->hasOneThrough(
-            RefundRequest::class,
-            Payment::class,
-            'booking_id',
-            'payment_id',
-            'booking_id',
-            'payment_id'
-        )
-            ->latestOfMany('refund_request_id');
-    }
-
     public function guestDetail(): HasOne
     {
         return $this->hasOne(BookingGuestDetail::class, 'booking_id', 'booking_id');
@@ -240,7 +213,7 @@ class Booking extends Model
     public function canRequestReschedule(): bool
     {
         return $this->status === 'confirmed'
-            && $this->payment_status === 'unpaid'
+            && $this->payment_status === 'paid'
             && is_null($this->actual_check_in_at)
             && is_null($this->actual_check_out_at)
             && $this->check_in?->copy()->startOfDay()->greaterThanOrEqualTo(now()->startOfDay());

@@ -18,11 +18,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::table('refund_requests', function (Blueprint $table): void {
-            $table->string('provider_refund_id', 120)->nullable()->unique()->after('transaction_reference');
-            $table->string('provider_refund_status', 30)->nullable()->after('provider_refund_id');
-        });
-
         Schema::table('bookings', function (Blueprint $table): void {
             $table->timestamp('payment_reminder_sent_at')->nullable()->after('payment_due_at');
             $table->timestamp('no_show_at')->nullable()->after('actual_check_out_at');
@@ -34,9 +29,6 @@ return new class extends Migration
     {
         Schema::table('bookings', function (Blueprint $table): void {
             $table->dropColumn(['payment_reminder_sent_at', 'no_show_at', 'cancellation_reason']);
-        });
-        Schema::table('refund_requests', function (Blueprint $table): void {
-            $table->dropColumn(['provider_refund_id', 'provider_refund_status']);
         });
         Schema::dropIfExists('paymongo_checkout_sessions');
     }

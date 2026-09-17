@@ -42,7 +42,7 @@ class ProcessBookingAutomation extends Command
             ->whereNull('expired_at')
             ->where('created_at', '<=', $cutoff)
             ->whereDoesntHave('payment', static function ($query): void {
-                $query->whereIn('status', ['paid', 'pending_verification', 'refund_pending']);
+                $query->whereIn('status', ['paid', 'pending_verification']);
             })
             ->select('booking_id')
             ->chunkById(100, function ($bookings) use (&$expired): void {
@@ -57,7 +57,7 @@ class ProcessBookingAutomation extends Command
                             return null;
                         }
 
-                        if (in_array($locked->payment_status, ['paid', 'pending_verification', 'refund_pending'], true)) {
+                        if (in_array($locked->payment_status, ['paid', 'pending_verification'], true)) {
                             return null;
                         }
 
@@ -92,7 +92,7 @@ class ProcessBookingAutomation extends Command
             ->whereNotNull('payment_due_at')
             ->where('payment_due_at', '<=', now())
             ->whereDoesntHave('payment', static function ($query): void {
-                $query->whereIn('status', ['paid', 'pending_verification', 'refund_pending']);
+                $query->whereIn('status', ['paid', 'pending_verification']);
             })
             ->select('booking_id')
             ->chunkById(100, function ($bookings) use (&$expired): void {
@@ -107,7 +107,7 @@ class ProcessBookingAutomation extends Command
                             || $locked->status !== 'confirmed'
                             || is_null($locked->payment_due_at)
                             || $locked->payment_due_at->isFuture()
-                            || in_array($locked->payment_status, ['paid', 'pending_verification', 'refund_pending'], true)) {
+                            || in_array($locked->payment_status, ['paid', 'pending_verification'], true)) {
                             return null;
                         }
 
@@ -142,7 +142,7 @@ class ProcessBookingAutomation extends Command
             ->where('status', 'confirmed')
             ->whereNull('payment_reminder_sent_at')
             ->whereBetween('payment_due_at', [now(), now()->addHours($hours)])
-            ->whereDoesntHave('payment', static fn ($query) => $query->whereIn('status', ['paid', 'pending_verification', 'refund_pending']))
+            ->whereDoesntHave('payment', static fn ($query) => $query->whereIn('status', ['paid', 'pending_verification']))
             ->with(['customer', 'room', 'guestDetail', 'payment'])
             ->each(function (Booking $booking) use (&$reminded): void {
                 $booking->update(['payment_reminder_sent_at' => now()]);

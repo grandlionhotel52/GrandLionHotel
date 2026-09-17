@@ -54,7 +54,7 @@ class BlogController extends Controller
                 'highlights' => [
                     'Book city stays 30 to 45 days before arrival for the best price and room balance.',
                     'Reserve earlier for holidays, concerts, and long weekends when inventory shrinks fast.',
-                    'Compare refundable and non-refundable rates based on how fixed your travel dates are.',
+                    'Compare room rates based on how fixed your travel dates are.',
                 ],
                 'sections' => [
                     [

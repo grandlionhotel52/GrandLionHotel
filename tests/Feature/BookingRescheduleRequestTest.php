@@ -14,11 +14,23 @@ class BookingRescheduleRequestTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_customer_can_request_schedule_change_for_confirmed_unpaid_booking(): void
+    public function test_customer_can_request_schedule_change_for_confirmed_paid_booking(): void
     {
         $customer = Customer::factory()->create();
         $room = $this->createRoom();
         $booking = $this->createConfirmedUnpaidBooking($customer, $room);
+        $booking->payment()->create([
+            'amount' => 3000,
+            'method' => 'cash',
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
+
+        $this->actingAs($customer, 'customer')
+            ->get(route('bookings.show', $booking))
+            ->assertOk()
+            ->assertSee('name="requested_check_in"', false)
+            ->assertSee('name="requested_check_out"', false);
 
         $response = $this->actingAs($customer, 'customer')->patch(
             route('bookings.request-reschedule', $booking),
@@ -36,6 +48,37 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertSame(now()->addDays(7)->toDateString(), $booking->requested_check_out?->toDateString());
         $this->assertSame('Need to move the trip because of work schedule.', $booking->reschedule_request_notes);
         $this->assertNotNull($booking->reschedule_requested_at);
+    }
+
+    public function test_customer_cannot_request_schedule_change_before_payment(): void
+    {
+        $customer = Customer::factory()->create();
+        $booking = $this->createConfirmedUnpaidBooking($customer, $this->createRoom());
+        $booking->payment()->create([
+            'amount' => 3000,
+            'method' => 'pending',
+            'status' => 'unpaid',
+        ]);
+
+        $this->actingAs($customer, 'customer')
+            ->get(route('bookings.show', $booking))
+            ->assertOk()
+            ->assertDontSee('name="requested_check_in"', false)
+            ->assertDontSee('name="requested_check_out"', false);
+
+        $this->actingAs($customer, 'customer')->patch(
+            route('bookings.request-reschedule', $booking),
+            [
+                'requested_check_in' => now()->addDays(5)->toDateString(),
+                'requested_check_out' => now()->addDays(7)->toDateString(),
+            ]
+        )->assertRedirect(route('bookings.show', $booking))
+            ->assertSessionHasErrors('booking');
+
+        $booking->refresh();
+        $this->assertNull($booking->requested_check_in);
+        $this->assertNull($booking->requested_check_out);
+        $this->assertNull($booking->reschedule_requested_at);
     }
 
     public function test_staff_can_apply_requested_schedule_and_update_unpaid_amount(): void

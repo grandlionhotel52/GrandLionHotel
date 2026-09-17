@@ -7,9 +7,6 @@
 </head>
 <body style="margin:0;padding:0;background:#f8f5ef;font-family:Arial,sans-serif;color:#1f2937;">
     @php
-        $refundMethodLabel = $booking->payment
-            ? \App\Models\Payment::methodLabel((string) $booking->payment->method)
-            : null;
     @endphp
     <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="padding:28px 12px;">
         <tr>
@@ -36,11 +33,7 @@
                             </p>
 
                             <p style="margin:0;line-height:1.6;color:#6b7280;">
-                                @if($booking->payment_status === 'refund_pending' && $refundMethodLabel)
-                                    If your payment was already completed, our team will process the refund back through your original payment method: <strong>{{ $refundMethodLabel }}</strong>.
-                                @else
-                                    If your payment was already completed, our team will process the refund based on policy.
-                                @endif
+                                This cancellation does not reverse or return any payment already collected.
                             </p>
                         </td>
                     </tr>

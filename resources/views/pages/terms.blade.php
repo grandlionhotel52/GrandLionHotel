@@ -28,7 +28,7 @@
         </ul>
 
         <h3 class="h5">4. Cancellations</h3>
-        <p class="text-secondary">Cancellation and refund eligibility depend on your booking terms and selected room policy.</p>
+        <p class="text-secondary">All payments are non-returnable. Cancellation eligibility depends on your booking terms and selected room policy.</p>
 
         <h3 class="h5">5. Guest Responsibility</h3>
         <p class="text-secondary mb-0">Guests are responsible for providing accurate booking details and following property rules during their stay.</p>

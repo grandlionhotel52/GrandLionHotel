@@ -1,6 +1,6 @@
 # Grand Lion Hotel Reservation System
 
-Laravel 12 application for customer reservations, staff operations, hotel administration, online-payment verification, refunds, room pricing, and occupancy reporting.
+Laravel 12 application for customer reservations, staff operations, hotel administration, online-payment verification, room pricing, and occupancy reporting.
 
 ## Requirements
 
@@ -36,7 +36,7 @@ composer run dev
 
 ## Account roles
 
-- **Customer** — browses rooms, maintains a profile, creates bookings, submits online-payment proof, requests rescheduling/transfers, downloads receipts, and requests cancellation/refunds.
+- **Customer** — browses rooms, maintains a profile, creates bookings, submits online-payment proof, requests rescheduling/transfers, downloads receipts, and requests cancellation.
 - **Staff** — manages arrivals, walk-ins, confirmation, check-in/out, occupancy changes, room transfers, rescheduling, payment verification, and operational notes.
 - **Admin** — manages rooms, room status, date discounts, customers, staff, bookings, sales, occupancy, and payment verification.
 
@@ -49,8 +49,8 @@ Accounts are stored in separate `customers`, `staff`, and `admins` tables and us
 3. Cash remains unpaid until staff records payment.
 4. InstaPay and card submissions require a customer reference and image proof.
 5. Staff/admin approval marks the payment paid and generates a transaction reference.
-6. Cancelling a paid booking creates a pending refund request.
-7. Booking, payment, and refund changes are recorded in `activity_logs`; relevant customer updates are also stored in `notifications`.
+6. Cancelling a booking does not reverse a payment that has already been collected.
+7. Booking and payment changes are recorded in `activity_logs`; relevant customer updates are also stored in `notifications`.
 
 Supported payment methods are `cash`, `instapay`, and `credit_debit_card`.
 

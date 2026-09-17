@@ -45,7 +45,6 @@
             return match ($status) {
                 'paid' => 'text-bg-success',
                 'pending_verification' => 'text-bg-info',
-                'refund_pending' => 'text-bg-info',
                 default => 'text-bg-warning',
             };
         };
