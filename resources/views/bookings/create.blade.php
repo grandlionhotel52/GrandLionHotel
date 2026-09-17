@@ -94,6 +94,10 @@
         .promo-code-box .input-group .form-control {
             min-width: 0;
         }
+        .promo-code-box.is-disabled {
+            opacity: .7;
+            background: #f1eee8;
+        }
         .booking-meal-option {
             max-width: 520px;
         }
@@ -481,14 +485,14 @@
                     </div>
 
                     <div class="col-12" id="promo_code_group">
-                        <div class="promo-code-box">
+                        <div class="promo-code-box {{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? 'is-disabled' : '' }}">
                             <label class="form-label fw-semibold" for="promo_code_input"><i class="bi bi-tag me-1" aria-hidden="true"></i>Have a promo code? <span class="text-secondary fw-normal">(optional)</span></label>
                             <div class="input-group">
-                                <input type="text" class="form-control text-uppercase" name="promo_code" id="promo_code_input" maxlength="40" value="{{ old('promo_code') }}" placeholder="Enter code" autocomplete="off" aria-describedby="promo_code_feedback">
-                                <button type="button" class="btn btn-ta" id="promo_code_apply">Apply code</button>
+                                <input type="text" class="form-control text-uppercase" name="promo_code" id="promo_code_input" maxlength="40" value="{{ old('promo_code') }}" placeholder="Enter code" autocomplete="off" aria-describedby="promo_code_feedback" @disabled(in_array(old('discount_type'), ['pwd', 'senior'], true))>
+                                <button type="button" class="btn btn-ta" id="promo_code_apply" @disabled(in_array(old('discount_type'), ['pwd', 'senior'], true))>Apply code</button>
                             </div>
                             <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
-                                <small class="text-secondary promo-code-feedback" id="promo_code_feedback" aria-live="polite">Enter code, then apply.</small>
+                                <small class="text-secondary promo-code-feedback" id="promo_code_feedback" aria-live="polite">{{ in_array(old('discount_type'), ['pwd', 'senior'], true) ? 'Promo codes cannot be combined with a PWD or Senior discount.' : 'Enter code, then apply.' }}</small>
                                 <button type="button" class="btn btn-link btn-sm text-danger p-0 d-none" id="promo_code_remove">Remove</button>
                             </div>
                         </div>
@@ -1039,13 +1043,34 @@
                 }
                 if (promoCodeInput) {
                     promoCodeInput.required = requiresPromo;
+                    promoCodeInput.disabled = requiresId;
+                    promoCodeInput.setAttribute('aria-disabled', requiresId ? 'true' : 'false');
                 }
+                if (promoCodeApply) promoCodeApply.disabled = requiresId;
+                promoCodeGroup?.querySelector('.promo-code-box')?.classList.toggle('is-disabled', requiresId);
 
                 if (!requiresId) {
                     discountIdInput.value = '';
                     if (discountIdPhotoInput) {
                         discountIdPhotoInput.value = '';
                     }
+                } else {
+                    appliedPromoCode = '';
+                    if (promoCodeInput) {
+                        promoCodeInput.value = '';
+                        promoCodeInput.required = false;
+                        promoCodeInput.setCustomValidity('');
+                    }
+                    promoCodeRemove?.classList.add('d-none');
+                    promoCodeFeedback?.classList.remove('is-success', 'is-error');
+                    if (promoCodeFeedback) {
+                        promoCodeFeedback.textContent = 'Promo codes cannot be combined with a PWD or Senior discount.';
+                    }
+                }
+
+                if (!requiresId && !requiresPromo && !promoCodeInput?.value) {
+                    promoCodeFeedback?.classList.remove('is-success', 'is-error');
+                    if (promoCodeFeedback) promoCodeFeedback.textContent = 'Enter code, then apply.';
                 }
 
                 renderPricingSummary(currentPricing, currentAvailability);

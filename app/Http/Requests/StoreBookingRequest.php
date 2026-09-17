@@ -52,7 +52,7 @@ class StoreBookingRequest extends FormRequest
             'contact_email' => ['nullable', 'email', 'max:255'],
             'discount_type' => ['nullable', 'in:none,pwd,senior,promo'],
             'discount_id' => ['nullable', 'string', 'max:80', 'required_if:discount_type,pwd,senior'],
-            'promo_code' => ['nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9_-]+$/', 'required_if:discount_type,promo'],
+            'promo_code' => ['nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9_-]+$/', 'required_if:discount_type,promo', 'prohibited_if:discount_type,pwd,senior'],
             'discount_id_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'required_if:discount_type,pwd,senior'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];
@@ -66,6 +66,7 @@ class StoreBookingRequest extends FormRequest
             'discount_id_photo.required_if' => 'Upload a PWD/Senior ID photo when selecting a discount.',
             'discount_id_photo.image' => 'Discount ID upload must be an image file.',
             'discount_id_photo.max' => 'Discount ID photo must not exceed 5MB.',
+            'promo_code.prohibited_if' => 'A promo code cannot be combined with a PWD or Senior discount.',
         ];
     }
 

@@ -95,6 +95,32 @@ class BookingWorkflowImprovementsTest extends TestCase
         $this->assertSame('1775.89', $booking->fresh('payment')->payment->amount);
     }
 
+    public function test_pwd_or_senior_discount_cannot_be_combined_with_a_promo_code(): void
+    {
+        $customer = Customer::factory()->create([
+            'phone' => '09170000002',
+            'address_line' => 'Discount Street',
+            'city' => 'Manila',
+            'province' => 'Metro Manila (NCR)',
+        ]);
+        $room = Room::factory()->create(['is_available' => true]);
+
+        $response = $this->actingAs($customer)->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'check_in' => today()->addDay()->toDateString(),
+            'check_out' => today()->addDays(2)->toDateString(),
+            'discount_type' => 'pwd',
+            'discount_id' => 'PWD-TEST-002',
+            'discount_id_photo' => \Illuminate\Http\UploadedFile::fake()->create('pwd-id.jpg', 10, 'image/jpeg'),
+            'promo_code' => 'WELCOME15',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'promo_code' => 'A promo code cannot be combined with a PWD or Senior discount.',
+        ]);
+        $this->assertDatabaseCount('bookings', 0);
+    }
+
     public function test_admin_cannot_transition_pending_booking_directly_to_completed(): void
     {
         $admin = Admin::factory()->create();
