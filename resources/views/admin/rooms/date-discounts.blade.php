@@ -88,7 +88,7 @@
                         name="q"
                         class="form-control"
                         value="{{ $search }}"
-                        placeholder="Room ID, room name, or room type"
+                        placeholder="Room name or room type"
                     >
                 </div>
                 <div class="col-sm-6 col-lg-3">
@@ -337,7 +337,7 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label" for="edit_discount_room_search">Affected Rooms</label>
-                                <input type="search" id="edit_discount_room_search" class="form-control mb-2" placeholder="Search by room ID, name, or type">
+                                <input type="search" id="edit_discount_room_search" class="form-control mb-2" placeholder="Search by room name or type">
                                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                                     <span class="small fw-semibold" id="edit_discount_room_count">0 rooms selected</span>
                                     <div class="d-flex gap-2">
@@ -347,7 +347,7 @@
                                 </div>
                                 <select name="room_ids[]" id="edit_discount_room_ids" class="form-select @error('room_ids') is-invalid @enderror @error('room_ids.*') is-invalid @enderror" multiple size="8" required>
                                     @foreach($discountRoomOptions as $optionRoom)
-                                        <option value="{{ $optionRoom->id }}">#{{ $optionRoom->id }} - {{ $optionRoom->name }} ({{ $optionRoom->type }})</option>
+                                        <option value="{{ $optionRoom->id }}">{{ $optionRoom->name }} ({{ $optionRoom->type }})</option>
                                     @endforeach
                                 </select>
                                 <small class="text-secondary">Click a room to toggle it. Removing a room removes this discount from that room.</small>

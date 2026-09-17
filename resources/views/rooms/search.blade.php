@@ -289,7 +289,7 @@
                                 @endif
                             </div>
                             <div class="search-card-actions">
-                                <a href="{{ route('rooms.show', $roomShowParameters) }}" class="btn btn-ta-outline btn-sm">Details</a>
+                                <a href="{{ route('rooms.show', $roomShowParameters) }}" class="btn btn-ta btn-sm">View details</a>
                                 @if($stay['is_valid'] && $room->is_available)
                                     @auth
                                         <a

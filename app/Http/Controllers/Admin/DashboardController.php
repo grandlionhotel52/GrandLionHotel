@@ -234,6 +234,115 @@ class DashboardController extends Controller
         ));
     }
 
+    public function exportSalesReport(Request $request)
+    {
+        $report = $this->salesReport($request)->getData();
+        $filename = 'sales-report-'.$report['from'].'-to-'.$report['to'].'.csv';
+
+        return response()->streamDownload(function () use ($report): void {
+            $stream = fopen('php://output', 'wb');
+            if ($stream === false) {
+                return;
+            }
+
+            fwrite($stream, "\xEF\xBB\xBF");
+
+            $write = static function (array $row) use ($stream): void {
+                $safeRow = array_map(static function (mixed $value): mixed {
+                    if (!is_string($value)) {
+                        return $value;
+                    }
+
+                    return preg_match('/^[=+\-@\t\r]/u', $value) === 1 ? "'".$value : $value;
+                }, $row);
+
+                fputcsv($stream, $safeRow, ',', '"', '');
+            };
+
+            $summary = $report['summary'];
+            $methodLabel = $report['method'] === 'all'
+                ? 'All methods'
+                : Payment::methodLabel((string) $report['method']);
+
+            $write(['The Grand Lion Hotel - Sales Report']);
+            $write(['Date Range', $report['selectedRangeLabel']]);
+            $write(['Payment Method', $methodLabel]);
+            $write(['Generated At', now()->format('M d, Y h:i A')]);
+            $write([]);
+
+            $write(['SUMMARY']);
+            $write(['Metric', 'Value']);
+            $write(['Total Sales', (float) $summary['gross_revenue']]);
+            $write(['Room Sales', (float) $summary['room_sales']]);
+            $write(['Food Sales', (float) $summary['food_sales']]);
+            $write(['Paid Bookings', (int) $summary['paid_bookings']]);
+            $write(['Average Sale', (float) $summary['average_sale']]);
+            $write(['Discount Total', (float) $summary['total_discount']]);
+            $write(['VAT-Exempt Sales', (float) $summary['vat_exempt_sales']]);
+            $write(['VAT', (float) $summary['vat_total']]);
+            $write(['Local Tax', (float) $summary['local_tax_total']]);
+            $write(['Net Sales', (float) $summary['net_sales_excluding_vat']]);
+            $write([]);
+
+            $write(['DAILY SALES']);
+            $write(['Date', 'Paid Bookings', 'Discount Total', 'Net Sales', 'VAT', 'Local Tax', 'Gross', 'Collected']);
+            foreach ($report['dailySales'] as $day) {
+                $write([
+                    $day->date,
+                    (int) $day->paid_bookings,
+                    (float) $day->discount_total,
+                    (float) $day->net_sales_excluding_vat,
+                    (float) $day->vat_total,
+                    (float) $day->local_tax_total,
+                    (float) $day->gross_revenue,
+                    (float) $day->revenue,
+                ]);
+            }
+            $write([]);
+
+            $write(['PAYMENT METHODS']);
+            $write(['Method', 'Paid Bookings', 'Gross', 'Collected']);
+            foreach ($report['methodBreakdown'] as $row) {
+                $write([
+                    Payment::methodLabel((string) $row->method),
+                    (int) $row->paid_bookings,
+                    (float) $row->gross_revenue,
+                    (float) $row->revenue,
+                ]);
+            }
+            $write([]);
+
+            $write(['STAFF PERFORMANCE']);
+            $write(['Staff', 'Paid Bookings', 'Gross', 'Collected']);
+            foreach ($report['staffBreakdown'] as $row) {
+                $write([
+                    $row->staff_name,
+                    (int) $row->paid_bookings,
+                    (float) $row->gross_revenue,
+                    (float) $row->revenue,
+                ]);
+            }
+            $write([]);
+
+            $write(['RECENT PAID TRANSACTIONS']);
+            $write(['Paid At', 'Booking', 'Method', 'Assigned Staff', 'Amount']);
+            foreach ($report['recentSales'] as $sale) {
+                $staffName = trim((string) ($sale->assigned_staff_name ?? ''));
+                $write([
+                    Carbon::parse($sale->paid_at)->format('Y-m-d H:i:s'),
+                    (int) $sale->booking_id,
+                    Payment::methodLabel((string) $sale->method),
+                    $staffName !== '' ? $staffName : 'Unassigned',
+                    (float) $sale->amount,
+                ]);
+            }
+
+            fclose($stream);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     public function occupancyReport(Request $request)
     {
         $from = $this->normalizeDateInput($request->string('from')->toString()) ?? now()->startOfMonth()->toDateString();

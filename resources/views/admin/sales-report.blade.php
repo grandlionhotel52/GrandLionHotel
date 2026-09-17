@@ -107,6 +107,9 @@
                     </div>
                     <div class="col-lg-3 d-flex gap-2">
                         <a href="{{ route('admin.sales-report') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
+                        <a href="{{ route('admin.sales-report.export', ['from' => $from, 'to' => $to, 'method' => $method]) }}" class="btn btn-ta">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export Excel
+                        </a>
                     </div>
                 </div>
             </form>

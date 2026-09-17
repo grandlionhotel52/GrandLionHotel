@@ -196,7 +196,6 @@
                 <caption class="visually-hidden">Hotel rooms, availability, status, and management actions</caption>
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Name</th>
                         <th>Room Type</th>
                         <th>View</th>
@@ -210,7 +209,6 @@
                 <tbody>
                     @forelse($rooms as $room)
                         <tr>
-                            <td>{{ $room->id }}</td>
                             <td>{{ $room->name }}</td>
                             <td>{{ $room->type }}</td>
                             <td>{{ $room->view_type ?: '-' }}</td>
@@ -274,7 +272,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-4">No rooms found.</td>
+                            <td colspan="8" class="text-center py-4">No rooms found.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -550,7 +548,7 @@
                                 >
                                     @foreach($discountRoomOptions as $optionRoom)
                                         <option value="{{ $optionRoom->id }}" @selected(in_array((int) $optionRoom->id, $oldSelectedRoomIds, true))>
-                                            #{{ $optionRoom->id }} - {{ $optionRoom->name }} (Room Type: {{ $optionRoom->type }})
+                                            {{ $optionRoom->name }} (Room Type: {{ $optionRoom->type }})
                                         </option>
                                     @endforeach
                                 </select>

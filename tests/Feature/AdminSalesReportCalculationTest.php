@@ -97,6 +97,35 @@ class AdminSalesReportCalculationTest extends TestCase
         $this->travelBack();
     }
 
+    public function test_admin_can_export_the_filtered_sales_report_for_excel(): void
+    {
+        $this->travelTo('2026-09-08 12:00:00');
+
+        $admin = Admin::factory()->create();
+        $staff = Staff::factory()->create(['name' => 'Front Desk']);
+        $this->createPayment($staff, 1500, Payment::METHOD_CASH, 'paid', '2026-09-08 09:00:00');
+        $this->createPayment($staff, 2500, Payment::METHOD_GCASH, 'paid', '2026-09-08 10:00:00');
+
+        $response = $this->actingAs($admin, 'admin')->get(route('admin.sales-report.export', [
+            'from' => '2026-09-08',
+            'to' => '2026-09-08',
+            'method' => Payment::METHOD_CASH,
+        ]));
+
+        $response->assertOk()
+            ->assertDownload('sales-report-2026-09-08-to-2026-09-08.csv');
+
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('The Grand Lion Hotel - Sales Report', $content);
+        $this->assertStringContainsString('"Payment Method",Cash', $content);
+        $this->assertStringContainsString('"Total Sales",1500', $content);
+        $this->assertStringContainsString('DAILY SALES', $content);
+        $this->assertStringContainsString('STAFF PERFORMANCE', $content);
+        $this->assertStringNotContainsString('GCash via PayMongo', $content);
+
+        $this->travelBack();
+    }
+
     private function createPayment(Staff $staff, float $amount, string $method, string $status, string $paidAt): Payment
     {
         $booking = Booking::factory()->create([

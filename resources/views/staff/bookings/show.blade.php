@@ -548,7 +548,7 @@
             <div class="booking-info-grid mb-3">
                 <div class="booking-info-item">
                     <p class="booking-info-label">Current Room</p>
-                    <p class="booking-info-value">Room {{ $booking->room->name ?? $booking->room_id }}</p>
+                    <p class="booking-info-value">{{ $booking->room->name ?? 'Room unavailable' }}</p>
                 </div>
                 <div class="booking-info-item">
                     <p class="booking-info-label">Requested At</p>
