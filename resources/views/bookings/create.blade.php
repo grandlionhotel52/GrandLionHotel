@@ -467,7 +467,7 @@
                     <div class="col-md-4">
                         <label class="form-label">ID discount</label>
                         <select class="form-select" id="discount_type_choice">
-                            <option value="none" @selected(!in_array(old('discount_type'), ['pwd', 'senior'], true))>No ID discount</option>
+                            <option value="none" @selected(!in_array(old('discount_type'), ['pwd', 'senior'], true))>Regular</option>
                             <option value="pwd" @selected(old('discount_type') === 'pwd')>PWD (20%)</option>
                             <option value="senior" @selected(old('discount_type') === 'senior')>Senior (20%)</option>
                         </select>
