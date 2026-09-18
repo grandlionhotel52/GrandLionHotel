@@ -74,6 +74,7 @@ class Booking extends Model
         static::saving(function (Booking $booking): void {
             if ($booking->status === 'confirmed'
                 && $booking->getOriginal('status') !== 'confirmed'
+                && $booking->payment_status !== 'paid'
                 && is_null($booking->payment_due_at)) {
                 $hours = max(1, (int) config('booking_automation.payment_due_hours', 24));
                 $cutoffHour = min(23, max(0, (int) config('booking_automation.payment_due_cutoff_hour', 14)));

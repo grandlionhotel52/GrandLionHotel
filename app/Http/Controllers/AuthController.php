@@ -361,13 +361,7 @@ class AuthController extends Controller
             $user->save();
         }
 
-        if ($intent === self::GOOGLE_AUTH_INTENT_REGISTER) {
-            if ($user) {
-                return redirect()
-                    ->route('login')
-                    ->withErrors(['email' => 'This Google account is already registered. Please sign in.']);
-            }
-
+        if (!$user) {
             try {
                 $verification = $this->issueRegistrationCode([
                     'name' => $googleUser->getName() ?: Str::before($email, '@'),
@@ -380,7 +374,7 @@ class AuthController extends Controller
                 report($exception);
 
                 return redirect()
-                    ->route('register')
+                    ->route($intent === self::GOOGLE_AUTH_INTENT_REGISTER ? 'register' : 'login')
                     ->withErrors(['email' => 'We could not send a confirmation code right now. Please try again.']);
             }
 
@@ -388,13 +382,7 @@ class AuthController extends Controller
 
             return redirect()
                 ->route('register.verify')
-                ->with('status', 'A 6-digit confirmation code was sent to your email.');
-        }
-
-        if (!$user) {
-            return redirect()
-                ->route('login')
-                ->withErrors(['email' => 'This Google account is not registered yet. Use Create account first.']);
+                ->with('status', 'Your Google email is new. Enter the 6-digit code we sent to finish creating your account.');
         }
 
         if (!$user->is_active) {

@@ -139,12 +139,21 @@ class AdminStaffButtonFlowsTest extends TestCase
 
         $this->patch(route('admin.bookings.update-status', $pendingBooking), [
             'status' => 'confirmed',
-        ])->assertRedirect(route('admin.bookings.show', $pendingBooking));
+        ])->assertSessionHasErrors('status');
+
+        $pendingBooking->refresh();
+        $this->assertSame('pending', $pendingBooking->status);
+
+        $this->actingAs($staff, 'staff')
+            ->patch(route('staff.bookings.confirm', $pendingBooking))
+            ->assertRedirect();
 
         $pendingBooking->refresh();
         $this->assertSame('confirmed', $pendingBooking->status);
         $this->assertSame($staff->id, $pendingBooking->staff_id);
         Mail::assertQueued(BookingConfirmedMail::class);
+
+        $this->actingAs($admin, 'admin');
 
         $dirtyStatusId = (int) RoomStatus::query()->where('slug', 'dirty')->value('room_status_id');
         $this->patch(route('admin.rooms.update-room-status', $room), [

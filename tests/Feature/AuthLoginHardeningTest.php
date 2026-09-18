@@ -7,7 +7,11 @@ use App\Models\Customer;
 use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
+use Laravel\Socialite\Facades\Socialite;
+use Mockery;
 use Tests\TestCase;
 
 class AuthLoginHardeningTest extends TestCase
@@ -163,6 +167,49 @@ class AuthLoginHardeningTest extends TestCase
             ->assertSessionHasErrors('email');
 
         $this->assertGuest('customer');
+    }
+
+    public function test_google_sign_in_starts_account_creation_for_a_new_email(): void
+    {
+        Mail::fake();
+
+        $googleUser = Mockery::mock(SocialiteUser::class);
+        $googleUser->shouldReceive('getId')->once()->andReturn('google-new-customer-123');
+        $googleUser->shouldReceive('getEmail')->once()->andReturn('new.google.customer@example.com');
+        $googleUser->shouldReceive('getName')->once()->andReturn('New Google Customer');
+
+        $provider = Mockery::mock();
+        $provider->shouldReceive('redirectUrl')
+            ->once()
+            ->with(route('auth.google.callback'))
+            ->andReturnSelf();
+        $provider->shouldReceive('user')->once()->andReturn($googleUser);
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
+
+        $response = $this
+            ->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback'));
+
+        $response
+            ->assertRedirect(route('register.verify'))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('registration_verifications', [
+            'email' => 'new.google.customer@example.com',
+            'name' => 'New Google Customer',
+            'google_id' => 'google-new-customer-123',
+        ]);
+        $this->assertSame(
+            'new.google.customer@example.com',
+            session('pending_registration_email')
+        );
+        $this->assertDatabaseMissing('customers', [
+            'email' => 'new.google.customer@example.com',
+        ]);
     }
 
     private function throttleKey(string $email): string

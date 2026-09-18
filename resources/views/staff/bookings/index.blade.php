@@ -423,10 +423,12 @@
                             <td>
                                 <div class="ops-status-stack">
                                     <span class="badge {{ $paymentBadgeClass($booking->payment_status) }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span>
-                                    @if($booking->status === 'confirmed' && $booking->payment_status === 'pending_verification')
+                                    @if($booking->payment_status === 'pending_verification')
                                         <span class="ops-guest-meta">Customer proof submitted</span>
                                     @endif
-                                    @if($booking->status === 'confirmed' && $booking->payment_status === 'unpaid')
+                                    @if($booking->payment_status === 'unpaid' && strtolower((string) ($booking->payment?->method ?? '')) === 'cash')
+                                        <span class="ops-guest-meta">Cash selected &mdash; not paid</span>
+                                    @elseif($booking->status === 'confirmed' && $booking->payment_status === 'unpaid')
                                         <span class="ops-guest-meta">Collect before checkout</span>
                                     @endif
                                 </div>

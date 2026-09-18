@@ -28,7 +28,7 @@
                 @if($isPaid)
                     <p class="ta-eyebrow mb-1">Payment confirmed</p>
                     <h1 class="h2 mb-3">Your payment was successful</h1>
-                    <p class="text-secondary">No proof upload is needed. PayMongo securely confirmed your payment.</p>
+                    <p class="text-secondary">No proof upload is needed. PayMongo securely confirmed your payment. Staff will confirm the booking separately.</p>
                 @else
                     <p class="ta-eyebrow mb-1">Payment submitted</p>
                     <h1 class="h2 mb-3">PayMongo is finalizing your payment</h1>

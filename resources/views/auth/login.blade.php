@@ -101,6 +101,7 @@
                                             <span class="auth-oauth-icon"></span>
                                             Continue with Google
                                         </a>
+                                        <div class="form-text mt-2 text-center">New here? Google will start account creation automatically.</div>
                                     </div>
                                 </form>
                             </div>

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\BookingCancelledMail;
-use App\Mail\BookingConfirmedMail;
 use App\Mail\BookingPaidMail;
 use App\Models\Booking;
 use App\Models\Payment;
@@ -126,6 +125,12 @@ class BookingController extends Controller
             return redirect()->route('admin.bookings.show', $booking)->with('status', 'Booking status is already up to date.');
         }
 
+        if ($newStatus === 'confirmed') {
+            return back()->withErrors([
+                'status' => 'Only staff can confirm a pending booking.',
+            ]);
+        }
+
         if (!$booking->canTransitionTo($newStatus)) {
             return back()->withErrors([
                 'status' => 'Invalid transition from '.ucfirst($previousStatus).' to '.ucfirst($newStatus).'.',
@@ -160,12 +165,8 @@ class BookingController extends Controller
         $booking->update($updatePayload);
         $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
 
-        if ($previousStatus !== $newStatus) {
-            if ($newStatus === 'confirmed') {
-                $this->sendBookingMail($booking, new BookingConfirmedMail($booking));
-            } elseif ($newStatus === 'cancelled') {
-                $this->sendBookingMail($booking, new BookingCancelledMail($booking));
-            }
+        if ($previousStatus !== $newStatus && $newStatus === 'cancelled') {
+            $this->sendBookingMail($booking, new BookingCancelledMail($booking));
         }
 
         return redirect()->route('admin.bookings.show', $booking)->with('status', 'Booking status updated.');

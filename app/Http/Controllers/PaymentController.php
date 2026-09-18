@@ -36,12 +36,6 @@ class PaymentController extends Controller
                 ->with('status', 'Your online payment proof is under review. Please wait for staff verification.');
         }
 
-        if ($booking->status === 'pending') {
-            return redirect()->route('bookings.show', $booking)->withErrors([
-                'booking' => 'Your booking is still pending. Please wait for staff confirmation before payment.',
-            ]);
-        }
-
         if (in_array($booking->status, ['cancelled', 'completed'], true)) {
             return redirect()->route('bookings.my')->withErrors([
                 'method' => 'This booking cannot be paid in its current status.',
@@ -71,12 +65,6 @@ class PaymentController extends Controller
         if ($booking->payment_status === 'pending_verification') {
             return back()->withErrors([
                 'method' => 'Your payment proof is already submitted and is waiting for staff verification.',
-            ]);
-        }
-
-        if ($booking->status === 'pending') {
-            return back()->withErrors([
-                'method' => 'Payment is disabled until staff confirms your booking.',
             ]);
         }
 
@@ -186,7 +174,7 @@ class PaymentController extends Controller
 
             return redirect()
                 ->route('bookings.show', $booking)
-                ->with('status', 'Cash payment selected. Please pay at the front desk. Staff will confirm and mark this booking as paid once payment is received.');
+                ->with('status', 'Cash payment selected. Payment remains unpaid until staff receives and records the cash. Staff will confirm the booking separately.');
         }
 
         if ($validated['method'] === Payment::METHOD_INSTAPAY) {
@@ -237,7 +225,9 @@ class PaymentController extends Controller
         if ($booking->payment_status === 'paid') {
             return redirect()
                 ->route('bookings.success', $booking)
-                ->with('status', 'Payment confirmed. Your booking is ready.');
+                ->with('status', $booking->status === 'confirmed'
+                    ? 'Payment confirmed. Your booking is ready.'
+                    : 'Payment confirmed. Your booking is awaiting staff confirmation.');
         }
 
         return view('payments.paymongo-confirmation', compact('booking'));
@@ -262,7 +252,9 @@ class PaymentController extends Controller
             'transaction_reference' => $booking->payment?->transaction_reference,
             'provider_payment_id' => $booking->payment?->provider_payment_id,
             'message' => $booking->payment_status === 'paid'
-                ? 'Payment confirmed. Your receipt is ready.'
+                ? ($booking->status === 'confirmed'
+                    ? 'Payment confirmed. Booking confirmed.'
+                    : 'Payment confirmed. Waiting for staff to confirm the booking.')
                 : 'Your payment was submitted and is still being confirmed by PayMongo.',
         ]);
     }

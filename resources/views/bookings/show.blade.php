@@ -158,11 +158,9 @@
         $hasPendingRoomTransferRequest = $booking->hasPendingRoomTransferRequest();
         $isPaid = $booking->payment_status === 'paid';
         $canCancel = $booking->canBeCancelled();
-        $isCashAwaitingVerification = $booking->status === 'confirmed'
-            && $booking->payment_status !== 'paid'
+        $isCashAwaitingVerification = $booking->payment_status !== 'paid'
             && strtolower((string) ($booking->payment?->method ?? '')) === 'cash';
-        $isOnlineAwaitingVerification = $booking->status === 'confirmed'
-            && $booking->payment_status === 'pending_verification'
+        $isOnlineAwaitingVerification = $booking->payment_status === 'pending_verification'
             && \App\Models\Payment::isOnlineMethod((string) ($booking->payment?->method ?? ''));
         $isCompleted = $booking->status === 'completed';
         $billedUnits = $booking->nights();
@@ -186,9 +184,10 @@
 
         $nextAction = match (true) {
             $isCancelled => 'This reservation has been cancelled. If you still plan to stay, create a new booking.',
-            $booking->status === 'pending' => 'Wait for staff confirmation. Payment becomes available right after approval.',
             $isOnlineAwaitingVerification => 'Your online payment proof was submitted. Please wait for staff to verify your transfer.',
-            $isCashAwaitingVerification => 'Cash payment selected. Please pay at front desk and wait for staff confirmation.',
+            $booking->status === 'pending' && $booking->payment_status === 'paid' => 'Payment is complete. Please wait for staff to confirm your booking.',
+            $isCashAwaitingVerification => 'Cash selected. Payment remains unpaid until staff receives it, and your booking is awaiting staff confirmation.',
+            $booking->status === 'pending' => 'Choose a payment method while staff reviews and confirms your booking.',
             $booking->status === 'confirmed' && $booking->payment_status !== 'paid' => 'Complete payment to finalize this reservation.',
             $booking->status === 'confirmed' && $booking->payment_status === 'paid' => 'You are all set. Bring a valid ID at check-in.',
             $booking->status === 'completed' => 'Stay completed. You can download your receipt anytime.',
@@ -570,7 +569,7 @@
                 @endif
 
                 <div class="d-grid gap-2">
-                    @if(!$isCashAwaitingVerification && !$isOnlineAwaitingVerification && $booking->payment_status !== 'paid' && $booking->status === 'confirmed')
+                    @if(!$isCashAwaitingVerification && !$isOnlineAwaitingVerification && $booking->payment_status !== 'paid' && in_array($booking->status, ['pending', 'confirmed'], true))
                         <a href="{{ route('payments.checkout', $booking) }}" class="btn btn-ta">Complete payment</a>
                     @endif
 

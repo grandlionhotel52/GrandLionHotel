@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Booking Confirmed')
+@section('title', $booking->status === 'confirmed' ? 'Booking Confirmed' : 'Payment Complete')
 
 @section('content')
     <div class="row justify-content-center">
@@ -10,7 +10,10 @@
                     <i class="bi bi-check2"></i>
                 </span>
                 <p class="ta-eyebrow mb-1">Payment complete</p>
-                <h1 class="h2 mb-3">You’re all set</h1>
+                <h1 class="h2 mb-3">{{ $booking->status === 'confirmed' ? 'You’re all set' : 'Payment received' }}</h1>
+                @if($booking->status !== 'confirmed')
+                    <div class="alert alert-warning text-start">Your payment is complete, but the booking is still awaiting staff confirmation.</div>
+                @endif
                 <p class="mb-1">Room: <strong>{{ $booking->room->name ?? 'N/A' }}</strong></p>
                 <p class="mb-1">Dates: <strong>{{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</strong></p>
                 <p class="mb-1">Total paid: <strong>&#8369;{{ number_format($booking->total_price, 2) }}</strong></p>

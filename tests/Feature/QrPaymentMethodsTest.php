@@ -93,6 +93,34 @@ class QrPaymentMethodsTest extends TestCase
         );
     }
 
+    public function test_pending_pre_booking_can_select_cash_without_becoming_paid_or_confirmed(): void
+    {
+        $customer = Customer::factory()->create();
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => 'pending',
+        ]);
+        $booking->payment()->update([
+            'status' => 'unpaid',
+            'method' => 'pending',
+            'paid_at' => null,
+        ]);
+
+        $this->actingAs($customer, 'customer')
+            ->get(route('payments.checkout', $booking))
+            ->assertOk()
+            ->assertSee('Only staff can confirm the booking.');
+
+        $this->post(route('payments.process', $booking), [
+            'method' => Payment::METHOD_CASH,
+        ])->assertRedirect(route('bookings.show', $booking));
+
+        $booking->refresh()->load('payment');
+        $this->assertSame('pending', $booking->status);
+        $this->assertSame('unpaid', $booking->payment_status);
+        $this->assertSame(Payment::METHOD_CASH, $booking->payment->method);
+    }
+
     public function test_repeated_checkout_click_reuses_the_active_paymongo_session(): void
     {
         $user = Customer::factory()->create();
@@ -122,7 +150,7 @@ class QrPaymentMethodsTest extends TestCase
 
     public function test_signed_paymongo_webhook_marks_maya_payment_as_paid_automatically(): void
     {
-        $booking = Booking::factory()->create(['status' => 'confirmed']);
+        $booking = Booking::factory()->create(['status' => 'pending']);
         $booking->payment()->update([
             'amount' => 2500,
             'status' => 'unpaid',
@@ -172,7 +200,7 @@ class QrPaymentMethodsTest extends TestCase
 
         $booking->refresh()->load('payment');
         $this->assertSame('paid', $booking->payment_status);
-        $this->assertSame('confirmed', $booking->status);
+        $this->assertSame('pending', $booking->status);
         $this->assertSame(Payment::METHOD_PAYMAYA, $booking->payment->method);
         $this->assertSame('paymongo_checkout', $booking->payment->source);
         $this->assertSame('pay_test_paid', $booking->payment->provider_payment_id);

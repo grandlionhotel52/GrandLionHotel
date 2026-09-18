@@ -114,10 +114,10 @@
             <section class="soft-card p-4 p-lg-5">
                 <p class="ta-eyebrow mb-1">Secure Payment</p>
                 <h1 class="h3 mb-1">Complete payment</h1>
-                <p class="text-secondary mb-3">Review the booking amount before submitting.</p>
+                <p class="text-secondary mb-3">Review the pre-booking amount and choose how you want to pay.</p>
 
                 <div class="alert alert-light border small mb-4" role="note">
-                    <strong>Choose how you want to pay.</strong> Online payment is confirmed automatically after PayMongo succeeds. For cash, pay at the front desk and staff will record it after receiving your payment.
+                    <strong>Payment and booking confirmation are separate.</strong> Successful online payment is marked Paid automatically. Cash stays Unpaid until staff receives it. Only staff can confirm the booking.
                 </div>
 
                 <div class="checkout-summary mb-4">

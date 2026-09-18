@@ -218,31 +218,20 @@ class BookingController extends Controller
             ]);
         }
 
-        $isAwaitingConfirmation = $booking->status === 'pending';
-        $nextRedirect = $isAwaitingConfirmation
-            ? route('bookings.show', $booking)
-            : route('payments.checkout', $booking);
+        $nextRedirect = route('payments.checkout', $booking);
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => $isAwaitingConfirmation
-                    ? 'Pre-booking submitted. This is not yet confirmed.'
-                    : 'Booking created successfully.',
+                'message' => 'Pre-booking submitted. Choose your payment method while staff reviews the booking.',
                 'booking_id' => $booking->id,
                 'redirect' => $nextRedirect,
-                'next_step' => $isAwaitingConfirmation
-                    ? 'Pre-booked only. Await staff confirmation before payment.'
-                    : 'Proceed to payment checkout.',
+                'next_step' => 'Proceed to payment checkout. Only staff can confirm the booking.',
             ], 201);
         }
 
-        if ($isAwaitingConfirmation) {
-            return redirect()
-                ->route('bookings.show', $booking)
-                ->with('status', 'Pre-booking submitted. This is not yet confirmed. Wait for staff confirmation before payment.');
-        }
-
-        return redirect()->route('payments.checkout', $booking);
+        return redirect()
+            ->route('payments.checkout', $booking)
+            ->with('status', 'Pre-booking submitted. Choose online payment or cash. Staff will confirm the booking separately.');
     }
 
     public function success(Booking $booking)

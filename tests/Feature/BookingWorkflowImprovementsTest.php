@@ -20,7 +20,7 @@ class BookingWorkflowImprovementsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_customer_booking_redirects_to_details_when_status_is_pending(): void
+    public function test_customer_pre_booking_redirects_to_payment_while_status_remains_pending(): void
     {
         $customer = Customer::factory()->create([
             'phone' => '+639000000001',
@@ -48,8 +48,8 @@ class BookingWorkflowImprovementsTest extends TestCase
 
         $booking = Booking::query()->firstOrFail();
 
-        $response->assertRedirect(route('bookings.show', $booking));
-        $response->assertSessionHas('status', 'Pre-booking submitted. This is not yet confirmed. Wait for staff confirmation before payment.');
+        $response->assertRedirect(route('payments.checkout', $booking));
+        $response->assertSessionHas('status', 'Pre-booking submitted. Choose online payment or cash. Staff will confirm the booking separately.');
         $this->assertSame('pending', $booking->status);
         $this->assertSame('unpaid', $booking->payment_status);
         $this->assertSame('breakfast_included', $booking->fresh('guestDetail')->guestDetail->meal_plan);
@@ -345,7 +345,7 @@ class BookingWorkflowImprovementsTest extends TestCase
 
         $booking = Booking::query()->firstOrFail();
 
-        $response->assertRedirect(route('bookings.show', $booking));
+        $response->assertRedirect(route('payments.checkout', $booking));
         $this->assertSame(now()->addDay()->toDateString(), $booking->check_in->toDateString());
         $this->assertSame(now()->addDays(2)->toDateString(), $booking->check_out->toDateString());
     }

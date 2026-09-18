@@ -228,6 +228,9 @@
                 <label class="form-label">Status</label>
                 <select class="form-select" name="status" required>
                     @foreach(['pending', 'confirmed', 'cancelled', 'completed'] as $status)
+                        @if($status === 'confirmed' && $booking->status !== 'confirmed')
+                            @continue
+                        @endif
                         <option value="{{ $status }}" {{ $booking->status === $status ? 'selected' : '' }}>
                             {{ \App\Models\Booking::statusLabel($status) }}
                         </option>

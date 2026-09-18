@@ -98,11 +98,9 @@
                 <tbody>
                     @forelse($bookings as $booking)
                         @php
-                            $isCashAwaitingVerification = $booking->status === 'confirmed'
-                                && $booking->payment_status !== 'paid'
+                            $isCashAwaitingVerification = $booking->payment_status !== 'paid'
                                 && strtolower((string) ($booking->payment?->method ?? '')) === 'cash';
-                            $isOnlineAwaitingVerification = $booking->status === 'confirmed'
-                                && $booking->payment_status === 'pending_verification'
+                            $isOnlineAwaitingVerification = $booking->payment_status === 'pending_verification'
                                 && \App\Models\Payment::isOnlineMethod((string) ($booking->payment?->method ?? ''));
                             $hasPendingRescheduleRequest = $booking->hasPendingRescheduleRequest();
                         @endphp
@@ -121,7 +119,7 @@
                             <td>&#8369;{{ number_format($booking->total_price, 2) }}</td>
                             <td class="text-end">
                                 <a href="{{ route('bookings.show', $booking) }}" class="btn btn-sm btn-ta-outline">View details</a>
-                                @if(!$isOnlineAwaitingVerification && !$isCashAwaitingVerification && $booking->payment_status !== 'paid' && $booking->status === 'confirmed')
+                                @if(!$isOnlineAwaitingVerification && !$isCashAwaitingVerification && $booking->payment_status !== 'paid' && in_array($booking->status, ['pending', 'confirmed'], true))
                                     <a href="{{ route('payments.checkout', $booking) }}" class="btn btn-sm btn-ta">Pay now</a>
                                 @elseif($booking->payment_status === 'paid')
                                     <a href="{{ route('bookings.receipt', $booking) }}" class="btn btn-sm btn-ta">Receipt</a>

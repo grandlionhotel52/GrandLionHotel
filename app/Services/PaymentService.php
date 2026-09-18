@@ -86,13 +86,7 @@ class PaymentService
                 $payment = $lockedBooking->payment()->create($paymentPayload);
             }
 
-            $bookingStatus = $lockedBooking->status;
-            if ($bookingStatus === 'pending') {
-                $bookingStatus = 'confirmed';
-            }
-
             $lockedBooking->update([
-                'status' => $bookingStatus,
                 'payment_due_at' => null,
             ]);
 
