@@ -19,7 +19,7 @@
                         <td style="padding:22px 24px;">
                             <p style="margin:0 0 12px;">Hello {{ $booking->guestName() }},</p>
                             <p style="margin:0 0 16px;line-height:1.6;">
-                                Booking <strong>#{{ $booking->id }}</strong> for {{ $booking->room->name ?? 'your selected room' }}
+                                Your booking for {{ $booking->room->name ?? 'your selected room' }}
                                 was automatically cancelled because its confirmation or payment deadline passed.
                             </p>
                             <p style="margin:0 0 18px;line-height:1.6;">The room has been released so it can be reserved again. You are welcome to create a new booking.</p>

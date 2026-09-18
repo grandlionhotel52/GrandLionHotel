@@ -178,7 +178,6 @@
                 <caption class="visually-hidden">Bookings matching the selected admin filters</caption>
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Guest</th>
                         <th>Room Type</th>
                         <th>Check in/out Dates</th>
@@ -191,7 +190,6 @@
                 <tbody>
                     @forelse($bookings as $booking)
                         <tr>
-                            <td>#{{ $booking->id }}</td>
                             <td>{{ $booking->guestName() }}</td>
                             <td>{{ $booking->room->name ?? '-' }}</td>
                             <td>{{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</td>
@@ -209,7 +207,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5">
+                            <td colspan="7" class="text-center py-5">
                                 <i class="bi bi-search fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
                                 <strong class="d-block">No matching bookings</strong>
                                 <span class="text-secondary">Change or reset the filters.</span>

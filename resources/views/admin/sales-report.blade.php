@@ -360,7 +360,6 @@
                         <thead>
                             <tr>
                                 <th>Paid At</th>
-                                <th>Booking</th>
                                 <th>Method</th>
                                 <th>Assigned Staff</th>
                                 <th class="text-end">Amount</th>
@@ -370,14 +369,13 @@
                             @forelse($recentSales as $sale)
                                 <tr>
                                     <td>{{ \Carbon\Carbon::parse($sale->paid_at)->format('M d, Y h:i A') }}</td>
-                                    <td>#{{ $sale->booking_id }}</td>
                                     <td>{{ $methodLabel((string) $sale->method) }}</td>
                                     <td>{{ trim((string) ($sale->assigned_staff_name ?? '')) !== '' ? $sale->assigned_staff_name : 'Unassigned' }}</td>
                                     <td class="text-end fw-semibold">&#8369;{{ number_format((float) $sale->amount, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-secondary">No paid transactions found.</td>
+                                    <td colspan="4" class="text-center py-4 text-secondary">No paid transactions found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

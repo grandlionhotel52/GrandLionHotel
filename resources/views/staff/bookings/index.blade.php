@@ -400,7 +400,7 @@
                             </td>
                             <td>
                                 <div class="ops-guest-name">{{ $booking->guestName() }}</div>
-                                <div class="ops-guest-meta">#{{ $booking->id }} &middot; {{ $booking->room->name ?? '-' }}</div>
+                                <div class="ops-guest-meta">{{ $booking->room->name ?? '-' }}</div>
                                 <div class="ops-guest-meta">{{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</div>
                                 @if($hasPendingRescheduleRequest)
                                     <div class="ops-guest-meta text-info">

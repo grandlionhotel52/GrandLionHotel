@@ -19,6 +19,7 @@ class Staff extends Account
         'password_changed_at',
         'remember_token',
         'admin_id',
+        'is_active',
     ];
 
     public function createdByAdmin(): BelongsTo

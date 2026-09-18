@@ -123,6 +123,48 @@ class AuthLoginHardeningTest extends TestCase
         ])->assertRedirect(route('admin.dashboard'));
     }
 
+    public function test_inactive_customer_and_staff_accounts_cannot_log_in(): void
+    {
+        $customer = Customer::factory()->create([
+            'email' => 'inactive.customer@example.com',
+            'password' => Hash::make('CustomerPass123'),
+            'is_active' => false,
+        ]);
+        $staff = Staff::factory()->create([
+            'email' => 'inactive.staff@example.com',
+            'password' => Hash::make('StaffPass123'),
+            'is_active' => false,
+        ]);
+
+        foreach ([
+            [$customer->email, 'CustomerPass123', 'customer'],
+            [$staff->email, 'StaffPass123', 'staff'],
+        ] as [$email, $password, $guard]) {
+            $this->post(route('login.perform'), compact('email', 'password'))
+                ->assertSessionHasErrors('email');
+
+            $this->assertGuest($guard);
+            $this->assertSame(
+                'This account is inactive. Please contact the administrator.',
+                session('errors')->first('email')
+            );
+        }
+    }
+
+    public function test_deactivated_authenticated_account_is_logged_out_on_its_next_request(): void
+    {
+        $customer = Customer::factory()->create(['is_active' => true]);
+
+        $this->actingAs($customer, 'customer');
+        $customer->update(['is_active' => false]);
+
+        $this->get(route('bookings.my'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('email');
+
+        $this->assertGuest('customer');
+    }
+
     private function throttleKey(string $email): string
     {
         return 'login:'.strtolower(trim($email)).'|127.0.0.1';

@@ -12,7 +12,6 @@
         <div class="row g-3 mb-1">
             <div class="col-md-4">
                 <p class="small text-secondary mb-1 text-uppercase">Account ID</p>
-                <p class="mb-0 fw-semibold">#{{ $user->id }}</p>
             </div>
             <div class="col-md-4">
                 <p class="small text-secondary mb-1 text-uppercase">Booking Count</p>

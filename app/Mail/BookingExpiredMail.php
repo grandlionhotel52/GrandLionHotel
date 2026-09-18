@@ -17,7 +17,7 @@ class BookingExpiredMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Booking #'.$this->booking->id.' has expired');
+        return new Envelope(subject: 'Your booking has expired');
     }
 
     public function content(): Content

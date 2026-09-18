@@ -23,6 +23,7 @@ class Customer extends Account
         'email_verified_at',
         'password_changed_at',
         'remember_token',
+        'is_active',
     ];
 
     public function bookings(): HasMany

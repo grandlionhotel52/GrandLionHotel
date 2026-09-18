@@ -412,7 +412,7 @@ class BookingController extends Controller
             'booking' => $booking,
         ])->setPaper('a4');
 
-        return $pdf->download('booking-receipt-'.$booking->id.'.pdf');
+        return $pdf->download('booking-receipt.pdf');
     }
 
     private function authorizeOwner(Booking $booking): void

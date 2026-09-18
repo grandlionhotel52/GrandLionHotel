@@ -237,7 +237,7 @@ class BookingWorkflowImprovementsTest extends TestCase
 
         $response->assertOk();
         $this->assertStringContainsString(
-            'booking-receipt-'.$booking->id.'.pdf',
+            'booking-receipt.pdf',
             (string) $response->headers->get('content-disposition')
         );
     }

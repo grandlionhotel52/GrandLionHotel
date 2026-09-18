@@ -87,7 +87,6 @@
                 <caption class="visually-hidden">Your hotel bookings and their current status</caption>
                 <thead class="table-light">
                     <tr>
-                        <th>ID</th>
                         <th>Room</th>
                         <th>Dates</th>
                         <th>Status</th>
@@ -108,7 +107,6 @@
                             $hasPendingRescheduleRequest = $booking->hasPendingRescheduleRequest();
                         @endphp
                         <tr>
-                            <td>#{{ $booking->id }}</td>
                             <td>{{ $booking->room->name ?? '-' }}</td>
                             <td>
                                 <div>{{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</div>
@@ -132,7 +130,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <i class="bi bi-calendar2-plus fs-2 text-secondary d-block mb-2" aria-hidden="true"></i>
                                 <strong class="d-block mb-1">No bookings yet</strong>
                                 <span class="text-secondary d-block mb-3">Choose a room to plan your first stay.</span>

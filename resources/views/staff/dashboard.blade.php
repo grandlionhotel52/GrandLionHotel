@@ -232,7 +232,7 @@
                                 <tr>
                                     <td>
                                         <div class="fw-semibold">{{ $booking->guestName() }}</div>
-                                        <div class="ops-subtext">#{{ $booking->id }} &middot; <span class="ops-date">{{ $booking->check_in->format('M d') }}</span></div>
+                                        <div class="ops-subtext"><span class="ops-date">{{ $booking->check_in->format('M d') }}</span></div>
                                     </td>
                                     <td>{{ $booking->room->name ?? '-' }}</td>
                                     <td>

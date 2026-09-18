@@ -53,7 +53,7 @@
 
     <section class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
         <div>
-            <p class="small text-secondary mb-1">Audit Event #{{ $activityLog->activity_log_id }}</p>
+            <p class="small text-secondary mb-1">Audit Event</p>
             <h1 class="h3 mb-1">{{ str($activityLog->action)->replace('_', ' ')->title() }} {{ str($activityLog->subject_type)->headline() }}</h1>
             <p class="text-secondary mb-0">{{ $activityLog->created_at?->format('M d, Y \a\t h:i:s A') }}</p>
         </div>
@@ -69,7 +69,7 @@
             </div>
             <div class="audit-detail-item">
                 <small class="text-secondary d-block">Target record</small>
-                <strong>{{ str($activityLog->subject_type)->headline() }} #{{ $activityLog->subject_id }}</strong>
+                <strong>{{ str($activityLog->subject_type)->headline() }}</strong>
             </div>
             <div class="audit-detail-item">
                 <small class="text-secondary d-block">IP address</small>

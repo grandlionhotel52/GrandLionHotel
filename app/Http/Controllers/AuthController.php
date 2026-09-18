@@ -86,6 +86,12 @@ class AuthController extends Controller
             ])->onlyInput('email');
         }
 
+        if (($account->isCustomer() || $account->isStaff()) && !$account->is_active) {
+            return back()->withErrors([
+                'email' => 'This account is inactive. Please contact the administrator.',
+            ])->onlyInput('email');
+        }
+
         RateLimiter::clear($throttleKey);
         $this->loginAccount($request, $account, $request->boolean('remember'));
 
@@ -389,6 +395,12 @@ class AuthController extends Controller
             return redirect()
                 ->route('login')
                 ->withErrors(['email' => 'This Google account is not registered yet. Use Create account first.']);
+        }
+
+        if (!$user->is_active) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'This account is inactive. Please contact the administrator.']);
         }
 
         $this->loginAccount($request, $user, true);

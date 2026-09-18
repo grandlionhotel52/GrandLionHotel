@@ -83,7 +83,7 @@
 
     <div class="booking-admin-head d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
-            <p class="small text-secondary mb-1">Booking #{{ $booking->id }}</p>
+            <p class="small text-secondary mb-1">Booking Details</p>
             <h1 class="h4 mb-2">{{ $displayName }} · {{ $booking->room->name ?? 'Room unavailable' }}</h1>
             <div class="d-flex flex-wrap gap-2">
                 <span class="badge {{ $statusBadgeClass }}">{{ \App\Models\Booking::statusLabel($booking->status) }}</span>

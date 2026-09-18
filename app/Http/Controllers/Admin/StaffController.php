@@ -242,13 +242,15 @@ class StaffController extends Controller
             ->with('status', 'Staff account updated successfully.');
     }
 
-    public function destroy(Staff $staff)
+    public function toggleStatus(Staff $staff)
     {
-        $staff->delete();
+        $staff->update(['is_active' => !$staff->is_active]);
+
+        $status = $staff->is_active ? 'activated' : 'deactivated';
 
         return redirect()
             ->route('admin.staff.index')
-            ->with('status', 'Staff account removed successfully.');
+            ->with('status', "Staff account {$status} successfully.");
     }
     private function resolveSelectedDate(string $rawDate): Carbon
     {

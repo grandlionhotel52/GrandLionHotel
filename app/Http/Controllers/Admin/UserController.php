@@ -164,19 +164,15 @@ class UserController extends Controller
             ->with('status', 'Customer account updated successfully.');
     }
 
-    public function destroy(Customer $user)
+    public function toggleStatus(Customer $user)
     {
-        if ($user->bookings()->exists()) {
-            return redirect()
-                ->route('admin.users.index')
-                ->withErrors(['user' => 'Cannot delete this customer because booking history exists.']);
-        }
+        $user->update(['is_active' => !$user->is_active]);
 
-        $user->delete();
+        $status = $user->is_active ? 'activated' : 'deactivated';
 
         return redirect()
             ->route('admin.users.index')
-            ->with('status', 'Customer account removed successfully.');
+            ->with('status', "Customer account {$status} successfully.");
     }
 
     private function applyCompleteProfileFilter(Builder $query, bool $complete): void

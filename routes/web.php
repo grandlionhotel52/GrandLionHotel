@@ -112,7 +112,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
-    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+    Route::patch('/users/{user}/status', [AdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
 
     Route::get('/staff', [AdminStaffController::class, 'index'])->name('staff.index');
     Route::get('/staff/create', [AdminStaffController::class, 'create'])->name('staff.create');
@@ -120,7 +120,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::get('/staff/{staff}', [AdminStaffController::class, 'show'])->name('staff.show');
     Route::get('/staff/{staff}/edit', [AdminStaffController::class, 'edit'])->name('staff.edit');
     Route::put('/staff/{staff}', [AdminStaffController::class, 'update'])->name('staff.update');
-    Route::delete('/staff/{staff}', [AdminStaffController::class, 'destroy'])->name('staff.destroy');
+    Route::patch('/staff/{staff}/status', [AdminStaffController::class, 'toggleStatus'])->name('staff.toggle-status');
 });
 
 Route::prefix('staff')->name('staff.')->middleware(['auth:staff', 'staff'])->group(function () {

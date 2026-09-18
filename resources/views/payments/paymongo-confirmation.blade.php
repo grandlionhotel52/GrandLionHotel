@@ -38,7 +38,6 @@
                 @endif
 
                 <div class="border rounded-3 p-3 my-4 text-start">
-                    <div class="d-flex justify-content-between gap-3 mb-2"><span class="text-secondary">Booking</span><strong>#{{ $booking->id }}</strong></div>
                     <div class="d-flex justify-content-between gap-3 mb-2"><span class="text-secondary">Room</span><strong>{{ $booking->room?->name ?? 'N/A' }}</strong></div>
                     <div class="d-flex justify-content-between gap-3 mb-2"><span class="text-secondary">Amount</span><strong>₱{{ number_format((float) ($booking->payment?->amount ?? $booking->total_price), 2) }}</strong></div>
                     <div class="d-flex justify-content-between gap-3"><span class="text-secondary">Status</span><strong class="{{ $isPaid ? 'text-success' : 'text-warning' }}">{{ $isPaid ? 'Paid' : 'Confirming' }}</strong></div>

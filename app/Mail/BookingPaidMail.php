@@ -20,7 +20,7 @@ class BookingPaidMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Payment confirmed for booking #'.$this->booking->id,
+            subject: 'Your booking payment is confirmed',
         );
     }
 

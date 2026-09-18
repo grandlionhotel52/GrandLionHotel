@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\ResolveActiveGuard;
 use App\Http\Middleware\StaffMiddleware;
 
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             ResolveActiveGuard::class,
+            EnsureAccountIsActive::class,
         ]);
 
         $middleware->alias([

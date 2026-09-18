@@ -105,7 +105,7 @@
             <div class="row g-2 align-items-end">
                 <div class="col-lg-4">
                     <label class="form-label">Search booking/customer</label>
-                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Booking ID, guest name, room...">
+                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Guest name, room...">
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label class="form-label">Booking status</label>
@@ -134,7 +134,6 @@
                 <caption class="visually-hidden">Bookings assigned to {{ $staff->name }}</caption>
                 <thead>
                     <tr>
-                        <th>Booking</th>
                         <th>Customer</th>
                         <th>Contact</th>
                         <th>Room</th>
@@ -148,7 +147,6 @@
                 <tbody>
                     @forelse($bookings as $booking)
                         <tr>
-                            <td>#{{ $booking->id }}</td>
                             <td>{{ $booking->guestName() }}</td>
                             <td>
                                 <div>{{ $booking->guestEmail() }}</div>
@@ -170,7 +168,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
                                 <i class="bi bi-inbox fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
                                 <strong class="d-block">No assigned bookings</strong>
                                 <span class="text-secondary">This staff member has no matching work.</span>

@@ -29,6 +29,7 @@ class CustomerFactory extends Factory
             'province' => fake()->state(),
             'country' => 'Philippines',
             'remember_token' => Str::random(10),
+            'is_active' => true,
         ];
     }
 

@@ -18,7 +18,7 @@
                     <tr>
                         <td style="padding:22px 24px;">
                             <p style="margin:0 0 12px;">Hello {{ $booking->guestName() }},</p>
-                            <p style="margin:0 0 16px;line-height:1.6;">This is a friendly reminder for booking <strong>#{{ $booking->id }}</strong>.</p>
+                            <p style="margin:0 0 16px;line-height:1.6;">This is a friendly reminder for your upcoming booking.</p>
                             <p style="margin:0 0 8px;"><strong>Room:</strong> {{ $booking->room->name ?? 'N/A' }}</p>
                             <p style="margin:0 0 8px;"><strong>Check-in:</strong> {{ $booking->check_in->format('M d, Y') }}</p>
                             <p style="margin:0 0 18px;"><strong>Check-out:</strong> {{ $booking->check_out->format('M d, Y') }}</p>

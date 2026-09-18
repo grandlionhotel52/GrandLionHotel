@@ -325,12 +325,11 @@ class DashboardController extends Controller
             $write([]);
 
             $write(['RECENT PAID TRANSACTIONS']);
-            $write(['Paid At', 'Booking', 'Method', 'Assigned Staff', 'Amount']);
+            $write(['Paid At', 'Method', 'Assigned Staff', 'Amount']);
             foreach ($report['recentSales'] as $sale) {
                 $staffName = trim((string) ($sale->assigned_staff_name ?? ''));
                 $write([
                     Carbon::parse($sale->paid_at)->format('Y-m-d H:i:s'),
-                    (int) $sale->booking_id,
                     Payment::methodLabel((string) $sale->method),
                     $staffName !== '' ? $staffName : 'Unassigned',
                     (float) $sale->amount,

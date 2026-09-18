@@ -150,7 +150,6 @@
                             </td>
                             <td>
                                 <strong>{{ str($log->subject_type)->headline() }}</strong>
-                                <small class="d-block text-secondary">#{{ $log->subject_id }}</small>
                             </td>
                             <td>
                                 <div class="audit-change-list">

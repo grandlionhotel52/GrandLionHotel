@@ -264,7 +264,6 @@
                 <caption class="visually-hidden">Most recent hotel bookings</caption>
                 <thead>
                     <tr>
-                        <th>Booking</th>
                         <th>Guest</th>
                         <th>Room Type</th>
                         <th>Dates</th>
@@ -277,7 +276,6 @@
                 <tbody>
                     @forelse($recentBookings as $booking)
                         <tr>
-                            <td>#{{ $booking->id }}</td>
                             <td>{{ $booking->guestName() }}</td>
                             <td>{{ $booking->room->name ?? '-' }}</td>
                             <td>{{ $booking->check_in->format('M d') }} - {{ $booking->check_out->format('M d') }}</td>
@@ -295,7 +293,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-secondary">No recent bookings yet.</td>
+                            <td colspan="7" class="text-center py-4 text-secondary">No recent bookings yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

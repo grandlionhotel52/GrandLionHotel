@@ -17,7 +17,7 @@ class PaymentDueReminderMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Payment reminder for booking #'.$this->booking->id);
+        return new Envelope(subject: 'Payment reminder for your booking');
     }
 
     public function content(): Content

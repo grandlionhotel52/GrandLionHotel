@@ -240,7 +240,6 @@
                     <caption class="visually-hidden">Today’s arrivals and available staff actions</caption>
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Customer</th>
                             <th>Room</th>
                             <th>Check-in Date</th>
@@ -259,7 +258,6 @@
                                 };
                             @endphp
                             <tr>
-                                <td>#{{ $booking->id }}</td>
                                 <td>
                                     <div class="d-flex flex-column">
                                         <span>{{ $booking->guestName() }}</span>
@@ -359,7 +357,7 @@
 
                         <div class="alert alert-warning small d-none mt-3 mb-0" id="gcash_qr_notice" role="alert"></div>
                         <div class="small text-secondary mt-3">
-                            Booking <strong data-gcash-booking>-</strong> | Guest: <strong data-gcash-guest>-</strong>
+                            Guest: <strong data-gcash-guest>-</strong>
                         </div>
                         <div class="small text-secondary mt-1">
                             Room: <strong data-gcash-room>-</strong>
@@ -490,7 +488,6 @@
             const discountIdInput = document.getElementById('gcash_discount_id');
             const discountProofWrap = document.getElementById('gcash_discount_proof_wrap');
             const discountProofLink = document.getElementById('gcash_discount_proof_link');
-            const bookingText = modalElement?.querySelector('[data-gcash-booking]');
             const guestText = modalElement?.querySelector('[data-gcash-guest]');
             const roomText = modalElement?.querySelector('[data-gcash-room]');
             const baseAmountText = modalElement?.querySelector('[data-gcash-base-amount]');
@@ -737,10 +734,6 @@
 
                 if (openAppLink) {
                     openAppLink.href = String(walletConfig.app_link || 'https://www.bsp.gov.ph/PaymentAndSettlement/Instapay');
-                }
-
-                if (bookingText) {
-                    bookingText.textContent = `#${activeBooking.bookingId}`;
                 }
 
                 if (guestText) {

@@ -21,7 +21,7 @@
                         <td style="padding:22px 24px;">
                             <p style="margin:0 0 10px 0;">Hello {{ $booking->guestName() }},</p>
                             <p style="margin:0 0 16px 0;line-height:1.6;">
-                                Booking <strong>#{{ $booking->id }}</strong> has been cancelled.
+                                Your booking has been cancelled.
                             </p>
                             <p style="margin:0 0 8px 0;"><strong>Room:</strong> {{ $booking->room->name ?? 'N/A' }}</p>
                             <p style="margin:0 0 8px 0;"><strong>Stay:</strong> {{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</p>

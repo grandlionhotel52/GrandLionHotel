@@ -71,15 +71,26 @@
         .staff-actions .btn-ta:hover {
             box-shadow: 0 8px 15px rgba(var(--theme-secondary-rgb), 0.2);
         }
-        .staff-actions .btn-delete {
+        .staff-actions .btn-deactivate {
             border: 1px solid rgba(var(--theme-secondary-rgb), 0.48);
             color: var(--theme-secondary);
             background: rgba(var(--theme-secondary-rgb), 0.08);
         }
-        .staff-actions .btn-delete:hover,
-        .staff-actions .btn-delete:focus {
+        .staff-actions .btn-deactivate:hover,
+        .staff-actions .btn-deactivate:focus {
             border-color: var(--theme-secondary);
             background: var(--theme-secondary);
+            color: #fff;
+        }
+        .staff-actions .btn-activate {
+            border: 1px solid rgba(25, 135, 84, 0.48);
+            color: #198754;
+            background: rgba(25, 135, 84, 0.08);
+        }
+        .staff-actions .btn-activate:hover,
+        .staff-actions .btn-activate:focus {
+            border-color: #198754;
+            background: #198754;
             color: #fff;
         }
         @media (max-width: 991.98px) {
@@ -166,6 +177,7 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
+                        <th>Account Status</th>
                         <th>Daily Earnings</th>
                         <th>Assigned Bookings</th>
                         <th>Paid Bookings (Day)</th>
@@ -180,6 +192,11 @@
                             <td>{{ $staff->name }}</td>
                             <td>{{ $staff->email }}</td>
                             <td>{{ $staff->phone ?: '-' }}</td>
+                            <td>
+                                <span class="badge {{ $staff->is_active ? 'text-bg-success' : 'text-bg-secondary' }}">
+                                    {{ $staff->is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
                             <td>
                                 <div class="fw-semibold">&#8369;{{ number_format((float) ($staff->daily_revenue ?? 0), 2) }}</div>
                                 <small class="text-secondary">{{ (int) ($staff->daily_paid_bookings ?? 0) }} paid booking(s) on {{ $selectedDateLabel }}</small>
@@ -208,12 +225,12 @@
                                         <i class="bi bi-pencil-square"></i>
                                         <span>Edit</span>
                                     </button>
-                                    <form method="POST" action="{{ route('admin.staff.destroy', $staff) }}" data-submit-lock onsubmit="return confirm('Delete this staff account?');">
+                                    <form method="POST" action="{{ route('admin.staff.toggle-status', $staff) }}" data-submit-lock onsubmit="return confirm('{{ $staff->is_active ? 'Deactivate' : 'Activate' }} this staff account?');">
                                         @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-delete">
-                                            <i class="bi bi-trash"></i>
-                                            <span>Delete</span>
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-sm {{ $staff->is_active ? 'btn-deactivate' : 'btn-activate' }}" data-submitting-text="Updating...">
+                                            <i class="bi {{ $staff->is_active ? 'bi-person-dash' : 'bi-person-check' }}"></i>
+                                            <span>{{ $staff->is_active ? 'Deactivate' : 'Activate' }}</span>
                                         </button>
                                     </form>
                                 </div>
@@ -221,7 +238,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5">
+                            <td colspan="9" class="text-center py-5">
                                 <i class="bi bi-person-plus fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
                                 <strong class="d-block">No staff accounts</strong>
                                 <span class="text-secondary">Create an account to assign booking work.</span>

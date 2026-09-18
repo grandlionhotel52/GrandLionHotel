@@ -187,13 +187,26 @@ class AdminStaffButtonFlowsTest extends TestCase
         $orphanCustomer->refresh();
         $this->assertSame('Updated Customer', $orphanCustomer->name);
 
-        $this->delete(route('admin.users.destroy', $orphanCustomer))
+        $this->patch(route('admin.users.toggle-status', $orphanCustomer))
             ->assertRedirect(route('admin.users.index'));
-        $this->assertDatabaseMissing('customers', ['customer_id' => $orphanCustomer->id]);
+        $this->assertDatabaseHas('customers', [
+            'customer_id' => $orphanCustomer->id,
+            'is_active' => false,
+        ]);
 
-        $this->delete(route('admin.staff.destroy', $createdStaff))
+        $this->patch(route('admin.users.toggle-status', $orphanCustomer))
+            ->assertRedirect(route('admin.users.index'));
+        $this->assertDatabaseHas('customers', [
+            'customer_id' => $orphanCustomer->id,
+            'is_active' => true,
+        ]);
+
+        $this->patch(route('admin.staff.toggle-status', $createdStaff))
             ->assertRedirect(route('admin.staff.index'));
-        $this->assertDatabaseMissing('staff', ['staff_id' => $createdStaff->id]);
+        $this->assertDatabaseHas('staff', [
+            'staff_id' => $createdStaff->id,
+            'is_active' => false,
+        ]);
     }
 
     public function test_admin_can_create_customer_and_duplicate_emails_are_validation_errors(): void

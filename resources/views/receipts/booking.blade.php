@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Booking Receipt #{{ $booking->id }}</title>
+    <title>Booking Receipt</title>
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -106,7 +106,6 @@
     </div>
 
     <p><strong>Receipt Date:</strong> {{ now()->format('M d, Y h:i A') }}</p>
-    <p><strong>Booking #:</strong> {{ $booking->id }}</p>
     <p><strong>Guest:</strong> {{ $booking->guestName() }}</p>
     <div class="reference-box">
         <div class="reference-label">Transaction Reference</div>

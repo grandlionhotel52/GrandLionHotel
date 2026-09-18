@@ -11,7 +11,6 @@
                 </span>
                 <p class="ta-eyebrow mb-1">Payment complete</p>
                 <h1 class="h2 mb-3">You’re all set</h1>
-                <p class="mb-1">Reservation #: <strong>{{ $booking->id }}</strong></p>
                 <p class="mb-1">Room: <strong>{{ $booking->room->name ?? 'N/A' }}</strong></p>
                 <p class="mb-1">Dates: <strong>{{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</strong></p>
                 <p class="mb-1">Total paid: <strong>&#8369;{{ number_format($booking->total_price, 2) }}</strong></p>

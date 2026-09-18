@@ -262,7 +262,7 @@
         <div class="mb-2">
             <x-back-button :href="$backUrl" label="Back to bookings" class="btn-sm" />
         </div>
-        <h1 class="h4 mb-1">Booking #{{ $booking->id }}</h1>
+        <h1 class="h4 mb-1">Booking Details</h1>
         <div class="d-flex flex-wrap gap-2">
             <span class="booking-top-chip {{ $bookingChipClass }}">Booking: {{ $bookingStatusLabel }}</span>
             <span class="booking-top-chip {{ $paymentChipClass }}">Payment: {{ $paymentStatusLabel }}</span>

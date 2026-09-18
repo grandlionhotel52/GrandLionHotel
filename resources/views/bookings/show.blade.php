@@ -190,7 +190,7 @@
             $isOnlineAwaitingVerification => 'Your online payment proof was submitted. Please wait for staff to verify your transfer.',
             $isCashAwaitingVerification => 'Cash payment selected. Please pay at front desk and wait for staff confirmation.',
             $booking->status === 'confirmed' && $booking->payment_status !== 'paid' => 'Complete payment to finalize this reservation.',
-            $booking->status === 'confirmed' && $booking->payment_status === 'paid' => 'You are all set. Bring your booking reference at check-in.',
+            $booking->status === 'confirmed' && $booking->payment_status === 'paid' => 'You are all set. Bring a valid ID at check-in.',
             $booking->status === 'completed' => 'Stay completed. You can download your receipt anytime.',
             default => 'Review your reservation details below.',
         };
@@ -205,7 +205,7 @@
         <div class="booking-hero-content">
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                 <div>
-                    <p class="ta-eyebrow mb-1">Reservation #{{ $booking->id }}</p>
+                    <p class="ta-eyebrow mb-1">Reservation Details</p>
                     <h1 class="h2 mb-1">{{ $booking->room?->name ?? 'Room reservation' }}</h1>
                     <p class="text-secondary mb-3">
                         {{ $booking->check_in->format('M d, Y') }} – {{ $booking->check_out->format('M d, Y') }}

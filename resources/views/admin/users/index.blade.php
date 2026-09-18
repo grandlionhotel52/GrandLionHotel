@@ -72,15 +72,26 @@
         .admin-user-actions .btn-ta-outline {
             border-width: 1px;
         }
-        .admin-user-actions .btn-delete {
+        .admin-user-actions .btn-deactivate {
             border: 1px solid rgba(var(--theme-secondary-rgb), 0.48);
             color: var(--theme-secondary);
             background: rgba(var(--theme-secondary-rgb), 0.08);
         }
-        .admin-user-actions .btn-delete:hover,
-        .admin-user-actions .btn-delete:focus {
+        .admin-user-actions .btn-deactivate:hover,
+        .admin-user-actions .btn-deactivate:focus {
             border-color: var(--theme-secondary);
             background: var(--theme-secondary);
+            color: #fff;
+        }
+        .admin-user-actions .btn-activate {
+            border: 1px solid rgba(25, 135, 84, 0.48);
+            color: #198754;
+            background: rgba(25, 135, 84, 0.08);
+        }
+        .admin-user-actions .btn-activate:hover,
+        .admin-user-actions .btn-activate:focus {
+            border-color: #198754;
+            background: #198754;
             color: #fff;
         }
         @media (max-width: 991.98px) {
@@ -173,6 +184,7 @@
                         <th>Contact</th>
                         <th>Location</th>
                         <th>Profile</th>
+                        <th>Account Status</th>
                         <th>Bookings</th>
                         <th class="admin-user-joined-col">Joined</th>
                         <th class="text-end admin-user-actions-col">Actions</th>
@@ -184,7 +196,6 @@
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $customer->name }}</div>
-                                <small class="text-secondary">#{{ $customer->id }}</small>
                             </td>
                             <td>
                                 <div>{{ $customer->email }}</div>
@@ -201,6 +212,11 @@
                                 @else
                                     <span class="badge text-bg-warning">Incomplete</span>
                                 @endif
+                            </td>
+                            <td>
+                                <span class="badge {{ $customer->is_active ? 'text-bg-success' : 'text-bg-secondary' }}">
+                                    {{ $customer->is_active ? 'Active' : 'Inactive' }}
+                                </span>
                             </td>
                             <td>{{ $customer->bookings_count }}</td>
                             <td class="admin-user-joined-at">{{ $customer->created_at?->format('M d, Y h:i A') }}</td>
@@ -225,12 +241,12 @@
                                         <i class="bi bi-pencil-square"></i>
                                         <span>Edit</span>
                                     </button>
-                                    <form method="POST" action="{{ route('admin.users.destroy', $customer) }}" data-submit-lock onsubmit="return confirm('Delete this customer account? This cannot be undone.');">
+                                    <form method="POST" action="{{ route('admin.users.toggle-status', $customer) }}" data-submit-lock onsubmit="return confirm('{{ $customer->is_active ? 'Deactivate' : 'Activate' }} this customer account?');">
                                         @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-delete">
-                                            <i class="bi bi-trash"></i>
-                                            <span>Delete</span>
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-sm {{ $customer->is_active ? 'btn-deactivate' : 'btn-activate' }}" data-submitting-text="Updating...">
+                                            <i class="bi {{ $customer->is_active ? 'bi-person-dash' : 'bi-person-check' }}"></i>
+                                            <span>{{ $customer->is_active ? 'Deactivate' : 'Activate' }}</span>
                                         </button>
                                     </form>
                                 </div>
@@ -238,7 +254,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
                                 <i class="bi bi-people fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
                                 <strong class="d-block">No matching customers</strong>
                                 <span class="text-secondary">Change or reset the filters.</span>
