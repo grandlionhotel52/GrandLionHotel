@@ -55,9 +55,12 @@ class PaymentController extends Controller
     {
         $this->authorizeOwner($booking);
         $booking->loadMissing('payment');
-        $amountDue = (float) ($booking->payment?->amount ?? $booking->total_price);
+        $bookingTotal = (float) ($booking->payment?->amount ?? $booking->total_price);
+        $amountDue = $booking->payment
+            ? $booking->payment->outstandingAmount()
+            : $bookingTotal;
         if ($amountDue <= 0) {
-            $amountDue = (float) $booking->total_price;
+            $amountDue = $bookingTotal;
         }
 
         if ($booking->payment_status === 'paid') {
@@ -136,7 +139,7 @@ class PaymentController extends Controller
             $booking->payment()->updateOrCreate(
                 ['booking_id' => $booking->id],
                 [
-                    'amount' => $amountDue,
+                    'amount' => $bookingTotal,
                     'method' => Payment::METHOD_CREDIT_DEBIT_CARD,
                     'status' => 'unpaid',
                     'source' => 'paymongo_checkout_pending',
@@ -166,7 +169,7 @@ class PaymentController extends Controller
             $booking->payment()->updateOrCreate(
                 ['booking_id' => $booking->id],
                 [
-                    'amount' => $amountDue,
+                    'amount' => $bookingTotal,
                     'method' => Payment::METHOD_CASH,
                     'status' => 'unpaid',
                     'source' => 'cash_pending',
@@ -198,7 +201,7 @@ class PaymentController extends Controller
             $booking->payment()->updateOrCreate(
                 ['booking_id' => $booking->id],
                 [
-                    'amount' => $amountDue,
+                    'amount' => $bookingTotal,
                     'method' => $validated['method'],
                     'status' => 'pending_verification',
                     'source' => 'online_submitted',
@@ -291,7 +294,7 @@ class PaymentController extends Controller
             return;
         }
 
-        $expectedAmount = (int) round((float) $payment->amount * 100);
+        $expectedAmount = (int) round($payment->outstandingAmount() * 100);
         $providerAmount = (int) data_get($paymentData, 'attributes.amount');
         $providerPaymentId = trim((string) data_get($paymentData, 'id'));
         if ($providerAmount !== $expectedAmount

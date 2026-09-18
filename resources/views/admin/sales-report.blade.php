@@ -4,6 +4,20 @@
 
 @push('head')
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
+        .admin-report-heading {
+            margin-bottom: 1rem;
+        }
+        .admin-report-heading .hotel-name {
+            color: var(--admin-brand-dark);
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
         .admin-report-stat {
             border-radius: 14px;
             border: 1px solid var(--admin-line);
@@ -64,6 +78,54 @@
         .admin-report-shell .table-responsive {
             overflow-y: hidden;
         }
+        @media print {
+            body {
+                background: #fff !important;
+                font-size: 9pt;
+            }
+            body > nav,
+            .admin-report-controls,
+            .admin-report-print-button {
+                display: none !important;
+            }
+            main.container-xl {
+                width: 100% !important;
+                max-width: none !important;
+                padding: 0 !important;
+            }
+            .admin-report-heading {
+                text-align: center;
+                margin-bottom: 8mm;
+            }
+            .admin-report-heading h1 {
+                font-size: 18pt !important;
+            }
+            .admin-report-stat,
+            .admin-report-shell {
+                border-color: #999 !important;
+                box-shadow: none !important;
+                break-inside: avoid;
+            }
+            .admin-report-metrics > [class*="col-"] {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+            .admin-report-shell .table-responsive {
+                overflow: visible !important;
+            }
+            .admin-report-table {
+                width: 100% !important;
+                min-width: 0 !important;
+                table-layout: fixed;
+            }
+            .admin-report-table thead th,
+            .admin-report-table tbody td {
+                padding: 0.3rem !important;
+                font-size: 7pt !important;
+                white-space: normal !important;
+                overflow-wrap: anywhere;
+            }
+        }
     </style>
 @endpush
 
@@ -75,14 +137,18 @@
     @endphp
 
     <section class="mb-4">
-        <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+        <div class="admin-report-heading d-flex flex-wrap align-items-end justify-content-between gap-2">
             <div>
+                <p class="hotel-name mb-1">The Grand Lion Hotel</p>
                 <h1 class="h4 mb-1">Sales Report</h1>
                 <p class="text-secondary mb-0" id="admin_sales_range_label" data-ajax-list-sync>Paid sales for {{ $selectedRangeLabel }}</p>
             </div>
+            <button type="button" class="btn btn-ta-outline admin-report-print-button" onclick="window.print()">
+                <i class="bi bi-printer me-1" aria-hidden="true"></i>Print Portrait
+            </button>
         </div>
 
-        <section class="admin-report-shell p-3 p-lg-4 mb-4">
+        <section class="admin-report-shell admin-report-controls p-3 p-lg-4 mb-4">
             <form method="GET" action="{{ route('admin.sales-report') }}" data-ajax-list-form="#admin_sales_results">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-4 col-lg-3">
@@ -116,7 +182,7 @@
         </section>
 
         <div id="admin_sales_results" aria-live="polite">
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 admin-report-metrics">
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
                     <p class="label">Total Sales</p>
@@ -148,7 +214,7 @@
                 </div>
             </div>
         </div>
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-4 admin-report-metrics">
             @foreach([
                 ['label' => 'VAT-Exempt Sales', 'value' => $summary['vat_exempt_sales'], 'label_class' => 'admin-report-tax-danger', 'value_class' => 'admin-report-tax-danger'],
                 ['label' => 'VAT (12/112)', 'value' => $summary['vat_total'], 'label_class' => 'admin-report-tax-danger', 'value_class' => 'admin-report-tax-danger'],

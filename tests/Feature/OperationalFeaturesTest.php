@@ -126,6 +126,31 @@ class OperationalFeaturesTest extends TestCase
             ->assertSeeInOrder(['Occupied', 'Available', 'Occupancy', '2']);
     }
 
+    public function test_occupancy_report_lists_unsold_rooms_before_sold_rooms(): void
+    {
+        $admin = Admin::factory()->create();
+        $stayDate = now()->addDay()->startOfDay();
+        $soldRoom = Room::factory()->create(['name' => 'Sold Garden Room', 'type' => 'Deluxe']);
+        $unsoldRoom = Room::factory()->create(['name' => 'Unsold City Room', 'type' => 'Suite']);
+
+        Booking::factory()->create([
+            'room_id' => $soldRoom->id,
+            'check_in' => $stayDate,
+            'check_out' => $stayDate->copy()->addDay(),
+            'status' => 'confirmed',
+        ]);
+
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.occupancy-report', [
+                'from' => $stayDate->toDateString(),
+                'to' => $stayDate->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertSee('Room-by-Room Occupancy')
+            ->assertSee('Rooms with no sales')
+            ->assertSeeInOrder([$unsoldRoom->name, 'Unsold', $soldRoom->name, 'Fully occupied']);
+    }
+
     public function test_legacy_room_search_redirects_to_the_canonical_route(): void
     {
         $this->get(route('rooms.search', ['type' => 'Suite']))

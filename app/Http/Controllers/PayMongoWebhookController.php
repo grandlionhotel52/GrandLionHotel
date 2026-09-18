@@ -59,7 +59,7 @@ class PayMongoWebhookController extends Controller
             return response('Ignored.', 200);
         }
 
-        $expectedAmount = (int) round((float) $payment->amount * 100);
+        $expectedAmount = (int) round($payment->outstandingAmount() * 100);
         $providerAmount = (int) data_get($paymentData, 'attributes.amount');
         if ($providerAmount !== $expectedAmount
             || ($checkoutSession && (int) $checkoutSession->amount_centavos !== $providerAmount)

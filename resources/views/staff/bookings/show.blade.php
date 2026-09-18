@@ -582,7 +582,7 @@
             <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-3">
                 <div>
                     <h2 class="h5 mb-1">Direct Staff Reschedule</h2>
-                    <p class="booking-note mb-0">Use this when the customer asks for a schedule change in person at the hotel. The system will recheck availability and update the due amount automatically when the booking is not yet paid.</p>
+                    <p class="booking-note mb-0">Use this when the customer asks for a schedule change in person. The system keeps whichever booking total is higher. A paid booking moving to a more expensive schedule will owe only the difference.</p>
                 </div>
             </div>
             <form method="POST" action="{{ route('staff.bookings.reschedule', $booking) }}" class="row g-3" data-confirm="Update this booking schedule now?">
@@ -970,6 +970,12 @@
                         <span class="booking-meta-label">Amount</span>
                         <span class="booking-meta-value">PHP {{ number_format($booking->payment->amount, 2) }}</span>
                     </div>
+                    @if((float) $booking->payment->balance_due > 0)
+                        <div class="booking-meta-line">
+                            <span class="booking-meta-label">Additional Balance Due</span>
+                            <span class="booking-meta-value text-danger">PHP {{ number_format($booking->payment->balance_due, 2) }}</span>
+                        </div>
+                    @endif
 
                     @if(filled(data_get($reservationMeta, 'discount_type')) && (float) ($booking->payment->discount_amount ?? 0) > 0)
                         <div class="booking-meta-line">

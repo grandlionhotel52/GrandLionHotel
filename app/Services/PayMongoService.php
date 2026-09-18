@@ -18,7 +18,9 @@ class PayMongoService
         }
 
         $booking->loadMissing(['room', 'user', 'payment']);
-        $amountDue = (float) ($booking->payment?->amount ?? $booking->total_price);
+        $amountDue = $booking->payment
+            ? $booking->payment->outstandingAmount()
+            : (float) $booking->total_price;
         $amount = (int) round(($amountDue > 0 ? $amountDue : (float) $booking->total_price) * 100);
 
         if ($amount < 100) {

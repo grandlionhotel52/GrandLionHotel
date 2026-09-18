@@ -547,7 +547,10 @@
                     <p class="mb-1 text-success"><small>Less: Discount</small><br><strong>-&#8369;{{ number_format((float) $booking->payment->discount_amount, 2) }}</strong></p>
                 @endif
                 <p class="mb-1"><small class="text-secondary">Taxes excluded from this summary</small><br><strong>VAT and local tax</strong> &mdash; itemized on receipt</p>
-                <p class="mb-3"><small class="text-secondary">Total amount due</small><br><strong>&#8369;{{ number_format((float) ($booking->payment?->amount ?? $booking->total_price), 2) }}</strong></p>
+                <p class="mb-1"><small class="text-secondary">Locked booking total</small><br><strong>&#8369;{{ number_format((float) ($booking->payment?->amount ?? $booking->total_price), 2) }}</strong></p>
+                @if((float) ($booking->payment?->balance_due ?? 0) > 0)
+                    <p class="mb-3 text-danger"><small>Additional balance due after reschedule</small><br><strong>&#8369;{{ number_format((float) $booking->payment->balance_due, 2) }}</strong></p>
+                @endif
 
                 <div class="booking-next-card mb-3">
                     <small class="text-secondary d-block mb-1">Next action</small>

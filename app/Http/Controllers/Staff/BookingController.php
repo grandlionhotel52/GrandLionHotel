@@ -702,6 +702,7 @@ class BookingController extends Controller
 
         $payment->update([
             'status' => 'paid',
+            'balance_due' => 0,
             'source' => 'online_verified',
             'paid_at' => now(),
             'verified_at' => now(),
@@ -777,13 +778,8 @@ class BookingController extends Controller
                 ->withErrors(['check_in' => 'The selected new schedule is not available for this room.']);
         }
 
-        $newTotal = $this->pricingService->calculateTotal(
-            $booking->room,
-            $validated['check_in'],
-            $validated['check_out'],
-            $booking->guests,
-            $this->bookingHasBreakfast($booking)
-        );
+        $newTotal = $this->calculateRescheduleTotal($booking, $validated['check_in'], $validated['check_out']);
+        $priceUpdate = $this->lockHigherReschedulePrice($booking, $newTotal);
 
         $booking->update($this->withAssignedStaff($booking, [
             'check_in' => $validated['check_in'],
@@ -794,16 +790,9 @@ class BookingController extends Controller
             'reschedule_requested_at' => null,
         ]));
 
-        if ($booking->payment && $booking->payment->status !== 'paid') {
-            $booking->payment->update([
-                'amount' => $newTotal,
-                'original_amount' => null,
-                'discount_rate' => null,
-                'discount_amount' => null,
-            ]);
-        }
+        $message = 'Booking schedule updated successfully. '.$this->reschedulePriceMessage($priceUpdate);
 
-        return $this->redirectAfterBookingAction($request, $booking, 'Booking schedule updated successfully.');
+        return $this->redirectAfterBookingAction($request, $booking, $message);
     }
 
     public function applyRescheduleRequest(Request $request, Booking $booking)
@@ -832,13 +821,8 @@ class BookingController extends Controller
             return back()->withErrors(['booking' => 'Requested schedule is no longer available for this room.']);
         }
 
-        $newTotal = $this->pricingService->calculateTotal(
-            $booking->room,
-            $requestedCheckIn,
-            $requestedCheckOut,
-            $booking->guests,
-            $this->bookingHasBreakfast($booking)
-        );
+        $newTotal = $this->calculateRescheduleTotal($booking, $requestedCheckIn, $requestedCheckOut);
+        $priceUpdate = $this->lockHigherReschedulePrice($booking, $newTotal);
 
         $booking->update($this->withAssignedStaff($booking, [
             'check_in' => $requestedCheckIn,
@@ -849,16 +833,9 @@ class BookingController extends Controller
             'reschedule_requested_at' => null,
         ]));
 
-        if ($booking->payment && $booking->payment->status !== 'paid') {
-            $booking->payment->update([
-                'amount' => $newTotal,
-                'original_amount' => null,
-                'discount_rate' => null,
-                'discount_amount' => null,
-            ]);
-        }
+        $message = 'Requested schedule applied successfully. '.$this->reschedulePriceMessage($priceUpdate);
 
-        return $this->redirectAfterBookingAction($request, $booking, 'Requested schedule applied successfully.');
+        return $this->redirectAfterBookingAction($request, $booking, $message);
     }
 
     public function declineRescheduleRequest(Request $request, Booking $booking)
@@ -1115,6 +1092,101 @@ class BookingController extends Controller
             $booking->guests,
             $this->bookingHasBreakfast($booking)
         );
+    }
+
+    private function calculateRescheduleTotal(Booking $booking, string $checkIn, string $checkOut): float
+    {
+        $booking->loadMissing('payment');
+        $quote = $this->pricingService->quoteStay(
+            $booking->room,
+            $checkIn,
+            $checkOut,
+            $booking->guests,
+            $this->bookingHasBreakfast($booking)
+        );
+        $discountType = strtolower(trim((string) data_get($booking->reservation_meta, 'discount_type', '')));
+        $storedRate = $booking->payment?->discount_rate;
+        $discountRate = is_numeric($storedRate)
+            ? (float) $storedRate
+            : match ($discountType) {
+                'pwd', 'senior' => 0.20,
+                'promo' => max(0, min(100, (float) data_get($booking->reservation_meta, 'promo_discount_percent'))) / 100,
+                default => 0.0,
+            };
+
+        return round((float) $this->pricingService
+            ->applyDiscount($quote, $discountType, $discountRate)['total'], 2);
+    }
+
+    /**
+     * Reschedules never reduce the booked total. A previously paid booking
+     * owes only the increase when its new schedule is more expensive.
+     *
+     * @return array{locked_total: float, balance_due: float, increased: bool}
+     */
+    private function lockHigherReschedulePrice(Booking $booking, float $calculatedTotal): array
+    {
+        $booking->loadMissing('payment');
+        $payment = $booking->payment;
+        $currentTotal = round(max(0, (float) ($payment?->amount ?? $booking->total_price)), 2);
+        $lockedTotal = round(max($currentTotal, $calculatedTotal), 2);
+        $increase = round(max(0, $lockedTotal - $currentTotal), 2);
+
+        if (!$payment) {
+            $payment = $booking->payment()->create([
+                'amount' => $lockedTotal,
+                'balance_due' => 0,
+                'method' => 'pending',
+                'status' => 'unpaid',
+            ]);
+            $booking->setRelation('payment', $payment);
+
+            return ['locked_total' => $lockedTotal, 'balance_due' => 0.0, 'increased' => $increase > 0];
+        }
+
+        $balanceDue = round(max(0, (float) $payment->balance_due), 2);
+        $status = (string) $payment->status;
+
+        if ($increase > 0) {
+            if ($status === 'paid') {
+                $balanceDue = $increase;
+                $status = 'unpaid';
+            } elseif ($balanceDue > 0) {
+                $balanceDue = round($balanceDue + $increase, 2);
+            } elseif ($status === 'pending_verification') {
+                $status = 'unpaid';
+                $balanceDue = 0.0;
+            }
+        }
+
+        $payment->update([
+            'amount' => $lockedTotal,
+            'balance_due' => $balanceDue,
+            'status' => $status,
+        ]);
+        $booking->setRelation('payment', $payment->fresh());
+
+        return [
+            'locked_total' => $lockedTotal,
+            'balance_due' => $balanceDue,
+            'increased' => $increase > 0,
+        ];
+    }
+
+    /** @param array{locked_total: float, balance_due: float, increased: bool} $priceUpdate */
+    private function reschedulePriceMessage(array $priceUpdate): string
+    {
+        if ($priceUpdate['balance_due'] > 0) {
+            return 'The higher schedule price applies. Additional balance due: PHP '
+                .number_format($priceUpdate['balance_due'], 2).'.';
+        }
+
+        if ($priceUpdate['increased']) {
+            return 'The higher schedule price of PHP '.number_format($priceUpdate['locked_total'], 2).' applies.';
+        }
+
+        return 'The existing higher booking price remains PHP '
+            .number_format($priceUpdate['locked_total'], 2).'; discounted dates do not reduce it.';
     }
 
     private function bookingHasBreakfast(Booking $booking): bool

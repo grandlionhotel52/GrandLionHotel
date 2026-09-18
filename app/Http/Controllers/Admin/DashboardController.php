@@ -358,7 +358,10 @@ class DashboardController extends Controller
             $to = $rangeEnd->toDateString();
         }
 
-        $rooms = Room::query()->count();
+        $roomInventory = Room::query()
+            ->orderBy('name')
+            ->get(['room_id', 'name', 'type', 'view_type']);
+        $roomCount = $roomInventory->count();
         $bookings = Booking::query()
             ->with('room:room_id,name,type')
             ->whereIn('status', ['confirmed', 'completed'])
@@ -366,8 +369,11 @@ class DashboardController extends Controller
             ->whereDate('check_out', '>', $from)
             ->get();
 
-        $dailyOccupancy = collect(CarbonPeriod::create($rangeStart, $rangeEnd))
-            ->map(function (Carbon $date) use ($bookings, $rooms): object {
+        $reportDates = collect(CarbonPeriod::create($rangeStart, $rangeEnd))
+            ->map(static fn (Carbon $date): Carbon => $date->copy()->startOfDay());
+
+        $dailyOccupancy = $reportDates
+            ->map(function (Carbon $date) use ($bookings, $roomCount): object {
                 $occupiedRooms = $bookings
                     ->filter(fn (Booking $booking): bool => $booking->check_in->lte($date) && $booking->check_out->gt($date))
                     ->pluck('room_id')
@@ -377,22 +383,54 @@ class DashboardController extends Controller
                 return (object) [
                     'date' => $date->toDateString(),
                     'occupied_rooms' => $occupiedRooms,
-                    'available_rooms' => max(0, $rooms - $occupiedRooms),
-                    'occupancy_rate' => $rooms > 0 ? round(($occupiedRooms / $rooms) * 100, 1) : 0,
+                    'available_rooms' => max(0, $roomCount - $occupiedRooms),
+                    'occupancy_rate' => $roomCount > 0 ? round(($occupiedRooms / $roomCount) * 100, 1) : 0,
                 ];
             });
 
-        $roomNightsAvailable = $rooms * $dailyOccupancy->count();
+        $totalNights = $reportDates->count();
+        $roomOccupancy = $roomInventory
+            ->map(function (Room $room) use ($bookings, $reportDates, $totalNights): object {
+                $roomBookings = $bookings->where('room_id', $room->id);
+                $soldNights = $reportDates->filter(
+                    fn (Carbon $date): bool => $roomBookings->contains(
+                        fn (Booking $booking): bool => $booking->check_in->lte($date) && $booking->check_out->gt($date)
+                    )
+                )->count();
+                $unsoldNights = max(0, $totalNights - $soldNights);
+
+                return (object) [
+                    'name' => $room->name,
+                    'type' => $room->type,
+                    'view_type' => $room->view_type,
+                    'sold_nights' => $soldNights,
+                    'unsold_nights' => $unsoldNights,
+                    'occupancy_rate' => $totalNights > 0 ? round(($soldNights / $totalNights) * 100, 1) : 0,
+                    'sales_status' => match (true) {
+                        $soldNights === 0 => 'Unsold',
+                        $unsoldNights === 0 => 'Fully occupied',
+                        default => 'Partially sold',
+                    },
+                ];
+            })
+            ->sortBy([
+                ['sold_nights', 'asc'],
+                ['name', 'asc'],
+            ])
+            ->values();
+
+        $roomNightsAvailable = $roomCount * $dailyOccupancy->count();
         $roomNightsSold = (int) $dailyOccupancy->sum('occupied_rooms');
         $summary = [
-            'rooms' => $rooms,
+            'rooms' => $roomCount,
+            'rooms_without_sales' => $roomOccupancy->where('sold_nights', 0)->count(),
             'room_nights_available' => $roomNightsAvailable,
             'room_nights_sold' => $roomNightsSold,
             'occupancy_rate' => $roomNightsAvailable > 0 ? round(($roomNightsSold / $roomNightsAvailable) * 100, 1) : 0,
             'peak_day' => $dailyOccupancy->sortByDesc('occupied_rooms')->first(),
         ];
 
-        return view('admin.occupancy-report', compact('summary', 'dailyOccupancy', 'from', 'to'));
+        return view('admin.occupancy-report', compact('summary', 'roomOccupancy', 'dailyOccupancy', 'from', 'to'));
     }
 
     private function normalizeDateInput(string $value): ?string

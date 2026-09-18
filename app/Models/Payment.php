@@ -33,6 +33,7 @@ class Payment extends Model
     protected $fillable = [
         'booking_id',
         'amount',
+        'balance_due',
         'method',
         'status',
         'source',
@@ -53,6 +54,7 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'balance_due' => 'decimal:2',
             'paid_at' => 'datetime',
             'verified_at' => 'datetime',
             'original_amount' => 'decimal:2',
@@ -96,6 +98,15 @@ class Payment extends Model
             self::METHOD_PAYMAYA => 'Maya',
             default => ucfirst(str_replace('_', ' ', $normalized !== '' ? $normalized : 'n/a')),
         };
+    }
+
+    public function outstandingAmount(): float
+    {
+        $balanceDue = round(max(0, (float) $this->balance_due), 2);
+
+        return $balanceDue > 0
+            ? min(round(max(0, (float) $this->amount), 2), $balanceDue)
+            : round(max(0, (float) $this->amount), 2);
     }
 
     public function ensureTransactionReference(?int $bookingId = null): string

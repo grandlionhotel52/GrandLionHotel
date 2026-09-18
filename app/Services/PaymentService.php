@@ -38,13 +38,20 @@ class PaymentService
             if ($bookingAmount <= 0) {
                 $bookingAmount = (float) $lockedBooking->total_price;
             }
+            $hasAdditionalBalance = $payment && (float) $payment->balance_due > 0;
+            $outstandingAmount = $hasAdditionalBalance
+                ? $payment->outstandingAmount()
+                : $bookingAmount;
             $requestedAmount = $meta['amount'] ?? null;
-            $chargeAmount = $bookingAmount;
+            $chargeAmount = $outstandingAmount;
 
             if (is_numeric($requestedAmount)) {
-                $chargeAmount = max(0.0, min($bookingAmount, round((float) $requestedAmount, 2)));
+                $chargeAmount = max(0.0, min($outstandingAmount, round((float) $requestedAmount, 2)));
                 unset($meta['amount']);
             }
+
+            $remainingBalance = round(max(0, $outstandingAmount - $chargeAmount), 2);
+            $storedBookingAmount = $hasAdditionalBalance ? $bookingAmount : $chargeAmount;
 
             $source = trim((string) ($meta['source'] ?? ''));
             if ($source === '') {
@@ -60,10 +67,11 @@ class PaymentService
             }
 
             $paymentPayload = array_filter([
-                'amount' => $chargeAmount,
+                'amount' => $storedBookingAmount,
+                'balance_due' => $remainingBalance,
                 'method' => $method,
-                'status' => 'paid',
-                'paid_at' => now(),
+                'status' => $remainingBalance > 0 ? 'unpaid' : 'paid',
+                'paid_at' => $remainingBalance > 0 ? null : now(),
                 'source' => $source,
                 'qr_reference' => data_get($meta, 'qr_reference'),
                 'original_amount' => is_numeric($meta['original_amount'] ?? null) ? round((float) $meta['original_amount'], 2) : null,

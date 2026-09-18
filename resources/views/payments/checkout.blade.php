@@ -73,7 +73,9 @@
         $pricingQuote = $booking->pricingQuote();
         $billingQuote = $booking->billingQuote();
         $billedUnits = max(1, $booking->nights());
-        $subtotalAmount = (float) ($booking->payment?->amount ?? $booking->total_price);
+        $subtotalAmount = $booking->payment
+            ? $booking->payment->outstandingAmount()
+            : (float) $booking->total_price;
         $roomSubtotal = (float) ($pricingQuote['room_total'] ?? $subtotalAmount);
         $roomNightlyRate = (float) ($pricingQuote['base_nightly_rate'] ?? 0);
         $extraBeddingCount = (int) ($pricingQuote['extra_bedding_count'] ?? 0);

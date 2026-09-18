@@ -205,14 +205,16 @@ class BookingController extends Controller
             return back()->withErrors(['payment' => 'The submitted online payment amount does not match the booking total.']);
         }
 
-        if (abs((float) $validated['verified_amount'] - (float) $payment->amount) > 0.009) {
+        $amountToVerify = $payment->outstandingAmount();
+        if (abs((float) $validated['verified_amount'] - $amountToVerify) > 0.009) {
             return back()->withErrors([
-                'verified_amount' => 'Verified amount must exactly match PHP '.number_format((float) $payment->amount, 2).'.',
+                'verified_amount' => 'Verified amount must exactly match PHP '.number_format($amountToVerify, 2).'.',
             ])->withInput();
         }
 
         $payment->update([
             'status' => 'paid',
+            'balance_due' => 0,
             'source' => 'online_verified',
             'paid_at' => now(),
             'verified_at' => now(),

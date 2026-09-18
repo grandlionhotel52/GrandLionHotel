@@ -5,8 +5,11 @@ namespace Tests\Feature;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Room;
+use App\Models\RoomDateDiscount;
 use App\Models\RoomStatus;
 use App\Models\Staff;
+use App\Services\PricingService;
+use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -210,11 +213,21 @@ class BookingRescheduleRequestTest extends TestCase
             'status' => 'paid',
         ]);
 
+        $newCheckIn = now()->addDays(9)->toDateString();
+        $newCheckOut = now()->addDays(12)->toDateString();
+        $expectedNewTotal = app(PricingService::class)->calculateTotal(
+            $room,
+            $newCheckIn,
+            $newCheckOut,
+            $booking->guests,
+            false
+        );
+
         $response = $this->actingAs($staff, 'staff')->patch(
             route('staff.bookings.reschedule', $booking),
             [
-                'check_in' => now()->addDays(9)->toDateString(),
-                'check_out' => now()->addDays(12)->toDateString(),
+                'check_in' => $newCheckIn,
+                'check_out' => $newCheckOut,
             ]
         );
 
@@ -223,10 +236,57 @@ class BookingRescheduleRequestTest extends TestCase
         $booking->refresh();
         $booking->load('payment');
 
-        $this->assertSame(now()->addDays(9)->toDateString(), $booking->check_in->toDateString());
-        $this->assertSame(now()->addDays(12)->toDateString(), $booking->check_out->toDateString());
-        $this->assertSame('4600.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame($newCheckIn, $booking->check_in->toDateString());
+        $this->assertSame($newCheckOut, $booking->check_out->toDateString());
+        $this->assertSame(number_format($expectedNewTotal, 2, '.', ''), number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame(number_format($expectedNewTotal - 4600, 2, '.', ''), number_format((float) $booking->payment->balance_due, 2, '.', ''));
+        $this->assertSame('unpaid', $booking->payment->status);
         $this->assertSame($staff->id, $booking->staff_id);
+
+        $chargedPayment = app(PaymentService::class)->charge($booking, 'cash', [
+            'amount' => $booking->payment->balance_due,
+        ]);
+        $this->assertSame(number_format($expectedNewTotal, 2, '.', ''), number_format((float) $chargedPayment->amount, 2, '.', ''));
+        $this->assertSame('0.00', number_format((float) $chargedPayment->balance_due, 2, '.', ''));
+        $this->assertSame('paid', $chargedPayment->status);
+    }
+
+    public function test_discounted_reschedule_dates_do_not_reduce_the_existing_higher_paid_total(): void
+    {
+        $staff = Staff::factory()->create();
+        $customer = Customer::factory()->create();
+        $room = $this->createRoom(['price_per_night' => 3000]);
+        $requestedCheckIn = now()->addDays(14)->toDateString();
+        $requestedCheckOut = now()->addDays(16)->toDateString();
+        $booking = $this->createConfirmedUnpaidBooking($customer, $room, [
+            'staff_id' => $staff->id,
+            'requested_check_in' => $requestedCheckIn,
+            'requested_check_out' => $requestedCheckOut,
+            'reschedule_requested_at' => now(),
+        ]);
+        $booking->payment()->create([
+            'amount' => 9000,
+            'method' => 'cash',
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
+        RoomDateDiscount::query()->create([
+            'room_id' => $room->id,
+            'discount_date_start' => $requestedCheckIn,
+            'discount_date_end' => now()->addDays(15)->toDateString(),
+            'discount_percent' => 60,
+        ]);
+
+        $this->actingAs($staff, 'staff')
+            ->patch(route('staff.bookings.apply-reschedule-request', $booking))
+            ->assertRedirect(route('staff.bookings.show', $booking));
+
+        $booking->refresh()->load('payment');
+        $this->assertSame($requestedCheckIn, $booking->check_in->toDateString());
+        $this->assertSame($requestedCheckOut, $booking->check_out->toDateString());
+        $this->assertSame('9000.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('0.00', number_format((float) $booking->payment->balance_due, 2, '.', ''));
+        $this->assertSame('paid', $booking->payment->status);
     }
 
     public function test_staff_can_directly_reschedule_confirmed_booking_even_if_check_in_date_has_started(): void

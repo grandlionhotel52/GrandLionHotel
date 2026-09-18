@@ -261,7 +261,7 @@
                                 min="0.01"
                                 step="0.01"
                                 inputmode="decimal"
-                                value="{{ old('verified_amount', number_format((float) $booking->payment->amount, 2, '.', '')) }}"
+                                value="{{ old('verified_amount', number_format($booking->payment->outstandingAmount(), 2, '.', '')) }}"
                                 required
                             >
                             @error('verified_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -288,6 +288,9 @@
                     <div class="col-md-6"><strong>Uploaded Proof:</strong> <a href="{{ $paymentProofUrl }}" target="_blank" rel="noopener">View screenshot</a></div>
                 @endif
                 <div class="col-md-6"><strong>Amount:</strong> PHP {{ number_format($booking->payment->amount, 2) }}</div>
+                @if((float) $booking->payment->balance_due > 0)
+                    <div class="col-md-6"><strong>Additional Balance Due:</strong> PHP {{ number_format($booking->payment->balance_due, 2) }}</div>
+                @endif
                 <div class="col-md-6"><strong>Paid At:</strong> {{ optional($booking->payment->paid_at)->format('M d, Y h:i A') ?? '-' }}</div>
                 <div class="col-md-6"><strong>Verified At:</strong> {{ optional($booking->payment->verified_at)->format('M d, Y h:i A') ?? 'Pending verification' }}</div>
                 <div class="col-md-6"><strong>Verified By:</strong> {{ $booking->payment->verified_at ? ($booking->payment->source === 'paymongo_checkout' ? 'PayMongo' : 'Hotel staff') : '-' }}</div>
