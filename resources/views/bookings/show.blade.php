@@ -409,6 +409,11 @@
                     @endif
 
                     @if($canRequestReschedule)
+                        <div class="alert alert-light border small mb-3">
+                            <strong>Current stay:</strong>
+                            {{ $booking->check_in->format('M d, Y') }} to {{ $booking->check_out->format('M d, Y') }}.
+                            These dates are prefilled below; change them to your preferred new schedule.
+                        </div>
                         <form method="POST" action="{{ route('bookings.request-reschedule', $booking) }}" class="row g-3">
                             @csrf
                             @method('PATCH')
@@ -419,7 +424,7 @@
                                     name="requested_check_in"
                                     class="form-control @error('requested_check_in') is-invalid @enderror"
                                     min="{{ now()->toDateString() }}"
-                                    value="{{ old('requested_check_in', optional($booking->requested_check_in)->toDateString()) }}"
+                                    value="{{ old('requested_check_in', optional($booking->requested_check_in)->toDateString() ?? $booking->check_in->toDateString()) }}"
                                     required
                                 >
                                 @error('requested_check_in')
@@ -433,7 +438,7 @@
                                     name="requested_check_out"
                                     class="form-control @error('requested_check_out') is-invalid @enderror"
                                     min="{{ now()->addDay()->toDateString() }}"
-                                    value="{{ old('requested_check_out', optional($booking->requested_check_out)->toDateString()) }}"
+                                    value="{{ old('requested_check_out', optional($booking->requested_check_out)->toDateString() ?? $booking->check_out->toDateString()) }}"
                                     required
                                 >
                                 @error('requested_check_out')

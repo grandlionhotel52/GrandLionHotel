@@ -33,7 +33,10 @@ class BookingRescheduleRequestTest extends TestCase
             ->get(route('bookings.show', $booking))
             ->assertOk()
             ->assertSee('name="requested_check_in"', false)
-            ->assertSee('name="requested_check_out"', false);
+            ->assertSee('name="requested_check_out"', false)
+            ->assertSee('Current stay:')
+            ->assertSee('value="'.$booking->check_in->toDateString().'"', false)
+            ->assertSee('value="'.$booking->check_out->toDateString().'"', false);
 
         $response = $this->actingAs($customer, 'customer')->patch(
             route('bookings.request-reschedule', $booking),
