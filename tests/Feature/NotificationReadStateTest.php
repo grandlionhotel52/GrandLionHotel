@@ -21,7 +21,7 @@ class NotificationReadStateTest extends TestCase
         $secondId = (string) Str::uuid();
 
         foreach ([
-            $firstId => 'Your first booking update.',
+            $firstId => 'Payment received for booking #25. Your receipt is ready.',
             $secondId => 'Your second booking update.',
         ] as $id => $message) {
             DB::table('notifications')->insert([
@@ -45,7 +45,8 @@ class NotificationReadStateTest extends TestCase
 
         $homeResponse = $this->get(route('home'))
             ->assertSuccessful()
-            ->assertSee('Your first booking update.')
+            ->assertSee('Payment received for your booking. Your receipt is ready.')
+            ->assertDontSee('booking #25')
             ->assertSee('Your second booking update.')
             ->assertSee('Read');
         $homeResponse->assertSee(route('bookings.show', [
@@ -62,7 +63,8 @@ class NotificationReadStateTest extends TestCase
 
         $this->assertSame(0, $customer->fresh()->unreadNotifications()->count());
         $this->get(route('home'))
-            ->assertSee('Your first booking update.')
+            ->assertSee('Payment received for your booking. Your receipt is ready.')
+            ->assertDontSee('booking #25')
             ->assertSee('Your second booking update.');
     }
 

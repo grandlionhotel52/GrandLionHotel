@@ -78,6 +78,9 @@ class OperationalFeaturesTest extends TestCase
             'notifiable_type' => Customer::class,
             'notifiable_id' => $customer->id,
         ]);
+
+        $notificationData = $customer->notifications()->latest()->firstOrFail()->data;
+        $this->assertStringNotContainsString('#', (string) data_get($notificationData, 'message'));
     }
 
     public function test_admin_can_open_the_occupancy_report(): void

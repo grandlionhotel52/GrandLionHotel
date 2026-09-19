@@ -585,13 +585,16 @@
                                             @forelse($recentNotifications as $notification)
                                                 @php
                                                     $notificationBooking = $notificationBookings->get((string) data_get($notification->data, 'booking_id'));
+                                                    $notificationMessage = (string) data_get($notification->data, 'message', 'Booking updated.');
+                                                    $notificationMessage = preg_replace('/^Booking\s*#\s*\d+\b/i', 'Your booking', $notificationMessage);
+                                                    $notificationMessage = preg_replace('/\bbooking\s*#\s*\d+\b/i', 'your booking', $notificationMessage);
                                                 @endphp
                                                 @if($notificationBooking)
                                                     <div class="d-flex align-items-start gap-1 rounded px-1 py-1 {{ $notification->read_at ? '' : 'bg-light' }}">
                                                         <a class="dropdown-item rounded text-wrap py-2 flex-grow-1" href="{{ route('bookings.show', ['booking' => $notificationBooking, 'return_to' => request()->getRequestUri()]) }}">
                                                             <span class="d-flex align-items-center gap-2 small fw-bold">
                                                                 @if(!$notification->read_at)<span class="rounded-circle bg-primary flex-shrink-0" style="width: .45rem; height: .45rem" aria-label="Unread"></span>@endif
-                                                                {{ data_get($notification->data, 'message', 'Booking updated.') }}
+                                                                {{ $notificationMessage }}
                                                             </span>
                                                             <span class="d-block text-secondary" style="font-size: .72rem">{{ $notification->created_at->diffForHumans() }}{{ $notification->read_at ? ' · Read' : '' }}</span>
                                                         </a>

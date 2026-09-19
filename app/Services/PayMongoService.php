@@ -31,7 +31,7 @@ class PayMongoService
             'data' => [
                 'attributes' => [
                     'line_items' => [[
-                        'name' => 'Hotel booking #'.$booking->getKey(),
+                        'name' => 'Hotel booking',
                         'description' => (string) ($booking->room?->name ?? config('app.name')),
                         'amount' => $amount,
                         'currency' => 'PHP',

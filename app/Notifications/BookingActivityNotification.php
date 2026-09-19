@@ -37,37 +37,35 @@ class BookingActivityNotification extends Notification implements ShouldQueue
 
     private function message(): string
     {
-        $bookingNumber = '#'.$this->booking->getKey();
-
         return match (class_basename($this->subject)) {
-            'Payment' => $this->paymentMessage($bookingNumber),
-            default => $this->bookingMessage($bookingNumber),
+            'Payment' => $this->paymentMessage(),
+            default => $this->bookingMessage(),
         };
     }
 
-    private function bookingMessage(string $bookingNumber): string
+    private function bookingMessage(): string
     {
         if ($this->event === 'created') {
-            return "Booking {$bookingNumber} was submitted. Please wait for hotel confirmation.";
+            return 'Your booking was submitted. Please wait for hotel confirmation.';
         }
 
         return match ($this->booking->status) {
-            'confirmed' => "Booking {$bookingNumber} is confirmed. Please complete payment before the deadline shown in your booking.",
-            'cancelled' => "Booking {$bookingNumber} was cancelled. Open it to see the cancellation details.",
-            'completed' => "Booking {$bookingNumber} is complete. Thank you for staying with us.",
-            default => "Booking {$bookingNumber} is being reviewed by the hotel.",
+            'confirmed' => 'Your booking is confirmed. Please complete payment before the deadline shown in your booking.',
+            'cancelled' => 'Your booking was cancelled. Open it to see the cancellation details.',
+            'completed' => 'Your booking is complete. Thank you for staying with us.',
+            default => 'Your booking is being reviewed by the hotel.',
         };
     }
 
-    private function paymentMessage(string $bookingNumber): string
+    private function paymentMessage(): string
     {
         $status = strtolower((string) $this->subject->getAttribute('status'));
 
         return match ($status) {
-            'paid' => "Payment received for booking {$bookingNumber}. Your receipt is ready.",
-            'pending_verification' => "Payment proof received for booking {$bookingNumber}. The hotel is checking it now.",
-            'failed' => "Payment for booking {$bookingNumber} failed. Please try again or choose another payment method.",
-            default => "Booking {$bookingNumber} still needs payment. Open the booking to continue.",
+            'paid' => 'Payment received. Your receipt is ready.',
+            'pending_verification' => 'Payment proof received. The hotel is checking it now.',
+            'failed' => 'Payment failed. Please try again or choose another payment method.',
+            default => 'Your booking still needs payment. Open it to continue.',
         };
     }
 

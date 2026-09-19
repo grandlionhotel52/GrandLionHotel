@@ -74,6 +74,7 @@ class BookingAutomationTest extends TestCase
             $customer,
             BookingAutomationNotification::class,
             fn (BookingAutomationNotification $notification): bool => data_get($notification->toArray($customer), 'event') === 'booking_expired'
+                && !str_contains((string) data_get($notification->toArray($customer), 'message'), '#')
         );
     }
 

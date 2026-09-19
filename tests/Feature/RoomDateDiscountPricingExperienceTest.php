@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\Booking;
 use App\Models\Room;
 use App\Models\RoomDateDiscount;
 use App\Models\RoomStatus;
@@ -156,6 +157,31 @@ class RoomDateDiscountPricingExperienceTest extends TestCase
         $customerResponse->assertDontSee('Breakfast (optional):');
         $customerResponse->assertDontSee('Local tax (5%):');
         $customerResponse->assertDontSee('Price breakdown available after sign-in');
+    }
+
+    public function test_room_calendar_marks_unavailable_dates_and_outlines_an_unavailable_range(): void
+    {
+        $room = $this->createRoom();
+        $blockedCheckIn = today()->addDays(3);
+        $blockedCheckOut = today()->addDays(5);
+
+        Booking::factory()->create([
+            'room_id' => $room->id,
+            'check_in' => $blockedCheckIn,
+            'check_out' => $blockedCheckOut,
+            'status' => 'confirmed',
+        ]);
+
+        $this->get(route('rooms.show', [
+            'room' => $room,
+            'check_in' => $blockedCheckIn->toDateString(),
+            'check_out' => $blockedCheckOut->toDateString(),
+        ]))
+            ->assertOk()
+            ->assertSee('room-date-trigger is-unavailable', false)
+            ->assertSee('Red dates are unavailable')
+            ->assertSee($blockedCheckIn->toDateString())
+            ->assertSee($blockedCheckOut->toDateString());
     }
 
     private function createRoom(array $overrides = []): Room

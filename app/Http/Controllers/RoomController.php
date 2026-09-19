@@ -61,7 +61,18 @@ class RoomController extends Controller
             ? ($room->is_available && $this->availabilityService->isRoomAvailable($room, $stay['check_in'], $stay['check_out']))
             : $room->is_available;
 
-        return view('rooms.show', compact('room', 'stay', 'pricingPreview', 'stayAvailability'));
+        $unavailableDateRanges = $room->bookings()
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereDate('check_out', '>', today()->toDateString())
+            ->orderBy('check_in')
+            ->get(['check_in', 'check_out'])
+            ->map(static fn ($booking): array => [
+                'check_in' => $booking->check_in->toDateString(),
+                'check_out' => $booking->check_out->toDateString(),
+            ])
+            ->values();
+
+        return view('rooms.show', compact('room', 'stay', 'pricingPreview', 'stayAvailability', 'unavailableDateRanges'));
     }
 
     public function redirectLegacySearch(Request $request)

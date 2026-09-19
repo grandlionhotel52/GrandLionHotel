@@ -59,6 +59,126 @@
             color: #87662f;
             font-size: 1.05rem;
         }
+        .room-date-trigger {
+            width: 100%;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #dbc9ae;
+            border-radius: 16px;
+            background: #fff;
+            color: #263247;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            text-align: left;
+            transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+        .room-date-trigger:hover,
+        .room-date-trigger:focus-visible,
+        .room-date-trigger[aria-expanded="true"] {
+            border-color: var(--theme-primary);
+            box-shadow: 0 0 0 .2rem rgba(var(--theme-primary-rgb), .14);
+            outline: 0;
+        }
+        .room-date-trigger.is-unavailable {
+            border: 2px solid #c62828;
+            background: #fff8f8;
+            color: #9f1f1f;
+            box-shadow: 0 0 0 .18rem rgba(198, 40, 40, .12);
+        }
+        .room-availability-calendar {
+            border: 1px solid #dbc9ae;
+            border-radius: 16px;
+            background: #fff;
+            padding: .85rem;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, .12);
+        }
+        .room-calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .65rem;
+            margin-bottom: .65rem;
+        }
+        .room-calendar-nav {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid #dbc9ae;
+            background: #fff;
+            color: #263247;
+        }
+        .room-calendar-weekdays,
+        .room-calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: .25rem;
+        }
+        .room-calendar-weekdays span {
+            color: #687386;
+            font-size: .7rem;
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .room-calendar-day {
+            aspect-ratio: 1;
+            min-width: 0;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            background: #fff;
+            color: #263247;
+            font-size: .8rem;
+            font-weight: 700;
+        }
+        .room-calendar-day:hover:not(:disabled),
+        .room-calendar-day:focus-visible {
+            border-color: var(--theme-primary);
+            background: rgba(var(--theme-primary-rgb), .1);
+            outline: 0;
+        }
+        .room-calendar-day.is-unavailable {
+            border-color: #e6a2a2;
+            background: #fff0f0;
+            color: #c62828;
+            text-decoration: line-through;
+        }
+        .room-calendar-day.is-selected {
+            border-color: #8b6427;
+            background: #8b6427;
+            color: #fff;
+            text-decoration: none;
+        }
+        .room-calendar-day.is-unavailable.is-selected {
+            border-color: #c62828;
+            background: #c62828;
+            color: #fff;
+        }
+        .room-calendar-day:disabled:not(.is-unavailable) {
+            color: #b4bac3;
+            background: #f7f7f7;
+        }
+        .room-calendar-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .8rem;
+            margin-top: .7rem;
+            color: #687386;
+            font-size: .72rem;
+        }
+        .room-calendar-legend-mark {
+            width: .7rem;
+            height: .7rem;
+            display: inline-block;
+            border-radius: 3px;
+            margin-right: .3rem;
+            vertical-align: -.05rem;
+        }
+        .room-calendar-legend-mark.unavailable {
+            border: 1px solid #e6a2a2;
+            background: #fff0f0;
+        }
         @media (min-width: 992px) {
             .room-booking-panel {
                 position: sticky;
@@ -227,14 +347,39 @@
                             id="room_quick_booking_form"
                             data-preview-url="{{ route('rooms.pricing-preview', $room) }}"
                             data-show-detailed-pricing="{{ $showDetailedPricing ? '1' : '0' }}"
+                            data-unavailable-ranges='@json($unavailableDateRanges ?? [])'
                         >
                             <div>
-                                <label class="form-label small mb-1" for="room_check_in_input">Check-in</label>
-                                <input type="date" class="form-control" name="check_in" id="room_check_in_input" min="{{ now()->toDateString() }}" value="{{ $checkIn }}" required>
+                                <label class="form-label small mb-1" for="room_check_in_trigger">Check-in</label>
+                                <input type="hidden" name="check_in" id="room_check_in_input" value="{{ $checkIn }}">
+                                <button type="button" class="room-date-trigger {{ $pricingPreview && !$stayAvailability ? 'is-unavailable' : '' }}" id="room_check_in_trigger" data-date-field="check_in" aria-expanded="false" aria-controls="room_availability_calendar">
+                                    <span id="room_check_in_label">{{ \Carbon\Carbon::parse($checkIn)->format('M d, Y') }}</span>
+                                    <i class="bi bi-calendar3" aria-hidden="true"></i>
+                                </button>
                             </div>
                             <div>
-                                <label class="form-label small mb-1" for="room_check_out_input">Check-out</label>
-                                <input type="date" class="form-control" name="check_out" id="room_check_out_input" min="{{ $minimumCheckOut }}" value="{{ $checkOut }}" required>
+                                <label class="form-label small mb-1" for="room_check_out_trigger">Check-out</label>
+                                <input type="hidden" name="check_out" id="room_check_out_input" value="{{ $checkOut }}">
+                                <button type="button" class="room-date-trigger {{ $pricingPreview && !$stayAvailability ? 'is-unavailable' : '' }}" id="room_check_out_trigger" data-date-field="check_out" aria-expanded="false" aria-controls="room_availability_calendar">
+                                    <span id="room_check_out_label">{{ \Carbon\Carbon::parse($checkOut)->format('M d, Y') }}</span>
+                                    <i class="bi bi-calendar3" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="room-availability-calendar" id="room_availability_calendar" hidden>
+                                <div class="room-calendar-header">
+                                    <button type="button" class="room-calendar-nav" id="room_calendar_previous" aria-label="Previous month"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                                    <strong id="room_calendar_month"></strong>
+                                    <button type="button" class="room-calendar-nav" id="room_calendar_next" aria-label="Next month"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                                </div>
+                                <div class="room-calendar-weekdays" aria-hidden="true">
+                                    @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $weekday)
+                                        <span>{{ $weekday }}</span>
+                                    @endforeach
+                                </div>
+                                <div class="room-calendar-days" id="room_calendar_days" role="grid" aria-label="Room availability dates"></div>
+                                <div class="room-calendar-legend">
+                                    <span><i class="room-calendar-legend-mark unavailable"></i>Red dates are unavailable</span>
+                                </div>
                             </div>
                             <p class="small text-secondary mb-1">
                                 {{ $standardGuests }} guests included. Extra bed available.
@@ -278,6 +423,15 @@
             const form = document.getElementById('room_quick_booking_form');
             const checkInInput = document.getElementById('room_check_in_input');
             const checkOutInput = document.getElementById('room_check_out_input');
+            const checkInTrigger = document.getElementById('room_check_in_trigger');
+            const checkOutTrigger = document.getElementById('room_check_out_trigger');
+            const checkInLabel = document.getElementById('room_check_in_label');
+            const checkOutLabel = document.getElementById('room_check_out_label');
+            const availabilityCalendar = document.getElementById('room_availability_calendar');
+            const calendarMonthLabel = document.getElementById('room_calendar_month');
+            const calendarDays = document.getElementById('room_calendar_days');
+            const calendarPrevious = document.getElementById('room_calendar_previous');
+            const calendarNext = document.getElementById('room_calendar_next');
             const headlineRate = document.getElementById('room_headline_rate');
             const priceCaption = document.getElementById('room_price_caption');
             const baseRateWrap = document.getElementById('room_base_rate_wrap');
@@ -291,9 +445,18 @@
             const bookingSubmit = document.getElementById('room_booking_submit');
             const baseNightlyRate = Number.parseFloat('{{ number_format((float) $room->price_per_night, 2, '.', '') }}') || 0;
             const showDetailedPricing = form?.dataset.showDetailedPricing === '1';
+            let unavailableRanges = [];
+            let activeDateField = null;
+            let displayedMonth = null;
 
             if (!form || !checkInInput || !checkOutInput) {
                 return;
+            }
+
+            try {
+                unavailableRanges = JSON.parse(form.dataset.unavailableRanges || '[]');
+            } catch (_) {
+                unavailableRanges = [];
             }
 
             const today = new Date();
@@ -301,6 +464,10 @@
             const dateFormatter = new Intl.DateTimeFormat('en-PH', {
                 month: 'short',
                 day: '2-digit',
+                year: 'numeric',
+            });
+            const monthFormatter = new Intl.DateTimeFormat('en-PH', {
+                month: 'long',
                 year: 'numeric',
             });
             const currencyFormatter = new Intl.NumberFormat('en-PH', {
@@ -325,6 +492,127 @@
                 return Number.isNaN(parsed.getTime()) ? null : parsed;
             };
 
+            const isSameDate = (first, second) => first && second && formatDate(first) === formatDate(second);
+
+            const isUnavailableDate = (date) => unavailableRanges.some((range) => {
+                const rangeStart = parseInputDate(range.check_in);
+                const rangeEnd = parseInputDate(range.check_out);
+                return rangeStart && rangeEnd && date >= rangeStart && date < rangeEnd;
+            });
+
+            const isAvailableRange = (start, end) => {
+                if (!start || !end || end <= start) {
+                    return false;
+                }
+
+                const cursor = new Date(start);
+                while (cursor < end) {
+                    if (isUnavailableDate(cursor)) {
+                        return false;
+                    }
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+
+                return true;
+            };
+
+            const syncDateLabels = () => {
+                const checkIn = parseInputDate(checkInInput.value);
+                const checkOut = parseInputDate(checkOutInput.value);
+                if (checkInLabel) checkInLabel.textContent = checkIn ? dateFormatter.format(checkIn) : 'Select check-in';
+                if (checkOutLabel) checkOutLabel.textContent = checkOut ? dateFormatter.format(checkOut) : 'Select check-out';
+            };
+
+            const closeCalendar = () => {
+                if (availabilityCalendar) availabilityCalendar.hidden = true;
+                checkInTrigger?.setAttribute('aria-expanded', 'false');
+                checkOutTrigger?.setAttribute('aria-expanded', 'false');
+                activeDateField = null;
+            };
+
+            const renderCalendar = () => {
+                if (!calendarDays || !calendarMonthLabel || !displayedMonth || !activeDateField) {
+                    return;
+                }
+
+                const year = displayedMonth.getFullYear();
+                const month = displayedMonth.getMonth();
+                const firstWeekday = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const selectedCheckIn = parseInputDate(checkInInput.value);
+                const selectedCheckOut = parseInputDate(checkOutInput.value);
+
+                calendarMonthLabel.textContent = monthFormatter.format(displayedMonth);
+                calendarDays.replaceChildren();
+
+                for (let blank = 0; blank < firstWeekday; blank += 1) {
+                    calendarDays.append(document.createElement('span'));
+                }
+
+                for (let day = 1; day <= daysInMonth; day += 1) {
+                    const date = new Date(year, month, day);
+                    const unavailable = isUnavailableDate(date);
+                    const isPast = date < today;
+                    const isCheckOutChoice = activeDateField === 'check_out';
+                    const selectable = isCheckOutChoice
+                        ? !isPast && selectedCheckIn && date > selectedCheckIn && isAvailableRange(selectedCheckIn, date)
+                        : !isPast && !unavailable;
+                    const button = document.createElement('button');
+
+                    button.type = 'button';
+                    button.className = 'room-calendar-day';
+                    button.textContent = String(day);
+                    button.dataset.date = formatDate(date);
+                    button.setAttribute('role', 'gridcell');
+                    button.setAttribute('aria-label', `${dateFormatter.format(date)}${unavailable ? ', unavailable' : ', available'}`);
+                    button.title = unavailable
+                        ? (selectable ? 'Unavailable for an overnight stay; allowed as your check-out boundary.' : 'Unavailable')
+                        : 'Available';
+
+                    if (unavailable) button.classList.add('is-unavailable');
+                    if (isSameDate(date, selectedCheckIn) || isSameDate(date, selectedCheckOut)) {
+                        button.classList.add('is-selected');
+                    }
+                    button.disabled = !selectable;
+
+                    button.addEventListener('click', () => {
+                        if (activeDateField === 'check_in') {
+                            checkInInput.value = button.dataset.date;
+                            applyDateRules();
+                            checkInInput.dispatchEvent(new Event('change'));
+                            activeDateField = 'check_out';
+                            checkInTrigger?.setAttribute('aria-expanded', 'false');
+                            checkOutTrigger?.setAttribute('aria-expanded', 'true');
+                            displayedMonth = new Date(parseInputDate(checkOutInput.value) || date);
+                            displayedMonth.setDate(1);
+                            renderCalendar();
+                            return;
+                        }
+
+                        checkOutInput.value = button.dataset.date;
+                        syncDateLabels();
+                        checkOutInput.dispatchEvent(new Event('change'));
+                        closeCalendar();
+                    });
+
+                    calendarDays.append(button);
+                }
+
+                const previousMonth = new Date(year, month - 1, 1);
+                calendarPrevious.disabled = previousMonth < new Date(today.getFullYear(), today.getMonth(), 1);
+            };
+
+            const openCalendar = (field) => {
+                if (!availabilityCalendar) return;
+                activeDateField = field;
+                const selectedDate = parseInputDate(field === 'check_in' ? checkInInput.value : checkOutInput.value) || today;
+                displayedMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+                availabilityCalendar.hidden = false;
+                checkInTrigger?.setAttribute('aria-expanded', field === 'check_in' ? 'true' : 'false');
+                checkOutTrigger?.setAttribute('aria-expanded', field === 'check_out' ? 'true' : 'false');
+                renderCalendar();
+            };
+
             const formatCurrency = (value) => currencyFormatter.format(Math.max(0, Number(value) || 0));
 
             const applyDateRules = () => {
@@ -338,6 +626,8 @@
                 if (!checkOutInput.value || checkOutInput.value < minCheckOut) {
                     checkOutInput.value = minCheckOut;
                 }
+
+                syncDateLabels();
             };
 
             const setAvailabilityState = (availability, fallbackMessage = 'Select valid dates to preview.') => {
@@ -356,6 +646,10 @@
                         ? bookingSubmit.dataset.readyLabel
                         : 'Unavailable for selected dates';
                 }
+
+                const unavailableSelection = availability?.stay_available === false;
+                checkInTrigger?.classList.toggle('is-unavailable', unavailableSelection);
+                checkOutTrigger?.classList.toggle('is-unavailable', unavailableSelection);
             };
 
             const setFallbackPricing = (message = 'Select valid dates to preview.') => {
@@ -465,6 +759,44 @@
                     setFallbackPricing('Unable to load live room pricing right now.');
                 }
             };
+
+            checkInTrigger?.addEventListener('click', () => {
+                if (!availabilityCalendar?.hidden && activeDateField === 'check_in') {
+                    closeCalendar();
+                    return;
+                }
+                openCalendar('check_in');
+            });
+
+            checkOutTrigger?.addEventListener('click', () => {
+                if (!availabilityCalendar?.hidden && activeDateField === 'check_out') {
+                    closeCalendar();
+                    return;
+                }
+                openCalendar('check_out');
+            });
+
+            calendarPrevious?.addEventListener('click', () => {
+                if (!displayedMonth) return;
+                displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() - 1, 1);
+                renderCalendar();
+            });
+
+            calendarNext?.addEventListener('click', () => {
+                if (!displayedMonth) return;
+                displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() + 1, 1);
+                renderCalendar();
+            });
+
+            document.addEventListener('click', (event) => {
+                if (availabilityCalendar?.hidden) return;
+                if (availabilityCalendar?.contains(event.target) || checkInTrigger?.contains(event.target) || checkOutTrigger?.contains(event.target)) return;
+                closeCalendar();
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closeCalendar();
+            });
 
             checkInInput.addEventListener('change', () => {
                 applyDateRules();
