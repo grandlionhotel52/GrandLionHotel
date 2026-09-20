@@ -133,7 +133,7 @@ class SalesReportExcelService
         return $this->createArchive($this->worksheetXml($rows, $merges, $rowNumber));
     }
 
-    private function createArchive(string $sheetXml): string
+    private function createArchive(string $sheetXml, string $title = 'Sales Report', string $sheetName = 'Sales Report'): string
     {
         $temporaryBase = tempnam(sys_get_temp_dir(), 'glh-sales-');
         if ($temporaryBase === false) {
@@ -144,7 +144,7 @@ class SalesReportExcelService
         $archivePath = $temporaryBase.'.zip';
 
         try {
-            $this->writeZip($archivePath, $this->workbookFiles($sheetXml));
+            $this->writeZip($archivePath, $this->workbookFiles($sheetXml, $title, $sheetName));
 
             return $archivePath;
         } catch (Throwable $exception) {
@@ -218,6 +218,96 @@ class SalesReportExcelService
         }
 
         return $this->createArchive($this->worksheetXml($rows, $merges, $rowNumber));
+    }
+
+    public function createOccupancy(array $report): string
+    {
+        $rows = [];
+        $merges = [];
+        $rowNumber = 0;
+
+        $addRow = function (array $cells, float $height = 18) use (&$rows, &$merges, &$rowNumber): void {
+            $rowNumber++;
+            $column = 1;
+            $xml = '<row r="'.$rowNumber.'" ht="'.$height.'" customHeight="1">';
+
+            foreach ($cells as $cell) {
+                $value = $cell['value'] ?? '';
+                $type = $cell['type'] ?? 'string';
+                $style = (int) ($cell['style'] ?? 0);
+                $mergeAcross = max(1, (int) ($cell['merge'] ?? 1));
+                $reference = $this->columnName($column).$rowNumber;
+
+                if ($type === 'number') {
+                    $xml .= '<c r="'.$reference.'" s="'.$style.'"><v>'.(float) $value.'</v></c>';
+                } else {
+                    $xml .= '<c r="'.$reference.'" s="'.$style.'" t="inlineStr"><is><t xml:space="preserve">'.$this->escape((string) $value).'</t></is></c>';
+                }
+
+                if ($mergeAcross > 1) {
+                    $merges[] = $reference.':'.$this->columnName($column + $mergeAcross - 1).$rowNumber;
+                }
+
+                $column += $mergeAcross;
+            }
+
+            $rows[] = $xml.'</row>';
+        };
+
+        $text = static fn (string $value, int $style = 0, int $merge = 1): array => compact('value', 'style', 'merge') + ['type' => 'string'];
+        $number = static fn (float|int $value, int $style = 6): array => compact('value', 'style') + ['type' => 'number'];
+        $rangeLabel = Carbon::parse($report['from'])->format('M d, Y').' to '.Carbon::parse($report['to'])->format('M d, Y');
+
+        $addRow([$text('The Grand Lion Hotel - Occupancy Report', 1, 8)], 28);
+        $addRow([$text('Date Range', 2), $text($rangeLabel, 2, 7)]);
+        $addRow([$text('Generated At', 2), $text(now()->format('M d, Y h:i A'), 2, 7)]);
+        $addRow([]);
+
+        $summary = $report['summary'];
+        $addRow([$text('SUMMARY', 3, 8)], 22);
+        $addRow([$text('Metric', 4), $text('Value', 4)]);
+        $addRow([$text('Overall Occupancy'), $text(number_format((float) $summary['occupancy_rate'], 1).'%', 7)]);
+        $addRow([$text('Room Nights Sold'), $number((int) $summary['room_nights_sold'])]);
+        $addRow([$text('Room Nights Available'), $number((int) $summary['room_nights_available'])]);
+        $addRow([$text('Rooms With No Sales'), $number((int) $summary['rooms_without_sales'])]);
+        $addRow([$text('Hotel Rooms'), $number((int) $summary['rooms'])]);
+        $addRow([]);
+
+        $addRow([$text('ROOM-BY-ROOM OCCUPANCY', 3, 8)], 22);
+        $addRow(array_map(static fn (string $label): array => $text($label, 4), [
+            'Room', 'Type', 'View', 'Sold Nights', 'Unsold Nights', 'Occupancy', 'Status',
+        ]));
+        foreach ($report['roomOccupancy'] as $room) {
+            $addRow([
+                $text((string) $room->name),
+                $text((string) $room->type),
+                $text(filled($room->view_type) ? (string) $room->view_type : '—'),
+                $number((int) $room->sold_nights),
+                $number((int) $room->unsold_nights),
+                $text(number_format((float) $room->occupancy_rate, 1).'%', 7),
+                $text((string) $room->sales_status, 7),
+            ]);
+        }
+        $addRow([]);
+
+        $addRow([$text('DAILY OCCUPANCY', 3, 8)], 22);
+        $addRow(array_map(static fn (string $label): array => $text($label, 4), [
+            'Date', 'Occupied Rooms', 'Available Rooms', 'Occupancy',
+        ]));
+        foreach ($report['dailyOccupancy'] as $day) {
+            $addRow([
+                $text(Carbon::parse($day->date)->format('M d, Y'), 7),
+                $number((int) $day->occupied_rooms),
+                $number((int) $day->available_rooms),
+                $text(number_format((float) $day->occupancy_rate, 1).'%', 7),
+            ]);
+        }
+
+        return $this->createArchive(
+            $this->worksheetXml($rows, $merges, $rowNumber),
+            'Occupancy Report',
+            'Occupancy Report'
+        );
     }
 
     private function writeZip(string $archivePath, array $files): void
@@ -321,7 +411,7 @@ class SalesReportExcelService
             .'</worksheet>';
     }
 
-    private function workbookFiles(string $sheetXml): array
+    private function workbookFiles(string $sheetXml, string $title, string $sheetName): array
     {
         $timestamp = now()->utc()->format('Y-m-d\TH:i:s\Z');
 
@@ -347,11 +437,11 @@ class SalesReportExcelService
                 .'<Application>The Grand Lion Hotel</Application></Properties>',
             'docProps/core.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
                 .'<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-                .'<dc:creator>The Grand Lion Hotel</dc:creator><dc:title>Sales Report</dc:title>'
+                .'<dc:creator>The Grand Lion Hotel</dc:creator><dc:title>'.$this->escape($title).'</dc:title>'
                 .'<dcterms:created xsi:type="dcterms:W3CDTF">'.$timestamp.'</dcterms:created></cp:coreProperties>',
             'xl/workbook.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
                 .'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-                .'<bookViews><workbookView/></bookViews><sheets><sheet name="Sales Report" sheetId="1" r:id="rId1"/></sheets>'
+                .'<bookViews><workbookView/></bookViews><sheets><sheet name="'.$this->escape($sheetName).'" sheetId="1" r:id="rId1"/></sheets>'
                 .'<calcPr calcId="191029"/></workbook>',
             'xl/_rels/workbook.xml.rels' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
                 .'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'

@@ -4,103 +4,12 @@
 
 @push('head')
     <style>
-        @page {
-            size: A4 landscape;
-            margin: 10mm;
-        }
         .admin-report-heading .hotel-name {
             color: var(--admin-brand-dark);
             font-size: 0.75rem;
             font-weight: 800;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-        }
-        @media print {
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            body {
-                background: #fff !important;
-                font-size: 8.5pt;
-            }
-            body > nav,
-            .skip-link,
-            .flash-stack,
-            .ux-back-to-top,
-            .admin-report-controls,
-            .admin-report-print-button {
-                display: none !important;
-            }
-            main.container-xl {
-                width: 100% !important;
-                max-width: none !important;
-                padding: 0 !important;
-            }
-            .admin-report-heading {
-                display: block !important;
-                text-align: center;
-                margin-bottom: 8mm !important;
-            }
-            .admin-report-heading h1 {
-                font-size: 18pt !important;
-            }
-            .admin-report-heading p {
-                margin-bottom: 0 !important;
-            }
-            .admin-report-print-meta {
-                display: block !important;
-                margin-top: 2mm;
-                font-size: 8pt;
-                color: #333 !important;
-            }
-            .admin-report-metrics {
-                margin-bottom: 5mm !important;
-            }
-            .admin-report-metrics > [class*="col-"] {
-                flex: 0 0 25%;
-                max-width: 25%;
-            }
-            .soft-card,
-            .table-shell {
-                border-color: #999 !important;
-                box-shadow: none !important;
-            }
-            .soft-card {
-                break-inside: avoid;
-            }
-            .table-shell {
-                overflow: visible !important;
-                break-inside: auto;
-                margin-bottom: 5mm !important;
-            }
-            .table-responsive {
-                overflow: visible !important;
-            }
-            .table {
-                width: 100% !important;
-                table-layout: fixed;
-            }
-            .table thead th,
-            .table tbody td {
-                padding: 0.35rem !important;
-                font-size: 8pt !important;
-                white-space: normal !important;
-            }
-            .table thead {
-                display: table-header-group;
-            }
-            .table tr,
-            .table td,
-            .table th {
-                break-inside: avoid;
-            }
-            .progress {
-                border: 1px solid #999;
-            }
-            .admin-daily-occupancy {
-                break-before: page;
-            }
         }
     </style>
 @endpush
@@ -111,14 +20,10 @@
             <p class="hotel-name mb-1">The Grand Lion Hotel</p>
             <h1 class="h3 mb-1">Occupancy Report</h1>
             <p class="text-secondary mb-0">Confirmed and completed room nights, including both cash and online payments.</p>
-            <p class="admin-report-print-meta d-none">
-                Reporting period: {{ \Carbon\Carbon::parse($from)->format('M d, Y') }} to {{ \Carbon\Carbon::parse($to)->format('M d, Y') }}
-                &middot; Generated {{ now()->format('M d, Y h:i A') }}
-            </p>
         </div>
-        <button type="button" class="btn btn-ta-outline admin-report-print-button" onclick="window.print()">
-            <i class="bi bi-printer me-1" aria-hidden="true"></i>Print Landscape
-        </button>
+        <a href="{{ route('admin.occupancy-report.export', ['from' => $from, 'to' => $to]) }}" class="btn btn-ta">
+            <i class="bi bi-file-earmark-spreadsheet me-1" aria-hidden="true"></i>Export Excel
+        </a>
     </div>
 
     <section class="soft-card admin-report-controls p-3 mb-4">
@@ -192,7 +97,7 @@
         </div>
     </section>
 
-    <section class="table-shell admin-daily-occupancy">
+    <section class="table-shell">
         <div class="px-3 pt-3">
             <h2 class="h5 mb-1">Daily Occupancy</h2>
             <p class="small text-secondary mb-2">Hotel-wide occupied and available room totals by date.</p>

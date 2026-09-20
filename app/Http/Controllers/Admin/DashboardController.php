@@ -409,6 +409,17 @@ class DashboardController extends Controller
         return view('admin.occupancy-report', compact('summary', 'roomOccupancy', 'dailyOccupancy', 'from', 'to'));
     }
 
+    public function exportOccupancyReport(Request $request, SalesReportExcelService $excelService)
+    {
+        $report = $this->occupancyReport($request)->getData();
+        $filename = 'occupancy-report-'.$report['from'].'-to-'.$report['to'].'.xlsx';
+        $workbookPath = $excelService->createOccupancy($report);
+
+        return response()->download($workbookPath, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
+    }
+
     private function normalizeDateInput(string $value): ?string
     {
         $trimmed = trim($value);

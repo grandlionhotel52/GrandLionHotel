@@ -86,18 +86,33 @@ class OperationalFeaturesTest extends TestCase
     public function test_admin_can_open_the_occupancy_report(): void
     {
         $admin = Admin::factory()->create();
+        $from = now()->startOfMonth()->toDateString();
+        $to = now()->endOfMonth()->toDateString();
 
         $this->actingAs($admin, 'admin')
             ->get(route('admin.occupancy-report', [
-                'from' => now()->startOfMonth()->toDateString(),
-                'to' => now()->endOfMonth()->toDateString(),
+                'from' => $from,
+                'to' => $to,
             ]))
             ->assertOk()
             ->assertSee('Occupancy Report')
             ->assertSee('Room nights sold')
-            ->assertSee('Print Landscape')
-            ->assertSee('size: A4 landscape', false)
-            ->assertSee('Reporting period:');
+            ->assertSee('Export Excel')
+            ->assertDontSee('Print Landscape')
+            ->assertSee(route('admin.occupancy-report.export', compact('from', 'to')));
+
+        $export = $this->actingAs($admin, 'admin')->get(route('admin.occupancy-report.export', compact('from', 'to')));
+
+        $export->assertOk()
+            ->assertDownload('occupancy-report-'.$from.'-to-'.$to.'.xlsx')
+            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $workbook = new \PharData($export->getFile()->getPathname());
+        $worksheet = $workbook['xl/worksheets/sheet1.xml']->getContent();
+        $this->assertStringContainsString('The Grand Lion Hotel - Occupancy Report', $worksheet);
+        $this->assertStringContainsString('ROOM-BY-ROOM OCCUPANCY', $worksheet);
+        $this->assertStringContainsString('DAILY OCCUPANCY', $worksheet);
+        $this->assertStringContainsString('orientation="landscape"', $worksheet);
     }
 
     public function test_occupancy_report_counts_cash_and_online_room_nights_as_sold(): void
