@@ -5,7 +5,7 @@
 @push('head')
     <style>
         @page {
-            size: A4 portrait;
+            size: A4 landscape;
             margin: 12mm;
         }
         .admin-report-heading {
@@ -85,7 +85,8 @@
             }
             body > nav,
             .admin-report-controls,
-            .admin-report-print-button {
+            .admin-report-print-button,
+            .admin-report-actions {
                 display: none !important;
             }
             main.container-xl {
@@ -144,7 +145,7 @@
                 <p class="text-secondary mb-0" id="admin_sales_range_label" data-ajax-list-sync>Paid sales for {{ $selectedRangeLabel }}</p>
             </div>
             <button type="button" class="btn btn-ta-outline admin-report-print-button" onclick="window.print()">
-                <i class="bi bi-printer me-1" aria-hidden="true"></i>Print Portrait
+                <i class="bi bi-printer me-1" aria-hidden="true"></i>Print Landscape
             </button>
         </div>
 
@@ -186,7 +187,7 @@
             <div class="col-sm-6 col-xl-2">
                 <div class="admin-report-stat">
                     <p class="label">Total Sales</p>
-                    <p class="value">&#8369;{{ number_format((float) $summary['gross_revenue'], 2) }}</p>
+                    <p class="value text-success">&#8369;{{ number_format((float) $summary['gross_revenue'], 2) }}</p>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-2">
@@ -352,17 +353,18 @@
         <div class="col-12">
             <div class="admin-report-shell p-2 p-lg-3 h-100">
                 <div class="d-flex justify-content-between align-items-center px-2 pt-1 mb-2">
-                    <h2 class="h5 mb-0">Recent Paid Transactions</h2>
+                    <h2 class="h5 mb-0">Paid Transactions</h2>
                 </div>
                 <div class="table-responsive">
                     <table class="table admin-report-table admin-report-table--transactions align-middle mb-0">
-                        <caption class="visually-hidden">Most recent paid transactions</caption>
+                        <caption class="visually-hidden">All paid transactions matching the selected filters</caption>
                         <thead>
                             <tr>
                                 <th>Paid At</th>
                                 <th>Method</th>
                                 <th>Assigned Staff</th>
                                 <th class="text-end">Amount</th>
+                                <th class="text-end admin-report-actions">Receipt</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -372,10 +374,21 @@
                                     <td>{{ $methodLabel((string) $sale->method) }}</td>
                                     <td>{{ trim((string) ($sale->assigned_staff_name ?? '')) !== '' ? $sale->assigned_staff_name : 'Unassigned' }}</td>
                                     <td class="text-end fw-semibold">&#8369;{{ number_format((float) $sale->amount, 2) }}</td>
+                                    <td class="text-end admin-report-actions">
+                                        <a
+                                            href="{{ route('admin.sales-report.receipt', $sale->payment_id) }}"
+                                            class="btn btn-sm btn-ta-outline"
+                                            target="_blank"
+                                            rel="noopener"
+                                            aria-label="View and print receipt for sale {{ $sale->payment_id }}"
+                                        >
+                                            <i class="bi bi-printer me-1" aria-hidden="true"></i>View / Print
+                                        </a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-4 text-secondary">No paid transactions found.</td>
+                                    <td colspan="5" class="text-center py-4 text-secondary">No paid transactions found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

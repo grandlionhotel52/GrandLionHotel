@@ -86,6 +86,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/sales-report', [DashboardController::class, 'salesReport'])->name('sales-report');
     Route::get('/sales-report/export', [DashboardController::class, 'exportSalesReport'])->name('sales-report.export');
+    Route::get('/sales-report/transactions/{payment}/receipt', [DashboardController::class, 'salesReceipt'])->name('sales-report.receipt');
     Route::get('/occupancy-report', [DashboardController::class, 'occupancyReport'])->name('occupancy-report');
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('/activity-logs/{activityLog}', [ActivityLogController::class, 'show'])->name('activity-logs.show');

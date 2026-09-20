@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\Room;
 use App\Models\Staff;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -218,7 +219,7 @@ class DashboardController extends Controller
             ->sortByDesc(static fn (object $row): float => $row->revenue)
             ->values();
 
-        $recentSales = $payments->take(20)->values();
+        $recentSales = $payments->values();
         $selectedRangeLabel = Carbon::parse($from)->format('M d, Y').' - '.Carbon::parse($to)->format('M d, Y');
 
         return view('admin.sales-report', compact(
@@ -324,7 +325,7 @@ class DashboardController extends Controller
             }
             $write([]);
 
-            $write(['RECENT PAID TRANSACTIONS']);
+            $write(['PAID TRANSACTIONS']);
             $write(['Paid At', 'Method', 'Assigned Staff', 'Amount']);
             foreach ($report['recentSales'] as $sale) {
                 $staffName = trim((string) ($sale->assigned_staff_name ?? ''));
@@ -340,6 +341,25 @@ class DashboardController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    public function salesReceipt(Payment $payment)
+    {
+        abort_unless($payment->status === 'paid' && $payment->paid_at, 404);
+
+        $booking = $payment->booking;
+        abort_unless($booking, 404);
+
+        $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'discount', 'assignedStaff']);
+
+        if (blank($payment->transaction_reference)) {
+            $payment->ensureTransactionReference((int) $booking->id);
+            $booking->setRelation('payment', $payment->fresh());
+        }
+
+        return Pdf::loadView('receipts.booking', [
+            'booking' => $booking,
+        ])->setPaper('a4')->stream('sale-receipt-'.$payment->id.'.pdf');
     }
 
     public function occupancyReport(Request $request)

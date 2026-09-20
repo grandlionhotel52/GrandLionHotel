@@ -126,6 +126,30 @@ class AdminSalesReportCalculationTest extends TestCase
         $this->travelBack();
     }
 
+    public function test_each_paid_sale_links_to_an_inline_printable_receipt(): void
+    {
+        $admin = Admin::factory()->create();
+        $staff = Staff::factory()->create();
+        $payment = $this->createPayment($staff, 1500, Payment::METHOD_CASH, 'paid', now()->toDateTimeString());
+
+        $report = $this->actingAs($admin, 'admin')->get(route('admin.sales-report', [
+            'from' => now()->toDateString(),
+            'to' => now()->toDateString(),
+        ]));
+
+        $report->assertOk()
+            ->assertSee(route('admin.sales-report.receipt', $payment), false)
+            ->assertSee('View / Print');
+
+        $receipt = $this->actingAs($admin, 'admin')->get(route('admin.sales-report.receipt', $payment));
+
+        $receipt->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'inline; filename=sale-receipt-'.$payment->id.'.pdf');
+
+        $this->assertNotNull($payment->fresh()->transaction_reference);
+    }
+
     private function createPayment(Staff $staff, float $amount, string $method, string $status, string $paidAt): Payment
     {
         $booking = Booking::factory()->create([
