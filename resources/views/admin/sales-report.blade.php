@@ -26,6 +26,26 @@
             padding: 0.82rem 0.9rem;
             height: 100%;
         }
+        .admin-report-stat-link {
+            color: inherit;
+            display: block;
+            height: 100%;
+            text-decoration: none;
+        }
+        .admin-report-stat-link .admin-report-stat {
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .admin-report-stat-link:hover .admin-report-stat,
+        .admin-report-stat-link:focus-visible .admin-report-stat {
+            border-color: var(--admin-brand);
+            box-shadow: 0 12px 28px rgba(63, 44, 21, 0.16);
+            transform: translateY(-2px);
+        }
+        .admin-report-stat-link:focus-visible {
+            border-radius: 14px;
+            outline: 3px solid rgba(184, 146, 84, 0.28);
+            outline-offset: 2px;
+        }
         .admin-report-stat .label {
             font-size: 0.68rem;
             letter-spacing: 0.07em;
@@ -135,6 +155,7 @@
         $methodLabel = static function (string $value): string {
             return \App\Models\Payment::methodLabel($value);
         };
+        $metricQuery = ['from' => $from, 'to' => $to, 'method' => $method];
     @endphp
 
     <section class="mb-4">
@@ -185,48 +206,60 @@
         <div id="admin_sales_results" aria-live="polite">
         <div class="row g-3 mb-4 admin-report-metrics">
             <div class="col-sm-6 col-xl-2">
-                <div class="admin-report-stat">
-                    <p class="label">Total Sales</p>
-                    <p class="value text-success">&#8369;{{ number_format((float) $summary['gross_revenue'], 2) }}</p>
-                </div>
+                <a href="{{ route('admin.sales-report.metric', array_merge(['metric' => 'total-sales'], $metricQuery)) }}" class="admin-report-stat-link" aria-label="View Total Sales breakdown">
+                    <div class="admin-report-stat">
+                        <p class="label">Total Sales</p>
+                        <p class="value text-success">&#8369;{{ number_format((float) $summary['gross_revenue'], 2) }}</p>
+                    </div>
+                </a>
             </div>
             <div class="col-sm-6 col-xl-2">
-                <div class="admin-report-stat">
-                    <p class="label">Room Sales</p>
-                    <p class="value">&#8369;{{ number_format((float) $summary['room_sales'], 2) }}</p>
-                </div>
+                <a href="{{ route('admin.sales-report.metric', array_merge(['metric' => 'room-sales'], $metricQuery)) }}" class="admin-report-stat-link" aria-label="View Room Sales breakdown">
+                    <div class="admin-report-stat">
+                        <p class="label">Room Sales</p>
+                        <p class="value">&#8369;{{ number_format((float) $summary['room_sales'], 2) }}</p>
+                    </div>
+                </a>
             </div>
             <div class="col-sm-6 col-xl-2">
-                <div class="admin-report-stat">
-                    <p class="label">Food Sales</p>
-                    <p class="value">&#8369;{{ number_format((float) $summary['food_sales'], 2) }}</p>
-                </div>
+                <a href="{{ route('admin.sales-report.metric', array_merge(['metric' => 'food-sales'], $metricQuery)) }}" class="admin-report-stat-link" aria-label="View Food Sales breakdown">
+                    <div class="admin-report-stat">
+                        <p class="label">Food Sales</p>
+                        <p class="value">&#8369;{{ number_format((float) $summary['food_sales'], 2) }}</p>
+                    </div>
+                </a>
             </div>
             <div class="col-sm-6 col-xl-2">
-                <div class="admin-report-stat">
-                    <p class="label">Paid Bookings</p>
-                    <p class="value text-primary">{{ $summary['paid_bookings'] }}</p>
-                </div>
+                <a href="{{ route('admin.sales-report.metric', array_merge(['metric' => 'paid-bookings'], $metricQuery)) }}" class="admin-report-stat-link" aria-label="View Paid Bookings breakdown">
+                    <div class="admin-report-stat">
+                        <p class="label">Paid Bookings</p>
+                        <p class="value text-primary">{{ $summary['paid_bookings'] }}</p>
+                    </div>
+                </a>
             </div>
             <div class="col-sm-6 col-xl-2">
-                <div class="admin-report-stat">
-                    <p class="label">Discount Total</p>
-                    <p class="value text-warning">&#8369;{{ number_format((float) $summary['total_discount'], 2) }}</p>
-                </div>
+                <a href="{{ route('admin.sales-report.metric', array_merge(['metric' => 'discount-total'], $metricQuery)) }}" class="admin-report-stat-link" aria-label="View Discount Total breakdown">
+                    <div class="admin-report-stat">
+                        <p class="label">Discount Total</p>
+                        <p class="value text-warning">&#8369;{{ number_format((float) $summary['total_discount'], 2) }}</p>
+                    </div>
+                </a>
             </div>
         </div>
         <div class="row g-3 mb-4 admin-report-metrics">
             @foreach([
-                ['label' => 'VAT-Exempt Sales', 'value' => $summary['vat_exempt_sales'], 'label_class' => 'admin-report-tax-danger', 'value_class' => 'admin-report-tax-danger'],
-                ['label' => 'VAT (12/112)', 'value' => $summary['vat_total'], 'label_class' => 'admin-report-tax-danger', 'value_class' => 'admin-report-tax-danger'],
-                ['label' => 'Local Tax (5%)', 'value' => $summary['local_tax_total'], 'label_class' => 'admin-report-tax-danger', 'value_class' => 'admin-report-tax-danger'],
-                ['label' => 'Net Sales', 'value' => $summary['net_sales_excluding_vat'], 'label_class' => '', 'value_class' => 'text-primary'],
+                ['metric' => 'vat-exempt-sales', 'label' => 'VAT-Exempt Sales', 'value' => $summary['vat_exempt_sales'], 'label_class' => 'admin-report-tax-danger', 'value_class' => 'admin-report-tax-danger'],
+                ['metric' => 'vat', 'label' => 'VAT (12/112)', 'value' => $summary['vat_total'], 'label_class' => 'admin-report-tax-danger', 'value_class' => 'admin-report-tax-danger'],
+                ['metric' => 'local-tax', 'label' => 'Local Tax (5%)', 'value' => $summary['local_tax_total'], 'label_class' => 'admin-report-tax-danger', 'value_class' => 'admin-report-tax-danger'],
+                ['metric' => 'net-sales', 'label' => 'Net Sales', 'value' => $summary['net_sales_excluding_vat'], 'label_class' => '', 'value_class' => 'text-primary'],
             ] as $taxMetric)
                 <div class="col-sm-6 col-xl-3">
-                    <div class="admin-report-stat">
-                        <p class="label {{ $taxMetric['label_class'] }}">{{ $taxMetric['label'] }}</p>
-                        <p class="value {{ $taxMetric['value_class'] }}">&#8369;{{ number_format((float) $taxMetric['value'], 2) }}</p>
-                    </div>
+                    <a href="{{ route('admin.sales-report.metric', array_merge(['metric' => $taxMetric['metric']], $metricQuery)) }}" class="admin-report-stat-link" aria-label="View {{ $taxMetric['label'] }} breakdown">
+                        <div class="admin-report-stat">
+                            <p class="label {{ $taxMetric['label_class'] }}">{{ $taxMetric['label'] }}</p>
+                            <p class="value {{ $taxMetric['value_class'] }}">&#8369;{{ number_format((float) $taxMetric['value'], 2) }}</p>
+                        </div>
+                    </a>
                 </div>
             @endforeach
         </div>

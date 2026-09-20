@@ -362,6 +362,47 @@ class DashboardController extends Controller
         ])->setPaper('a4')->stream('sale-receipt-'.$payment->id.'.pdf');
     }
 
+    public function salesMetric(Request $request, string $metric)
+    {
+        $metrics = [
+            'total-sales' => ['label' => 'Total Sales', 'summary' => 'gross_revenue', 'attribute' => 'amount', 'count' => false],
+            'room-sales' => ['label' => 'Room Sales', 'summary' => 'room_sales', 'attribute' => 'report_room_sales', 'count' => false],
+            'food-sales' => ['label' => 'Food Sales', 'summary' => 'food_sales', 'attribute' => 'report_food_sales', 'count' => false],
+            'paid-bookings' => ['label' => 'Paid Bookings', 'summary' => 'paid_bookings', 'attribute' => null, 'count' => true],
+            'discount-total' => ['label' => 'Discount Total', 'summary' => 'total_discount', 'attribute' => 'discount_amount', 'count' => false],
+            'vat-exempt-sales' => ['label' => 'VAT-Exempt Sales', 'summary' => 'vat_exempt_sales', 'attribute' => 'report_vat_exempt_sales', 'count' => false],
+            'vat' => ['label' => 'VAT (12/112)', 'summary' => 'vat_total', 'attribute' => 'report_vat', 'count' => false],
+            'local-tax' => ['label' => 'Local Tax (5%)', 'summary' => 'local_tax_total', 'attribute' => 'report_local_tax', 'count' => false],
+            'net-sales' => ['label' => 'Net Sales', 'summary' => 'net_sales_excluding_vat', 'attribute' => 'report_net_sales', 'count' => false],
+        ];
+
+        abort_unless(isset($metrics[$metric]), 404);
+
+        $definition = $metrics[$metric];
+        $report = $this->salesReport($request)->getData();
+        $sales = collect($report['recentSales'])
+            ->map(function ($sale) use ($definition) {
+                $value = $definition['count'] ? 1 : (float) ($sale->{$definition['attribute']} ?? 0);
+                $sale->setAttribute('metric_value', $value);
+
+                return $sale;
+            })
+            ->filter(static fn ($sale): bool => (float) $sale->metric_value > 0)
+            ->values();
+
+        return view('admin.sales-metric', [
+            'metric' => $metric,
+            'metricLabel' => $definition['label'],
+            'metricTotal' => $report['summary'][$definition['summary']],
+            'metricIsCount' => $definition['count'],
+            'sales' => $sales,
+            'from' => $report['from'],
+            'to' => $report['to'],
+            'method' => $report['method'],
+            'selectedRangeLabel' => $report['selectedRangeLabel'],
+        ]);
+    }
+
     public function occupancyReport(Request $request)
     {
         $from = $this->normalizeDateInput($request->string('from')->toString()) ?? now()->startOfMonth()->toDateString();

@@ -138,8 +138,26 @@ class AdminSalesReportCalculationTest extends TestCase
         ]));
 
         $report->assertOk()
+            ->assertSee(route('admin.sales-report.metric', [
+                'metric' => 'total-sales',
+                'from' => now()->toDateString(),
+                'to' => now()->toDateString(),
+                'method' => 'all',
+            ]))
             ->assertSee(route('admin.sales-report.receipt', $payment), false)
             ->assertSee('View / Print');
+
+        $breakdown = $this->actingAs($admin, 'admin')->get(route('admin.sales-report.metric', [
+            'metric' => 'total-sales',
+            'from' => now()->toDateString(),
+            'to' => now()->toDateString(),
+        ]));
+
+        $breakdown->assertOk()
+            ->assertViewHas('metricTotal', 1500.0)
+            ->assertSee('Total Sales Breakdown')
+            ->assertSee('Print Landscape')
+            ->assertSee(route('admin.sales-report.receipt', $payment), false);
 
         $receipt = $this->actingAs($admin, 'admin')->get(route('admin.sales-report.receipt', $payment));
 
