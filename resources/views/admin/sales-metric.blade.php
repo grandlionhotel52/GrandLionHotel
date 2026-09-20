@@ -86,8 +86,8 @@
                 <a href="{{ route('admin.sales-report', ['from' => $from, 'to' => $to, 'method' => $method]) }}" class="btn btn-ta-outline">
                     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to Sales Report
                 </a>
-                <a href="{{ route('admin.sales-report.export', ['from' => $from, 'to' => $to, 'method' => $method]) }}" class="btn btn-ta">
-                    <i class="bi bi-file-earmark-spreadsheet me-1" aria-hidden="true"></i>Export Excel
+                <a href="{{ route('admin.sales-report.metric.export', ['metric' => $metric, 'from' => $from, 'to' => $to, 'method' => $method]) }}" class="btn btn-ta">
+                    <i class="bi bi-file-earmark-spreadsheet me-1" aria-hidden="true"></i>Export {{ $metricLabel }}
                 </a>
             </div>
         </div>

@@ -169,9 +169,36 @@ class AdminSalesReportCalculationTest extends TestCase
         $breakdown->assertOk()
             ->assertViewHas('metricTotal', 1500.0)
             ->assertSee('Total Sales Breakdown')
-            ->assertSee('Export Excel')
+            ->assertSee('Export Total Sales')
+            ->assertSee(route('admin.sales-report.metric.export', [
+                'metric' => 'total-sales',
+                'from' => now()->toDateString(),
+                'to' => now()->toDateString(),
+                'method' => 'all',
+            ]))
             ->assertDontSee('Print Landscape')
             ->assertSee(route('admin.sales-report.receipt', $payment), false);
+
+        $metricExport = $this->actingAs($admin, 'admin')->get(route('admin.sales-report.metric.export', [
+            'metric' => 'total-sales',
+            'from' => now()->toDateString(),
+            'to' => now()->toDateString(),
+            'method' => 'all',
+        ]));
+
+        $metricExport->assertOk()
+            ->assertDownload('total-sales-'.now()->toDateString().'-to-'.now()->toDateString().'.xlsx')
+            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $metricWorkbook = new \PharData($metricExport->getFile()->getPathname());
+        $metricWorksheet = $metricWorkbook['xl/worksheets/sheet1.xml']->getContent();
+        $this->assertStringContainsString('The Grand Lion Hotel - Total Sales Breakdown', $metricWorksheet);
+        $this->assertStringContainsString('Total Sales Total', $metricWorksheet);
+        $this->assertStringContainsString('Sale Amount', $metricWorksheet);
+        $this->assertStringContainsString('Transaction Reference', $metricWorksheet);
+        $this->assertStringContainsString('orientation="landscape"', $metricWorksheet);
+        $this->assertStringNotContainsString('DAILY SALES', $metricWorksheet);
+        $this->assertStringNotContainsString('GUEST CARE STAFF PERFORMANCE', $metricWorksheet);
 
         $receipt = $this->actingAs($admin, 'admin')->get(route('admin.sales-report.receipt', $payment));
 

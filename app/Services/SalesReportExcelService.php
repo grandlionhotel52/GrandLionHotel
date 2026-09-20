@@ -130,7 +130,11 @@ class SalesReportExcelService
             ]);
         }
 
-        $sheetXml = $this->worksheetXml($rows, $merges, $rowNumber);
+        return $this->createArchive($this->worksheetXml($rows, $merges, $rowNumber));
+    }
+
+    private function createArchive(string $sheetXml): string
+    {
         $temporaryBase = tempnam(sys_get_temp_dir(), 'glh-sales-');
         if ($temporaryBase === false) {
             throw new RuntimeException('Unable to create the Excel export.');
@@ -147,6 +151,73 @@ class SalesReportExcelService
             @unlink($archivePath);
             throw $exception;
         }
+    }
+
+    public function createMetric(array $report): string
+    {
+        $rows = [];
+        $merges = [];
+        $rowNumber = 0;
+
+        $addRow = function (array $cells, float $height = 18) use (&$rows, &$merges, &$rowNumber): void {
+            $rowNumber++;
+            $column = 1;
+            $xml = '<row r="'.$rowNumber.'" ht="'.$height.'" customHeight="1">';
+
+            foreach ($cells as $cell) {
+                $value = $cell['value'] ?? '';
+                $type = $cell['type'] ?? 'string';
+                $style = (int) ($cell['style'] ?? 0);
+                $mergeAcross = max(1, (int) ($cell['merge'] ?? 1));
+                $reference = $this->columnName($column).$rowNumber;
+
+                if ($type === 'number') {
+                    $xml .= '<c r="'.$reference.'" s="'.$style.'"><v>'.(float) $value.'</v></c>';
+                } else {
+                    $xml .= '<c r="'.$reference.'" s="'.$style.'" t="inlineStr"><is><t xml:space="preserve">'.$this->escape((string) $value).'</t></is></c>';
+                }
+
+                if ($mergeAcross > 1) {
+                    $merges[] = $reference.':'.$this->columnName($column + $mergeAcross - 1).$rowNumber;
+                }
+
+                $column += $mergeAcross;
+            }
+
+            $rows[] = $xml.'</row>';
+        };
+
+        $text = static fn (string $value, int $style = 0, int $merge = 1): array => compact('value', 'style', 'merge') + ['type' => 'string'];
+        $number = static fn (float|int $value, int $style = 5): array => compact('value', 'style') + ['type' => 'number'];
+        $methodLabel = $report['method'] === 'all' ? 'All methods' : Payment::methodLabel((string) $report['method']);
+
+        $addRow([$text('The Grand Lion Hotel - '.$report['metricLabel'].' Breakdown', 1, 8)], 28);
+        $addRow([$text('Date Range', 2), $text($report['selectedRangeLabel'], 2, 7)]);
+        $addRow([$text('Payment Method', 2), $text($methodLabel, 2, 7)]);
+        $addRow([
+            $text($report['metricLabel'].' Total', 3),
+            $number($report['metricTotal'], $report['metricIsCount'] ? 6 : 5),
+        ], 22);
+        $addRow([]);
+
+        $addRow(array_map(static fn (string $label): array => $text($label, 4), [
+            'Booking', 'Paid At', 'Method', 'Guest Care Staff', 'Sale Amount', $report['metricLabel'], 'Transaction Reference',
+        ]));
+
+        foreach ($report['sales'] as $sale) {
+            $staffName = trim((string) ($sale->assigned_staff_name ?? ''));
+            $addRow([
+                $text('#'.(int) $sale->booking_id, 7),
+                $text(Carbon::parse($sale->paid_at)->format('M d, Y h:i A'), 7),
+                $text(Payment::methodLabel((string) $sale->method)),
+                $text($staffName !== '' ? $staffName : 'Not recorded'),
+                $number((float) $sale->amount),
+                $number((float) $sale->metric_value, $report['metricIsCount'] ? 6 : 5),
+                $text((string) ($sale->transaction_reference ?? 'Not available'), 7),
+            ]);
+        }
+
+        return $this->createArchive($this->worksheetXml($rows, $merges, $rowNumber));
     }
 
     private function writeZip(string $archivePath, array $files): void

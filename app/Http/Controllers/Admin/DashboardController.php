@@ -308,6 +308,17 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function exportSalesMetric(Request $request, string $metric, SalesReportExcelService $excelService)
+    {
+        $metricReport = $this->salesMetric($request, $metric)->getData();
+        $filename = $metric.'-'.$metricReport['from'].'-to-'.$metricReport['to'].'.xlsx';
+        $workbookPath = $excelService->createMetric($metricReport);
+
+        return response()->download($workbookPath, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
+    }
+
     public function occupancyReport(Request $request)
     {
         $from = $this->normalizeDateInput($request->string('from')->toString()) ?? now()->startOfMonth()->toDateString();
