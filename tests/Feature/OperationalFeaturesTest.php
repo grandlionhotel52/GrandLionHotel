@@ -94,7 +94,10 @@ class OperationalFeaturesTest extends TestCase
             ]))
             ->assertOk()
             ->assertSee('Occupancy Report')
-            ->assertSee('Room nights sold');
+            ->assertSee('Room nights sold')
+            ->assertSee('Print Landscape')
+            ->assertSee('size: A4 landscape', false)
+            ->assertSee('Reporting period:');
     }
 
     public function test_occupancy_report_counts_cash_and_online_room_nights_as_sold(): void
