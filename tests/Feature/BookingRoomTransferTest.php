@@ -56,6 +56,25 @@ class BookingRoomTransferTest extends TestCase
         $this->assertSame('6267.86', number_format((float) $booking->payment->amount, 2, '.', ''));
     }
 
+    public function test_only_assigned_staff_can_transfer_a_booking(): void
+    {
+        $assignedStaff = Staff::factory()->create();
+        $otherStaff = Staff::factory()->create();
+        $customer = Customer::factory()->create();
+        $currentRoom = $this->createRoom(['name' => 'Room 101']);
+        $newRoom = $this->createRoom(['name' => 'Room 102']);
+        $booking = $this->createTransferableBooking($customer, $currentRoom, $assignedStaff);
+
+        $this->actingAs($otherStaff, 'staff')->patch(
+            route('staff.bookings.transfer-room', $booking),
+            ['room_id' => $newRoom->id]
+        )->assertSessionHasErrors([
+            'booking' => 'Only the assigned staff member can perform this booking action.',
+        ]);
+
+        $this->assertSame($currentRoom->id, $booking->fresh()->room_id);
+    }
+
     public function test_staff_cannot_transfer_paid_booking_to_room_with_different_total(): void
     {
         $staff = Staff::factory()->create();

@@ -13,10 +13,11 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_staff_can_confirm_without_changing_admin_assignment(): void
+    public function test_staff_cannot_confirm_until_admin_assigns_them(): void
     {
         Mail::fake();
 
+        $admin = Admin::factory()->create();
         $staff = Staff::factory()->create();
 
         $booking = Booking::factory()->create([
@@ -32,10 +33,40 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
 
         $response = $this->actingAs($staff, 'staff')->patch(route('staff.bookings.confirm', $booking));
 
-        $response->assertRedirect(route('staff.bookings.show', $booking));
+        $response->assertSessionHasErrors([
+            'booking' => 'An admin must assign a staff member before this booking can proceed.',
+        ]);
 
         $booking->refresh();
         $this->assertNull($booking->staff_id);
+        $this->assertSame('pending', $booking->status);
+
+        $this->actingAs($admin, 'admin')->patch(route('admin.bookings.assign-staff', $booking), [
+            'staff_id' => $staff->id,
+        ])->assertRedirect(route('admin.bookings.show', $booking));
+
+        $this->actingAs($staff, 'staff')->patch(route('staff.bookings.confirm', $booking))
+            ->assertRedirect(route('staff.bookings.show', $booking));
+
+        $this->assertSame('confirmed', $booking->fresh()->status);
+    }
+
+    public function test_only_assigned_staff_can_confirm_a_booking(): void
+    {
+        $assignedStaff = Staff::factory()->create();
+        $otherStaff = Staff::factory()->create();
+        $booking = Booking::factory()->create([
+            'status' => 'pending',
+            'staff_id' => $assignedStaff->id,
+        ]);
+
+        $this->actingAs($otherStaff, 'staff')
+            ->patch(route('staff.bookings.confirm', $booking))
+            ->assertSessionHasErrors([
+                'booking' => 'Only the assigned staff member can perform this booking action.',
+            ]);
+
+        $this->assertSame('pending', $booking->fresh()->status);
     }
 
     public function test_admin_can_assign_staff_owner_to_booking(): void
