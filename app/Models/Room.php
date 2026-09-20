@@ -139,6 +139,10 @@ class Room extends Model
                 ['label' => 'Premium bedding', 'icon' => 'bi-moon-stars'],
                 ['label' => 'Rainfall shower', 'icon' => 'bi-cloud-rain'],
             ],
+            'accessible' => [
+                ['label' => 'Step-free layout', 'icon' => 'bi-person-check'],
+                ['label' => 'Accessible bathroom', 'icon' => 'bi-shield-check'],
+            ],
             default => [
                 ['label' => 'Work desk', 'icon' => 'bi-laptop'],
                 ['label' => 'Daily housekeeping', 'icon' => 'bi-check2-circle'],
