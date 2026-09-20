@@ -46,6 +46,7 @@ class AdminDashboardExperienceTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Dashboard');
+        $response->assertDontSee('Administrator quick guide');
         $response->assertSee('Open Booking Desk');
         $response->assertSee('Priority Queues');
         $response->assertSee('Quick Actions');
