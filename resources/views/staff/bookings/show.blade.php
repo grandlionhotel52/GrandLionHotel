@@ -223,11 +223,10 @@
         $billedUnits = $booking->nights();
         $isOnlineAwaitingVerification = $booking->payment_status === 'pending_verification'
             && \App\Models\Payment::isOnlineMethod((string) ($booking->payment?->method ?? ''));
-        $isAssignedStaff = (int) $booking->staff_id === (int) auth('staff')->id();
         $hasPendingRescheduleRequest = $booking->hasPendingRescheduleRequest();
         $hasPendingRoomTransferRequest = $booking->hasPendingRoomTransferRequest();
-        $canStaffDirectlyReschedule = $isAssignedStaff && $booking->canBeRescheduledByStaff();
-        $canStaffTransferRoom = $isAssignedStaff && $booking->canBeTransferredByStaff();
+        $canStaffDirectlyReschedule = $booking->canBeRescheduledByStaff();
+        $canStaffTransferRoom = $booking->canBeTransferredByStaff();
         $defaultCheckInTime = old('actual_check_in_at', now()->format('Y-m-d\TH:i'));
         $defaultCheckOutTime = old('actual_check_out_at', now()->format('Y-m-d\TH:i'));
         $standardGuests = \App\Models\Room::standardGuestCapacity();
@@ -237,6 +236,7 @@
         $currentExtraBedding = max(0, $currentOccupancyTotal - $standardGuests);
         $pricingQuote = $booking->pricingQuote();
         $billingQuote = $booking->billingQuote();
+        $isAssignedStaff = (int) $booking->staff_id === (int) auth('staff')->id();
         $bookingChipClass = match ($booking->status) {
             'confirmed', 'completed' => 'success',
             'cancelled' => 'danger',
@@ -249,8 +249,6 @@
         $nextStep = match (true) {
             $booking->status === 'cancelled' => 'No arrival action is required for this cancelled booking.',
             $booking->status === 'completed' => 'Stay completed. Confirm the receipt and internal notes are complete.',
-            !$booking->staff_id => 'Wait for an administrator to assign a staff owner before processing this booking.',
-            !$isAssignedStaff => 'This booking can only be processed by its assigned staff member.',
             $isOnlineAwaitingVerification => 'Verify the submitted online payment proof before continuing.',
             $booking->status === 'pending' => 'Review the reservation details and confirm the booking.',
             is_null($booking->actual_check_in_at) => 'Prepare for arrival and record check-in when the guest reaches the hotel.',
@@ -320,7 +318,7 @@
     </section>
 
     <div class="booking-actions mb-3" id="booking-top-actions">
-        @if($booking->canBeConfirmedByStaff() && $isAssignedStaff)
+        @if($booking->canBeConfirmedByStaff())
             <form method="POST" action="{{ route('staff.bookings.confirm', $booking) }}" data-confirm="Confirm this booking now?">
                 @csrf
                 @method('PATCH')
@@ -506,7 +504,6 @@
                     <p class="booking-info-value">{{ $booking->reschedule_request_notes ?: '-' }}</p>
                 </div>
             </div>
-            @if($isAssignedStaff)
             <div class="booking-actions">
                 <form method="POST" action="{{ route('staff.bookings.apply-reschedule-request', $booking) }}" data-confirm="Apply this requested schedule to the booking now?">
                     @csrf
@@ -535,9 +532,6 @@
                     </button>
                 </form>
             </div>
-            @else
-                <div class="alert alert-warning mb-0">Only the assigned staff member can process this schedule request.</div>
-            @endif
         </section>
     @endif
 
@@ -565,7 +559,6 @@
                     <p class="booking-info-value">{{ $booking->room_transfer_request_reason ?: '-' }}</p>
                 </div>
             </div>
-            @if($isAssignedStaff)
             <div class="booking-actions">
                 <form method="POST" action="{{ route('staff.bookings.decline-room-transfer-request', $booking) }}" data-confirm="Decline and clear this room transfer request?">
                     @csrf
@@ -581,9 +574,6 @@
                     </button>
                 </form>
             </div>
-            @else
-                <div class="alert alert-warning mb-0">Only the assigned staff member can process this room transfer request.</div>
-            @endif
         </section>
     @endif
 
@@ -906,7 +896,7 @@
                         && $booking->status === 'confirmed'
                         && in_array(strtolower((string) ($booking->payment?->method ?? 'pending')), ['', 'pending', 'cash'], true);
                 @endphp
-                @if($staffCanRecordCash && $isAssignedStaff)
+                @if($staffCanRecordCash)
                     <form method="POST" action="{{ route('staff.bookings.record-payment', $booking) }}" class="row g-3 align-items-end mb-4" data-confirm="Confirm that the cash payment was received?">
                         @csrf
                         @method('PATCH')

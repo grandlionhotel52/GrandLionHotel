@@ -183,10 +183,6 @@ class BookingController extends Controller
             ]);
         }
 
-        if ($newStatus === 'confirmed' && ($assignmentError = $this->assignedStaffError($booking))) {
-            return back()->withErrors(['booking' => $assignmentError]);
-        }
-
         if ($newStatus === 'completed' && !$booking->canBeCheckedOutByStaff()) {
             return back()->withErrors(['status' => 'Only checked-in confirmed bookings can be completed.']);
         }
@@ -230,10 +226,6 @@ class BookingController extends Controller
 
     public function confirm(Request $request, Booking $booking)
     {
-        if ($assignmentError = $this->assignedStaffError($booking)) {
-            return back()->withErrors(['booking' => $assignmentError]);
-        }
-
         if (!$booking->canBeConfirmedByStaff()) {
             return back()->withErrors(['booking' => 'Only pending bookings can be confirmed.']);
         }
@@ -521,10 +513,6 @@ class BookingController extends Controller
 
     public function transferRoom(Request $request, Booking $booking)
     {
-        if ($assignmentError = $this->assignedStaffError($booking)) {
-            return back()->withErrors(['booking' => $assignmentError]);
-        }
-
         $validated = $request->validate([
             'room_id' => ['required', 'exists:rooms,room_id'],
         ]);
@@ -611,10 +599,6 @@ class BookingController extends Controller
 
     public function recordPayment(Request $request, Booking $booking)
     {
-        if ($assignmentError = $this->assignedStaffError($booking)) {
-            return back()->withErrors(['booking' => $assignmentError]);
-        }
-
         $booking->loadMissing('payment');
 
         if ($booking->payment_status === 'paid') {
@@ -765,10 +749,6 @@ class BookingController extends Controller
 
     public function reschedule(Request $request, Booking $booking)
     {
-        if ($assignmentError = $this->assignedStaffError($booking)) {
-            return back()->withErrors(['booking' => $assignmentError]);
-        }
-
         if (!$booking->canBeRescheduledByStaff()) {
             return back()->withErrors(['booking' => 'Only confirmed bookings before check-out can be rescheduled by staff.']);
         }
@@ -817,10 +797,6 @@ class BookingController extends Controller
 
     public function applyRescheduleRequest(Request $request, Booking $booking)
     {
-        if ($assignmentError = $this->assignedStaffError($booking)) {
-            return back()->withErrors(['booking' => $assignmentError]);
-        }
-
         if (!$booking->hasPendingRescheduleRequest()) {
             return back()->withErrors(['booking' => 'There is no pending schedule change request for this booking.']);
         }
@@ -864,10 +840,6 @@ class BookingController extends Controller
 
     public function declineRescheduleRequest(Request $request, Booking $booking)
     {
-        if ($assignmentError = $this->assignedStaffError($booking)) {
-            return back()->withErrors(['booking' => $assignmentError]);
-        }
-
         if (!$booking->hasPendingRescheduleRequest()) {
             return back()->withErrors(['booking' => 'There is no pending schedule change request for this booking.']);
         }
@@ -884,10 +856,6 @@ class BookingController extends Controller
 
     public function declineRoomTransferRequest(Request $request, Booking $booking)
     {
-        if ($assignmentError = $this->assignedStaffError($booking)) {
-            return back()->withErrors(['booking' => $assignmentError]);
-        }
-
         if (!$booking->hasPendingRoomTransferRequest()) {
             return back()->withErrors(['booking' => 'There is no pending room transfer request for this booking.']);
         }
@@ -921,19 +889,6 @@ class BookingController extends Controller
     private function withAssignedStaff(Booking $booking, array $attributes = []): array
     {
         return $attributes;
-    }
-
-    private function assignedStaffError(Booking $booking): ?string
-    {
-        if (!$booking->staff_id) {
-            return 'An admin must assign a staff member before this booking can proceed.';
-        }
-
-        if ((int) $booking->staff_id !== (int) auth('staff')->id()) {
-            return 'Only the assigned staff member can perform this booking action.';
-        }
-
-        return null;
     }
 
     private function resolveBookingBillableBaseTotal(Booking $booking): float

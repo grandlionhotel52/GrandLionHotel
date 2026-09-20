@@ -163,29 +163,6 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertSame('7834.82', number_format((float) $booking->payment->amount, 2, '.', ''));
     }
 
-    public function test_only_assigned_staff_can_reschedule_a_booking(): void
-    {
-        $assignedStaff = Staff::factory()->create();
-        $otherStaff = Staff::factory()->create();
-        $customer = Customer::factory()->create();
-        $booking = $this->createConfirmedUnpaidBooking($customer, $this->createRoom(), [
-            'staff_id' => $assignedStaff->id,
-        ]);
-        $originalCheckIn = $booking->check_in->toDateString();
-
-        $this->actingAs($otherStaff, 'staff')->patch(
-            route('staff.bookings.reschedule', $booking),
-            [
-                'check_in' => now()->addDays(7)->toDateString(),
-                'check_out' => now()->addDays(9)->toDateString(),
-            ]
-        )->assertSessionHasErrors([
-            'booking' => 'Only the assigned staff member can perform this booking action.',
-        ]);
-
-        $this->assertSame($originalCheckIn, $booking->fresh()->check_in->toDateString());
-    }
-
     public function test_staff_can_apply_requested_schedule_for_confirmed_booking_with_pending_verification_payment(): void
     {
         $staff = Staff::factory()->create();

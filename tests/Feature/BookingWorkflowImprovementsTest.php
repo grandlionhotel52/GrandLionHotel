@@ -153,7 +153,6 @@ class BookingWorkflowImprovementsTest extends TestCase
             'customer_id' => null,
             'room_id' => $room->id,
             'status' => 'pending',
-            'staff_id' => $staff->id,
         ]);
         $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending']);
         $booking->guestDetail()->update([

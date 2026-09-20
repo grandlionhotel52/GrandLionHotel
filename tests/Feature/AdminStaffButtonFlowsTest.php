@@ -339,7 +339,6 @@ class AdminStaffButtonFlowsTest extends TestCase
             status: 'pending',
             paymentStatus: 'unpaid'
         );
-        $pendingBooking->update(['staff_id' => $staff->id]);
         $activeBooking = $this->createBooking(
             customer: $customer,
             room: $room,
@@ -399,7 +398,7 @@ class AdminStaffButtonFlowsTest extends TestCase
 
         $pendingBooking->refresh();
         $this->assertSame('confirmed', $pendingBooking->status);
-        $this->assertSame($staff->id, $pendingBooking->staff_id);
+        $this->assertNull($pendingBooking->staff_id);
         Mail::assertQueued(BookingConfirmedMail::class);
 
         $this->patch(route('staff.bookings.staff-notes', $activeBooking), [

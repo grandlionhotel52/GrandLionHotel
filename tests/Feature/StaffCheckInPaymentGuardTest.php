@@ -75,28 +75,6 @@ class StaffCheckInPaymentGuardTest extends TestCase
         $this->assertNull($booking->fresh()->actual_check_in_at);
     }
 
-    public function test_staff_cannot_record_cash_payment_for_an_unassigned_booking(): void
-    {
-        $staff = Staff::factory()->create();
-        $booking = Booking::factory()->create([
-            'status' => 'confirmed',
-            'staff_id' => null,
-        ]);
-        $booking->payment()->update([
-            'method' => 'cash',
-            'status' => 'unpaid',
-            'paid_at' => null,
-        ]);
-
-        $this->actingAs($staff, 'staff')
-            ->patch(route('staff.bookings.record-payment', $booking), ['discount_type' => 'none'])
-            ->assertSessionHasErrors([
-                'booking' => 'An admin must assign a staff member before this booking can proceed.',
-            ]);
-
-        $this->assertSame('unpaid', $booking->payment()->firstOrFail()->status);
-    }
-
     public function test_only_assigned_staff_can_check_in_the_guest(): void
     {
         $assigned = Staff::factory()->create();
