@@ -105,7 +105,6 @@
             }
             body > nav,
             .admin-report-controls,
-            .admin-report-print-button,
             .admin-report-actions {
                 display: none !important;
             }
@@ -165,9 +164,9 @@
                 <h1 class="h4 mb-1">Sales Report</h1>
                 <p class="text-secondary mb-0" id="admin_sales_range_label" data-ajax-list-sync>Paid sales for {{ $selectedRangeLabel }}</p>
             </div>
-            <button type="button" class="btn btn-ta-outline admin-report-print-button" onclick="window.print()">
-                <i class="bi bi-printer me-1" aria-hidden="true"></i>Print Landscape
-            </button>
+            <a href="{{ route('admin.sales-report.export', ['from' => $from, 'to' => $to, 'method' => $method]) }}" class="btn btn-ta">
+                <i class="bi bi-file-earmark-spreadsheet me-1" aria-hidden="true"></i>Export Excel
+            </a>
         </div>
 
         <section class="admin-report-shell admin-report-controls p-3 p-lg-4 mb-4">
@@ -195,9 +194,6 @@
                     </div>
                     <div class="col-lg-3 d-flex gap-2">
                         <a href="{{ route('admin.sales-report') }}" class="btn btn-ta-outline" data-ajax-list-reset>Reset</a>
-                        <a href="{{ route('admin.sales-report.export', ['from' => $from, 'to' => $to, 'method' => $method]) }}" class="btn btn-ta">
-                            <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export Excel
-                        </a>
                     </div>
                 </div>
             </form>

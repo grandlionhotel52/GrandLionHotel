@@ -113,15 +113,18 @@ class AdminSalesReportCalculationTest extends TestCase
         ]));
 
         $response->assertOk()
-            ->assertDownload('sales-report-2026-09-08-to-2026-09-08.csv');
+            ->assertDownload('sales-report-2026-09-08-to-2026-09-08.xlsx')
+            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
-        $content = $response->streamedContent();
-        $this->assertStringContainsString('The Grand Lion Hotel - Sales Report', $content);
-        $this->assertStringContainsString('"Payment Method",Cash', $content);
-        $this->assertStringContainsString('"Total Sales",1500', $content);
-        $this->assertStringContainsString('DAILY SALES', $content);
-        $this->assertStringContainsString('STAFF PERFORMANCE', $content);
-        $this->assertStringNotContainsString('GCash via PayMongo', $content);
+        $archive = new \PharData($response->getFile()->getPathname());
+        $worksheet = $archive['xl/worksheets/sheet1.xml']->getContent();
+        $this->assertStringContainsString('The Grand Lion Hotel - Sales Report', $worksheet);
+        $this->assertStringContainsString('Payment Method', $worksheet);
+        $this->assertStringContainsString('Total Sales', $worksheet);
+        $this->assertStringContainsString('DAILY SALES', $worksheet);
+        $this->assertStringContainsString('GUEST CARE STAFF PERFORMANCE', $worksheet);
+        $this->assertStringContainsString('orientation="landscape"', $worksheet);
+        $this->assertStringNotContainsString('GCash via PayMongo', $worksheet);
 
         $this->travelBack();
     }
@@ -156,7 +159,8 @@ class AdminSalesReportCalculationTest extends TestCase
         $breakdown->assertOk()
             ->assertViewHas('metricTotal', 1500.0)
             ->assertSee('Total Sales Breakdown')
-            ->assertSee('Print Landscape')
+            ->assertSee('Export Excel')
+            ->assertDontSee('Print Landscape')
             ->assertSee(route('admin.sales-report.receipt', $payment), false);
 
         $receipt = $this->actingAs($admin, 'admin')->get(route('admin.sales-report.receipt', $payment));

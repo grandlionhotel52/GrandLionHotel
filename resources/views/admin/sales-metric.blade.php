@@ -86,9 +86,9 @@
                 <a href="{{ route('admin.sales-report', ['from' => $from, 'to' => $to, 'method' => $method]) }}" class="btn btn-ta-outline">
                     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to Sales Report
                 </a>
-                <button type="button" class="btn btn-ta" onclick="window.print()">
-                    <i class="bi bi-printer me-1" aria-hidden="true"></i>Print Landscape
-                </button>
+                <a href="{{ route('admin.sales-report.export', ['from' => $from, 'to' => $to, 'method' => $method]) }}" class="btn btn-ta">
+                    <i class="bi bi-file-earmark-spreadsheet me-1" aria-hidden="true"></i>Export Excel
+                </a>
             </div>
         </div>
 
