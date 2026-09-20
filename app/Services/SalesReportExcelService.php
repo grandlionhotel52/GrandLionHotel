@@ -4,8 +4,6 @@ namespace App\Services;
 
 use App\Models\Payment;
 use Carbon\Carbon;
-use Phar;
-use PharData;
 use RuntimeException;
 use Throwable;
 
@@ -142,16 +140,89 @@ class SalesReportExcelService
         $archivePath = $temporaryBase.'.zip';
 
         try {
-            $archive = new PharData($archivePath, 0, null, Phar::ZIP);
-            foreach ($this->workbookFiles($sheetXml) as $path => $contents) {
-                $archive->addFromString($path, $contents);
-            }
-            unset($archive);
+            $this->writeZip($archivePath, $this->workbookFiles($sheetXml));
 
             return $archivePath;
         } catch (Throwable $exception) {
             @unlink($archivePath);
             throw $exception;
+        }
+    }
+
+    private function writeZip(string $archivePath, array $files): void
+    {
+        $archive = '';
+        $centralDirectory = '';
+        $offset = 0;
+        $entryCount = 0;
+        $now = getdate();
+        $dosTime = (($now['hours'] & 0x1f) << 11) | (($now['minutes'] & 0x3f) << 5) | ((int) ($now['seconds'] / 2) & 0x1f);
+        $dosDate = (((max(1980, $now['year']) - 1980) & 0x7f) << 9) | (($now['mon'] & 0x0f) << 5) | ($now['mday'] & 0x1f);
+
+        foreach ($files as $path => $contents) {
+            $fileName = str_replace('\\', '/', (string) $path);
+            $data = (string) $contents;
+            $size = strlen($data);
+            $crc = crc32($data);
+            $nameLength = strlen($fileName);
+
+            $localHeader = pack(
+                'VvvvvvVVVvv',
+                0x04034b50,
+                20,
+                0,
+                0,
+                $dosTime,
+                $dosDate,
+                $crc,
+                $size,
+                $size,
+                $nameLength,
+                0
+            );
+
+            $archive .= $localHeader.$fileName.$data;
+            $centralDirectory .= pack(
+                'VvvvvvvVVVvvvvvVV',
+                0x02014b50,
+                20,
+                20,
+                0,
+                0,
+                $dosTime,
+                $dosDate,
+                $crc,
+                $size,
+                $size,
+                $nameLength,
+                0,
+                0,
+                0,
+                0,
+                0,
+                $offset
+            ).$fileName;
+
+            $offset += strlen($localHeader) + $nameLength + $size;
+            $entryCount++;
+        }
+
+        $centralOffset = strlen($archive);
+        $centralSize = strlen($centralDirectory);
+        $endOfDirectory = pack(
+            'VvvvvVVv',
+            0x06054b50,
+            0,
+            0,
+            $entryCount,
+            $entryCount,
+            $centralSize,
+            $centralOffset,
+            0
+        );
+
+        if (file_put_contents($archivePath, $archive.$centralDirectory.$endOfDirectory) === false) {
+            throw new RuntimeException('Unable to write the Excel export.');
         }
     }
 

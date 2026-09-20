@@ -116,7 +116,17 @@ class AdminSalesReportCalculationTest extends TestCase
             ->assertDownload('sales-report-2026-09-08-to-2026-09-08.xlsx')
             ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
-        $archive = new \PharData($response->getFile()->getPathname());
+        $workbookPath = $response->getFile()->getPathname();
+        $workbookBinary = file_get_contents($workbookPath);
+        $this->assertIsString($workbookBinary);
+        $this->assertSame("PK\x03\x04", substr($workbookBinary, 0, 4));
+        $this->assertSame(20, unpack('vversion', substr($workbookBinary, 4, 2))['version']);
+        $centralHeaderOffset = strpos($workbookBinary, "PK\x01\x02");
+        $this->assertNotFalse($centralHeaderOffset);
+        $this->assertSame(20, unpack('vversion', substr($workbookBinary, $centralHeaderOffset + 4, 2))['version']);
+        $this->assertSame(20, unpack('vversion', substr($workbookBinary, $centralHeaderOffset + 6, 2))['version']);
+
+        $archive = new \PharData($workbookPath);
         $worksheet = $archive['xl/worksheets/sheet1.xml']->getContent();
         $this->assertStringContainsString('The Grand Lion Hotel - Sales Report', $worksheet);
         $this->assertStringContainsString('Payment Method', $worksheet);
