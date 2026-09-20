@@ -210,7 +210,7 @@ class DashboardController extends Controller
 
                 return (object) [
                     'staff_id' => $staffId > 0 ? $staffId : null,
-                    'staff_name' => $staffName !== '' ? $staffName : 'Unassigned',
+                    'staff_name' => $staffName !== '' ? $staffName : 'Not recorded',
                     'paid_bookings' => $paymentRows->count(),
                     'gross_revenue' => $gross,
                     'revenue' => $gross,
@@ -326,13 +326,13 @@ class DashboardController extends Controller
             $write([]);
 
             $write(['PAID TRANSACTIONS']);
-            $write(['Paid At', 'Method', 'Assigned Staff', 'Amount']);
+            $write(['Paid At', 'Method', 'Guest Care Staff', 'Amount']);
             foreach ($report['recentSales'] as $sale) {
                 $staffName = trim((string) ($sale->assigned_staff_name ?? ''));
                 $write([
                     Carbon::parse($sale->paid_at)->format('Y-m-d H:i:s'),
                     Payment::methodLabel((string) $sale->method),
-                    $staffName !== '' ? $staffName : 'Unassigned',
+                    $staffName !== '' ? $staffName : 'Not recorded',
                     (float) $sale->amount,
                 ]);
             }

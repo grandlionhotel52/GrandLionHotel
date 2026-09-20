@@ -101,7 +101,7 @@
                             <th>Booking</th>
                             <th>Paid At</th>
                             <th>Method</th>
-                            <th>Assigned Staff</th>
+                            <th>Guest Care Staff</th>
                             <th class="text-end">Sale Amount</th>
                             <th class="text-end">{{ $metricLabel }}</th>
                             <th class="text-end sales-metric-receipt">Receipt</th>
@@ -113,7 +113,7 @@
                                 <td>#{{ $sale->booking_id }}</td>
                                 <td>{{ \Carbon\Carbon::parse($sale->paid_at)->format('M d, Y h:i A') }}</td>
                                 <td>{{ \App\Models\Payment::methodLabel((string) $sale->method) }}</td>
-                                <td>{{ filled($sale->assigned_staff_name) ? $sale->assigned_staff_name : 'Unassigned' }}</td>
+                                <td>{{ filled($sale->assigned_staff_name) ? $sale->assigned_staff_name : 'Not recorded' }}</td>
                                 <td class="text-end">&#8369;{{ number_format((float) $sale->amount, 2) }}</td>
                                 <td class="text-end fw-bold">
                                     @if($metricIsCount)

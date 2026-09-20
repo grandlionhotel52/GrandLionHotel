@@ -395,7 +395,7 @@
                             <tr>
                                 <th>Paid At</th>
                                 <th>Method</th>
-                                <th>Assigned Staff</th>
+                                <th>Guest Care Staff</th>
                                 <th class="text-end">Amount</th>
                                 <th class="text-end admin-report-actions">Receipt</th>
                             </tr>
@@ -405,7 +405,7 @@
                                 <tr>
                                     <td>{{ \Carbon\Carbon::parse($sale->paid_at)->format('M d, Y h:i A') }}</td>
                                     <td>{{ $methodLabel((string) $sale->method) }}</td>
-                                    <td>{{ trim((string) ($sale->assigned_staff_name ?? '')) !== '' ? $sale->assigned_staff_name : 'Unassigned' }}</td>
+                                    <td>{{ trim((string) ($sale->assigned_staff_name ?? '')) !== '' ? $sale->assigned_staff_name : 'Not recorded' }}</td>
                                     <td class="text-end fw-semibold">&#8369;{{ number_format((float) $sale->amount, 2) }}</td>
                                     <td class="text-end admin-report-actions">
                                         <a

@@ -222,8 +222,8 @@
             <td class="total">&#8369;{{ number_format($paidAmount, 2) }}</td>
         </tr>
         <tr>
-            <th>Assigned Staff</th>
-            <td>{{ $booking->assignedStaff?->name ?? 'N/A' }}</td>
+            <th>Guest Care Staff</th>
+            <td>{{ $booking->assignedStaff?->name ?? 'Not recorded' }}</td>
         </tr>
     </table>
 

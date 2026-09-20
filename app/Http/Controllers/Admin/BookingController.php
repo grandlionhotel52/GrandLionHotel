@@ -104,8 +104,8 @@ class BookingController extends Controller
         ]);
 
         $message = $assignedStaff
-            ? 'Assigned staff updated to '.$assignedStaff->name.'.'
-            : 'Assigned staff cleared for this booking.';
+            ? 'Guest care staff updated to '.$assignedStaff->name.'.'
+            : 'Guest care staff cleared for this booking.';
 
         return redirect()
             ->route('admin.bookings.show', $booking)

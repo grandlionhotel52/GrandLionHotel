@@ -183,7 +183,7 @@
                         <th>Check in/out Dates</th>
                         <th>Status</th>
                         <th>Payment</th>
-                        <th>Assigned Staff</th>
+                        <th>Guest Care Staff</th>
                         <th class="text-end admin-action-col">Action</th>
                     </tr>
                 </thead>

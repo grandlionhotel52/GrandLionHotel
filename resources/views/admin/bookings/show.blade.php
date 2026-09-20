@@ -173,8 +173,8 @@
                 <p class="booking-admin-value">{{ optional($booking->actual_check_out_at)->format('M d, Y h:i A') ?? '-' }}</p>
             </div>
             <div class="booking-admin-item">
-                <p class="booking-admin-label">Assigned Staff</p>
-                <p class="booking-admin-value">{{ $booking->assignedStaff->name ?? '-' }}</p>
+                <p class="booking-admin-label">Guest Care Staff</p>
+                <p class="booking-admin-value">{{ $booking->assignedStaff->name ?? 'Not recorded' }}</p>
             </div>
             <div class="booking-admin-item" style="grid-column: 1 / -1;">
                 <p class="booking-admin-label">Address</p>
@@ -195,14 +195,14 @@
     </section>
 
     <section class="soft-card p-4 mb-3">
-        <h2 class="h5 mb-3">Staff assignment</h2>
-        <form method="POST" action="{{ route('admin.bookings.assign-staff', $booking) }}" class="row g-3 align-items-end" data-confirm="Save this staff assignment?">
+        <h2 class="h5 mb-3">Guest care assignment</h2>
+        <form method="POST" action="{{ route('admin.bookings.assign-staff', $booking) }}" class="row g-3 align-items-end" data-confirm="Save this guest care assignment?">
             @csrf
             @method('PATCH')
             <div class="col-md-5">
-                <label class="form-label">Responsible staff</label>
+                <label class="form-label">Staff who guided or cared for the guest</label>
                 <select class="form-select" name="staff_id">
-                    <option value="">Unassigned</option>
+                    <option value="">Not recorded</option>
                     @foreach($staffMembers as $staffMember)
                         <option value="{{ $staffMember->id }}" @selected((int) $booking->staff_id === (int) $staffMember->id)>
                             {{ $staffMember->name }} ({{ $staffMember->email }})
@@ -214,7 +214,7 @@
                 <button type="submit" class="btn btn-ta w-100">Save assignment</button>
             </div>
             <div class="col-12">
-                <p class="small text-secondary mb-0">This staff member owns the booking workflow.</p>
+                <p class="small text-secondary mb-0">This is for guest-care attribution only. It does not restrict which staff can process the booking.</p>
             </div>
         </form>
     </section>

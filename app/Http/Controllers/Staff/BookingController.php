@@ -269,14 +269,6 @@ class BookingController extends Controller
 
     public function checkIn(Request $request, Booking $booking)
     {
-        if (! $booking->staff_id) {
-            return back()->withErrors(['booking' => 'An admin must assign a staff member before check-in.']);
-        }
-
-        if ((int) $booking->staff_id !== (int) auth('staff')->id()) {
-            return back()->withErrors(['booking' => 'Only the assigned staff member can check in this guest.']);
-        }
-
         if ($booking->payment_status !== 'paid') {
             return back()->withErrors(['booking' => 'Payment must be recorded as paid before the guest can check in.']);
         }
@@ -315,14 +307,6 @@ class BookingController extends Controller
 
     public function checkOut(Request $request, Booking $booking)
     {
-        if (! $booking->staff_id) {
-            return back()->withErrors(['booking' => 'An admin must assign a staff member before check-out.']);
-        }
-
-        if ((int) $booking->staff_id !== (int) auth('staff')->id()) {
-            return back()->withErrors(['booking' => 'Only the assigned staff member can check out this guest.']);
-        }
-
         if (!$booking->canBeCheckedOutByStaff()) {
             return back()->withErrors(['booking' => 'Only checked-in confirmed bookings can be checked out.']);
         }
@@ -370,8 +354,8 @@ class BookingController extends Controller
 
     public function markRoomClean(Request $request, Booking $booking)
     {
-        if ($booking->status !== 'completed' || (int) $booking->staff_id !== (int) auth('staff')->id()) {
-            return back()->withErrors(['room' => 'Only the assigned staff member can finish room cleaning for a completed stay.']);
+        if ($booking->status !== 'completed') {
+            return back()->withErrors(['room' => 'Room cleaning can only be completed for a finished stay.']);
         }
 
         $booking->loadMissing('room.roomStatus');
