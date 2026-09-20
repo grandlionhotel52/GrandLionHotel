@@ -78,8 +78,15 @@ class BookingController extends Controller
         $booking->load(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
         $this->ensurePaidTransactionReference($booking);
         $staffMembers = Staff::query()
+            ->where(function (Builder $query) use ($booking): void {
+                $query->where('is_active', true);
+
+                if ($booking->staff_id) {
+                    $query->orWhere('staff_id', $booking->staff_id);
+                }
+            })
             ->orderBy('name')
-            ->get(['staff_id', 'name', 'email']);
+            ->get(['staff_id', 'name', 'email', 'is_active']);
 
         return view('admin.bookings.show', compact('booking', 'staffMembers'));
     }
@@ -90,7 +97,13 @@ class BookingController extends Controller
             'staff_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('staff', 'staff_id'),
+                Rule::exists('staff', 'staff_id')->where(function ($query) use ($booking): void {
+                    $query->where('is_active', true);
+
+                    if ($booking->staff_id) {
+                        $query->orWhere('staff_id', $booking->staff_id);
+                    }
+                }),
             ],
         ]);
 

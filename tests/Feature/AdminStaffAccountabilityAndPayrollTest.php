@@ -57,6 +57,62 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
         $this->assertSame($staff->id, $booking->staff_id);
     }
 
+    public function test_admin_cannot_newly_assign_inactive_staff_to_booking(): void
+    {
+        $admin = Admin::factory()->create();
+        $activeStaff = Staff::factory()->create([
+            'name' => 'Active Guide',
+            'email' => 'active.guide@example.com',
+            'is_active' => true,
+        ]);
+        $inactiveStaff = Staff::factory()->create([
+            'name' => 'Inactive Guide',
+            'email' => 'inactive.guide@example.com',
+            'is_active' => false,
+        ]);
+        $booking = Booking::factory()->create(['staff_id' => null]);
+
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.bookings.show', $booking))
+            ->assertOk()
+            ->assertSee($activeStaff->email)
+            ->assertDontSee($inactiveStaff->email);
+
+        $this->actingAs($admin, 'admin')
+            ->patch(route('admin.bookings.assign-staff', $booking), [
+                'staff_id' => $inactiveStaff->id,
+            ])
+            ->assertSessionHasErrors('staff_id');
+
+        $this->assertNull($booking->fresh()->staff_id);
+    }
+
+    public function test_existing_inactive_staff_assignment_remains_visible_and_can_be_retained(): void
+    {
+        $admin = Admin::factory()->create();
+        $inactiveStaff = Staff::factory()->create([
+            'name' => 'Former Guest Guide',
+            'email' => 'former.guide@example.com',
+            'is_active' => false,
+        ]);
+        $booking = Booking::factory()->create(['staff_id' => $inactiveStaff->id]);
+
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.bookings.show', $booking))
+            ->assertOk()
+            ->assertSee('Former Guest Guide')
+            ->assertSee('Inactive, existing assignment');
+
+        $this->actingAs($admin, 'admin')
+            ->patch(route('admin.bookings.assign-staff', $booking), [
+                'staff_id' => $inactiveStaff->id,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('admin.bookings.show', $booking));
+
+        $this->assertSame($inactiveStaff->id, $booking->fresh()->staff_id);
+    }
+
     public function test_admin_can_view_only_assigned_customers_for_specific_staff(): void
     {
         $admin = Admin::factory()->create();
