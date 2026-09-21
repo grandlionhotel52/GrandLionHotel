@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
+use App\Models\Admin;
 use App\Models\Customer;
 use App\Models\Room;
 use App\Models\RoomDateDiscount;
@@ -54,6 +55,8 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertSame(now()->addDays(7)->toDateString(), $booking->requested_check_out?->toDateString());
         $this->assertSame('Need to move the trip because of work schedule.', $booking->reschedule_request_notes);
         $this->assertNotNull($booking->reschedule_requested_at);
+        $this->assertNull($booking->reschedule_approved_at);
+        $this->assertNull($booking->reschedule_approved_by_admin_id);
     }
 
     public function test_customer_cannot_request_schedule_change_before_payment(): void
@@ -87,7 +90,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertNull($booking->reschedule_requested_at);
     }
 
-    public function test_staff_can_apply_requested_schedule_and_update_unpaid_amount(): void
+    public function test_staff_cannot_apply_requested_schedule_until_admin_approves_it(): void
     {
         $staff = Staff::factory()->create();
         $customer = Customer::factory()->create();
@@ -110,6 +113,18 @@ class BookingRescheduleRequestTest extends TestCase
             route('staff.bookings.apply-reschedule-request', $booking)
         );
 
+        $response->assertSessionHasErrors('booking');
+
+        $booking->refresh();
+        $this->assertSame(now()->addDays(2)->toDateString(), $booking->check_in->toDateString());
+        $this->assertNotNull($booking->requested_check_in);
+
+        $this->approveReschedule($booking);
+
+        $response = $this->actingAs($staff, 'staff')->patch(
+            route('staff.bookings.apply-reschedule-request', $booking)
+        );
+
         $response->assertRedirect(route('staff.bookings.show', $booking));
 
         $booking->refresh();
@@ -125,7 +140,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertSame('6267.86', number_format((float) $booking->payment->amount, 2, '.', ''));
     }
 
-    public function test_staff_can_directly_reschedule_confirmed_unpaid_booking_without_customer_request(): void
+    public function test_staff_reschedule_submission_requires_admin_approval_before_it_is_applied(): void
     {
         $staff = Staff::factory()->create();
         $customer = Customer::factory()->create();
@@ -153,6 +168,19 @@ class BookingRescheduleRequestTest extends TestCase
         $booking->refresh();
         $booking->load('payment');
 
+        $this->assertSame(now()->addDays(2)->toDateString(), $booking->check_in->toDateString());
+        $this->assertSame(now()->addDays(4)->toDateString(), $booking->check_out->toDateString());
+        $this->assertSame(now()->addDays(7)->toDateString(), $booking->requested_check_in?->toDateString());
+        $this->assertSame(now()->addDays(10)->toDateString(), $booking->requested_check_out?->toDateString());
+        $this->assertNull($booking->reschedule_approved_at);
+        $this->assertSame('5000.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+
+        $this->approveReschedule($booking);
+        $this->actingAs($staff, 'staff')
+            ->patch(route('staff.bookings.apply-reschedule-request', $booking))
+            ->assertRedirect(route('staff.bookings.show', $booking));
+
+        $booking->refresh()->load('payment');
         $this->assertSame(now()->addDays(7)->toDateString(), $booking->check_in->toDateString());
         $this->assertSame(now()->addDays(10)->toDateString(), $booking->check_out->toDateString());
         $this->assertNull($booking->requested_check_in);
@@ -182,6 +210,8 @@ class BookingRescheduleRequestTest extends TestCase
             'status' => 'pending_verification',
         ]);
 
+        $this->approveReschedule($booking);
+
         $response = $this->actingAs($staff, 'staff')->patch(
             route('staff.bookings.apply-reschedule-request', $booking)
         );
@@ -201,7 +231,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertSame('5641.07', number_format((float) $booking->payment->amount, 2, '.', ''));
     }
 
-    public function test_staff_can_directly_reschedule_confirmed_booking_with_paid_payment(): void
+    public function test_approved_staff_reschedule_updates_paid_booking_balance(): void
     {
         $staff = Staff::factory()->create();
         $customer = Customer::factory()->create();
@@ -235,6 +265,15 @@ class BookingRescheduleRequestTest extends TestCase
         );
 
         $response->assertRedirect(route('staff.bookings.show', $booking));
+
+        $booking->refresh();
+        $this->assertSame(now()->addDays(2)->toDateString(), $booking->check_in->toDateString());
+        $this->assertSame($newCheckIn, $booking->requested_check_in?->toDateString());
+
+        $this->approveReschedule($booking);
+        $this->actingAs($staff, 'staff')
+            ->patch(route('staff.bookings.apply-reschedule-request', $booking))
+            ->assertRedirect(route('staff.bookings.show', $booking));
 
         $booking->refresh();
         $booking->load('payment');
@@ -280,6 +319,8 @@ class BookingRescheduleRequestTest extends TestCase
             'discount_percent' => 60,
         ]);
 
+        $this->approveReschedule($booking);
+
         $this->actingAs($staff, 'staff')
             ->patch(route('staff.bookings.apply-reschedule-request', $booking))
             ->assertRedirect(route('staff.bookings.show', $booking));
@@ -292,7 +333,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertSame('paid', $booking->payment->status);
     }
 
-    public function test_staff_can_directly_reschedule_confirmed_booking_even_if_check_in_date_has_started(): void
+    public function test_approved_staff_reschedule_can_be_applied_when_check_in_date_has_started(): void
     {
         $staff = Staff::factory()->create();
         $customer = Customer::factory()->create();
@@ -320,6 +361,14 @@ class BookingRescheduleRequestTest extends TestCase
         $response->assertRedirect(route('staff.bookings.show', $booking));
 
         $booking->refresh();
+        $this->assertSame(now()->subDay()->toDateString(), $booking->check_in->toDateString());
+
+        $this->approveReschedule($booking);
+        $this->actingAs($staff, 'staff')
+            ->patch(route('staff.bookings.apply-reschedule-request', $booking))
+            ->assertRedirect(route('staff.bookings.show', $booking));
+
+        $booking->refresh();
         $this->assertSame(now()->addDays(3)->toDateString(), $booking->check_in->toDateString());
         $this->assertSame(now()->addDays(5)->toDateString(), $booking->check_out->toDateString());
         $this->assertSame($staff->id, $booking->staff_id);
@@ -332,6 +381,19 @@ class BookingRescheduleRequestTest extends TestCase
         return Room::factory()->create(array_merge([
             'room_status_id' => $cleanStatusId,
         ], $attributes));
+    }
+
+    private function approveReschedule(Booking $booking): void
+    {
+        $admin = Admin::factory()->create();
+
+        $this->actingAs($admin, 'admin')
+            ->patch(route('admin.bookings.approve-reschedule', $booking))
+            ->assertRedirect(route('admin.bookings.show', $booking));
+
+        $booking->refresh();
+        $this->assertSame($admin->id, $booking->reschedule_approved_by_admin_id);
+        $this->assertNotNull($booking->reschedule_approved_at);
     }
 
     private function createConfirmedUnpaidBooking(Customer $customer, Room $room, array $attributes = []): Booking

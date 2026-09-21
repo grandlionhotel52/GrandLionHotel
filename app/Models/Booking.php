@@ -34,6 +34,8 @@ class Booking extends Model
         'requested_check_out',
         'reschedule_request_notes',
         'reschedule_requested_at',
+        'reschedule_approved_by_admin_id',
+        'reschedule_approved_at',
         'room_transfer_request_reason',
         'room_transfer_requested_at',
         'status',
@@ -58,6 +60,7 @@ class Booking extends Model
             'requested_check_in' => 'date',
             'requested_check_out' => 'date',
             'reschedule_requested_at' => 'datetime',
+            'reschedule_approved_at' => 'datetime',
             'room_transfer_requested_at' => 'datetime',
             'actual_check_in_at' => 'datetime',
             'actual_check_out_at' => 'datetime',
@@ -132,6 +135,11 @@ class Booking extends Model
     public function assignedStaff(): BelongsTo
     {
         return $this->belongsTo(Staff::class, 'staff_id', 'staff_id');
+    }
+
+    public function rescheduleApprovedByAdmin(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'reschedule_approved_by_admin_id', 'admin_id');
     }
 
     public function nights(): int
@@ -209,6 +217,13 @@ class Booking extends Model
         return !is_null($this->requested_check_in)
             && !is_null($this->requested_check_out)
             && !is_null($this->reschedule_requested_at);
+    }
+
+    public function isRescheduleApproved(): bool
+    {
+        return $this->hasPendingRescheduleRequest()
+            && !is_null($this->reschedule_approved_at)
+            && !is_null($this->reschedule_approved_by_admin_id);
     }
 
     public function canRequestReschedule(): bool

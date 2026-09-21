@@ -393,8 +393,8 @@
                     <h3 class="h6 mb-3">Request Schedule Change</h3>
 
                     @if($hasPendingRescheduleRequest)
-                        <div class="alert alert-info small">
-                            Pending staff review:
+                        <div class="alert {{ $booking->isRescheduleApproved() ? 'alert-success' : 'alert-warning' }} small">
+                            {{ $booking->isRescheduleApproved() ? 'Approved by an admin and waiting for staff to apply:' : 'Pending admin approval:' }}
                             <strong>{{ $booking->requested_check_in?->format('M d, Y') }}</strong>
                             to
                             <strong>{{ $booking->requested_check_out?->format('M d, Y') }}</strong>.
@@ -460,7 +460,7 @@
                                 <button type="submit" class="btn btn-ta">Send reschedule request</button>
                             </div>
                         </form>
-                        <p class="small text-secondary mt-2 mb-0">Choose your preferred new dates. Staff will review availability before approving the change.</p>
+                        <p class="small text-secondary mt-2 mb-0">Choose your preferred new dates. An admin reviews the request first; staff can apply it only after approval.</p>
                     @else
                         <p class="small text-secondary mb-0">Schedule change requests are available only after payment for a confirmed booking before check-in.</p>
                     @endif

@@ -111,6 +111,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::patch('/bookings/{booking}/assign-staff', [AdminBookingController::class, 'assignStaff'])->name('bookings.assign-staff');
     Route::patch('/bookings/{booking}/approve-online-payment', [AdminBookingController::class, 'approveOnlinePayment'])->name('bookings.approve-online-payment');
     Route::patch('/bookings/{booking}/reject-online-payment', [AdminBookingController::class, 'rejectOnlinePayment'])->name('bookings.reject-online-payment');
+    Route::patch('/bookings/{booking}/approve-reschedule', [AdminBookingController::class, 'approveReschedule'])->name('bookings.approve-reschedule');
+    Route::patch('/bookings/{booking}/reject-reschedule', [AdminBookingController::class, 'rejectReschedule'])->name('bookings.reject-reschedule');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
@@ -144,7 +146,6 @@ Route::prefix('staff')->name('staff.')->middleware(['auth:staff', 'staff'])->gro
     Route::patch('/bookings/{booking}/transfer-room', [StaffBookingController::class, 'transferRoom'])->name('bookings.transfer-room');
     Route::patch('/bookings/{booking}/reschedule', [StaffBookingController::class, 'reschedule'])->name('bookings.reschedule');
     Route::patch('/bookings/{booking}/apply-reschedule-request', [StaffBookingController::class, 'applyRescheduleRequest'])->name('bookings.apply-reschedule-request');
-    Route::patch('/bookings/{booking}/decline-reschedule-request', [StaffBookingController::class, 'declineRescheduleRequest'])->name('bookings.decline-reschedule-request');
     Route::patch('/bookings/{booking}/decline-room-transfer-request', [StaffBookingController::class, 'declineRoomTransferRequest'])->name('bookings.decline-room-transfer-request');
     Route::patch('/bookings/{booking}/occupancy', [StaffBookingController::class, 'updateOccupancy'])->name('bookings.occupancy');
     Route::patch('/bookings/{booking}/staff-notes', [StaffBookingController::class, 'updateStaffNotes'])->name('bookings.staff-notes');

@@ -144,6 +144,7 @@ class BookingController extends Controller
             'payment',
             'guestDetail',
             'assignedStaff',
+            'rescheduleApprovedByAdmin',
         ]);
         $this->ensurePaidTransactionReference($booking);
         $returnTo = $this->resolveSafeReturnTo($request->query('return_to'));
@@ -737,6 +738,10 @@ class BookingController extends Controller
             return back()->withErrors(['booking' => 'Only confirmed bookings before check-out can be rescheduled by staff.']);
         }
 
+        if ($booking->hasPendingRescheduleRequest()) {
+            return back()->withErrors(['booking' => 'This booking already has a reschedule request awaiting an admin decision or staff application.']);
+        }
+
         $validated = $request->validate([
             'check_in' => ['required', 'date', 'after_or_equal:today'],
             'check_out' => ['required', 'date', 'after:check_in'],
@@ -762,21 +767,20 @@ class BookingController extends Controller
                 ->withErrors(['check_in' => 'The selected new schedule is not available for this room.']);
         }
 
-        $newTotal = $this->calculateRescheduleTotal($booking, $validated['check_in'], $validated['check_out']);
-        $priceUpdate = $this->lockHigherReschedulePrice($booking, $newTotal);
-
         $booking->update($this->withAssignedStaff($booking, [
-            'check_in' => $validated['check_in'],
-            'check_out' => $validated['check_out'],
-            'requested_check_in' => null,
-            'requested_check_out' => null,
-            'reschedule_request_notes' => null,
-            'reschedule_requested_at' => null,
+            'requested_check_in' => $validated['check_in'],
+            'requested_check_out' => $validated['check_out'],
+            'reschedule_request_notes' => 'Schedule change submitted by hotel staff.',
+            'reschedule_requested_at' => now(),
+            'reschedule_approved_by_admin_id' => null,
+            'reschedule_approved_at' => null,
         ]));
 
-        $message = 'Booking schedule updated successfully. '.$this->reschedulePriceMessage($priceUpdate);
-
-        return $this->redirectAfterBookingAction($request, $booking, $message);
+        return $this->redirectAfterBookingAction(
+            $request,
+            $booking,
+            'Reschedule request submitted. An admin must approve it before staff can apply the new dates.'
+        );
     }
 
     public function applyRescheduleRequest(Request $request, Booking $booking)
@@ -787,6 +791,10 @@ class BookingController extends Controller
 
         if (!$booking->canBeRescheduledByStaff()) {
             return back()->withErrors(['booking' => 'Only confirmed bookings before check-out can be rescheduled here.']);
+        }
+
+        if (!$booking->isRescheduleApproved()) {
+            return back()->withErrors(['booking' => 'Admin approval is required before staff can apply this reschedule.']);
         }
 
         $requestedCheckIn = $booking->requested_check_in?->toDateString();
@@ -815,27 +823,13 @@ class BookingController extends Controller
             'requested_check_out' => null,
             'reschedule_request_notes' => null,
             'reschedule_requested_at' => null,
+            'reschedule_approved_by_admin_id' => null,
+            'reschedule_approved_at' => null,
         ]));
 
         $message = 'Requested schedule applied successfully. '.$this->reschedulePriceMessage($priceUpdate);
 
         return $this->redirectAfterBookingAction($request, $booking, $message);
-    }
-
-    public function declineRescheduleRequest(Request $request, Booking $booking)
-    {
-        if (!$booking->hasPendingRescheduleRequest()) {
-            return back()->withErrors(['booking' => 'There is no pending schedule change request for this booking.']);
-        }
-
-        $booking->update($this->withAssignedStaff($booking, [
-            'requested_check_in' => null,
-            'requested_check_out' => null,
-            'reschedule_request_notes' => null,
-            'reschedule_requested_at' => null,
-        ]));
-
-        return $this->redirectAfterBookingAction($request, $booking, 'Schedule change request declined.');
     }
 
     public function declineRoomTransferRequest(Request $request, Booking $booking)

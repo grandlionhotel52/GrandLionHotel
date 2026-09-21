@@ -225,7 +225,7 @@
             && \App\Models\Payment::isOnlineMethod((string) ($booking->payment?->method ?? ''));
         $hasPendingRescheduleRequest = $booking->hasPendingRescheduleRequest();
         $hasPendingRoomTransferRequest = $booking->hasPendingRoomTransferRequest();
-        $canStaffDirectlyReschedule = $booking->canBeRescheduledByStaff();
+        $canStaffDirectlyReschedule = $booking->canBeRescheduledByStaff() && !$hasPendingRescheduleRequest;
         $canStaffTransferRoom = $booking->canBeTransferredByStaff();
         $defaultCheckInTime = old('actual_check_in_at', now()->format('Y-m-d\TH:i'));
         $defaultCheckOutTime = old('actual_check_out_at', now()->format('Y-m-d\TH:i'));
@@ -475,8 +475,12 @@
         <section class="booking-shell p-3 p-lg-4 mb-4">
             <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-3">
                 <div>
-                    <h2 class="h5 mb-1">Pending Schedule Change Request</h2>
-                    <p class="booking-note mb-0">Customer requested a new stay schedule. Apply it only if the requested dates are still available.</p>
+                    <h2 class="h5 mb-1">Schedule Change Request</h2>
+                    @if($booking->isRescheduleApproved())
+                        <p class="booking-note mb-0 text-success">Approved by {{ $booking->rescheduleApprovedByAdmin?->name ?? 'an admin' }}. Staff may now apply the requested dates.</p>
+                    @else
+                        <p class="booking-note mb-0 text-warning">Waiting for admin approval. Staff cannot apply the requested dates yet.</p>
+                    @endif
                 </div>
             </div>
             <div class="booking-info-grid mb-3">
@@ -496,34 +500,32 @@
                     <p class="booking-info-label">Customer Note</p>
                     <p class="booking-info-value">{{ $booking->reschedule_request_notes ?: '-' }}</p>
                 </div>
+                <div class="booking-info-item">
+                    <p class="booking-info-label">Admin Approval</p>
+                    <p class="booking-info-value">{{ $booking->isRescheduleApproved() ? 'Approved '.optional($booking->reschedule_approved_at)->format('M d, Y h:i A') : 'Pending' }}</p>
+                </div>
             </div>
             <div class="booking-actions">
-                <form method="POST" action="{{ route('staff.bookings.apply-reschedule-request', $booking) }}" data-confirm="Apply this requested schedule to the booking now?">
-                    @csrf
-                    @method('PATCH')
-                    @if(!empty($returnTo))
-                        <input type="hidden" name="return_to" value="{{ $returnTo }}">
-                    @endif
-                    <input type="hidden" name="stay_on_booking" value="1">
-                    <input type="hidden" name="redirect_section" value="schedule-management">
-                    <button type="submit" class="btn btn-staff">
-                        <i class="bi bi-calendar-check"></i>
-                        <span>Apply requested schedule</span>
+                @if($booking->isRescheduleApproved())
+                    <form method="POST" action="{{ route('staff.bookings.apply-reschedule-request', $booking) }}" data-confirm="Apply this admin-approved schedule to the booking now?">
+                        @csrf
+                        @method('PATCH')
+                        @if(!empty($returnTo))
+                            <input type="hidden" name="return_to" value="{{ $returnTo }}">
+                        @endif
+                        <input type="hidden" name="stay_on_booking" value="1">
+                        <input type="hidden" name="redirect_section" value="schedule-management">
+                        <button type="submit" class="btn btn-staff">
+                            <i class="bi bi-calendar-check"></i>
+                            <span>Confirm and apply reschedule</span>
+                        </button>
+                    </form>
+                @else
+                    <button type="button" class="btn btn-staff" disabled title="Admin approval is required">
+                        <i class="bi bi-hourglass-split"></i>
+                        <span>Awaiting admin approval</span>
                     </button>
-                </form>
-                <form method="POST" action="{{ route('staff.bookings.decline-reschedule-request', $booking) }}" data-confirm="Decline and clear this schedule change request?">
-                    @csrf
-                    @method('PATCH')
-                    @if(!empty($returnTo))
-                        <input type="hidden" name="return_to" value="{{ $returnTo }}">
-                    @endif
-                    <input type="hidden" name="stay_on_booking" value="1">
-                    <input type="hidden" name="redirect_section" value="schedule-management">
-                    <button type="submit" class="btn btn-staff-outline">
-                        <i class="bi bi-calendar-x"></i>
-                        <span>Decline request</span>
-                    </button>
-                </form>
+                @endif
             </div>
         </section>
     @endif
@@ -574,11 +576,11 @@
         <section class="booking-shell p-3 p-lg-4 mb-4" id="direct-staff-reschedule">
             <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-3">
                 <div>
-                    <h2 class="h5 mb-1">Direct Staff Reschedule</h2>
-                    <p class="booking-note mb-0">Use this when the customer asks for a schedule change in person. The system keeps whichever booking total is higher. A paid booking moving to a more expensive schedule will owe only the difference.</p>
+                    <h2 class="h5 mb-1">Submit Reschedule Request</h2>
+                    <p class="booking-note mb-0">Enter the customer’s requested dates. An admin must approve the request before staff can apply it. The final amount is recalculated only when the approved schedule is applied.</p>
                 </div>
             </div>
-            <form method="POST" action="{{ route('staff.bookings.reschedule', $booking) }}" class="row g-3" data-confirm="Update this booking schedule now?">
+            <form method="POST" action="{{ route('staff.bookings.reschedule', $booking) }}" class="row g-3" data-confirm="Submit these dates for admin approval?">
                 @csrf
                 @method('PATCH')
                 @if(!empty($returnTo))
@@ -617,7 +619,7 @@
                 <div class="col-12">
                     <button type="submit" class="btn btn-staff">
                         <i class="bi bi-calendar2-week"></i>
-                        <span>Update schedule</span>
+                        <span>Submit for admin approval</span>
                     </button>
                 </div>
             </form>

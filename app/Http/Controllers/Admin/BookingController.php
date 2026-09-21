@@ -8,6 +8,7 @@ use App\Mail\BookingPaidMail;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Staff;
+use App\Services\AvailabilityService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Mailable;
@@ -17,6 +18,10 @@ use Throwable;
 
 class BookingController extends Controller
 {
+    public function __construct(private readonly AvailabilityService $availabilityService)
+    {
+    }
+
     public function index(Request $request)
     {
         $statusFilter = trim($request->string('status')->toString());
@@ -75,7 +80,7 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
-        $booking->load(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+        $booking->load(['user', 'room', 'payment', 'guestDetail', 'assignedStaff', 'rescheduleApprovedByAdmin']);
         $this->ensurePaidTransactionReference($booking);
         $staffMembers = Staff::query()
             ->where(function (Builder $query) use ($booking): void {
@@ -270,6 +275,56 @@ class BookingController extends Controller
 
         return redirect()->route('admin.bookings.show', $booking)
             ->with('status', 'Online payment proof rejected. Customer can submit again.');
+    }
+
+    public function approveReschedule(Request $request, Booking $booking)
+    {
+        if (!$booking->hasPendingRescheduleRequest()) {
+            return back()->withErrors(['booking' => 'There is no pending reschedule request to approve.']);
+        }
+
+        if (!$booking->canBeRescheduledByStaff()) {
+            return back()->withErrors(['booking' => 'This booking can no longer be rescheduled.']);
+        }
+
+        $requestedCheckIn = $booking->requested_check_in?->toDateString();
+        $requestedCheckOut = $booking->requested_check_out?->toDateString();
+
+        if (!$requestedCheckIn || !$requestedCheckOut || !$this->availabilityService->isRoomAvailable(
+            $booking->room,
+            $requestedCheckIn,
+            $requestedCheckOut,
+            (int) $booking->id
+        )) {
+            return back()->withErrors(['booking' => 'The requested dates are no longer available for this room.']);
+        }
+
+        $booking->update([
+            'reschedule_approved_by_admin_id' => $request->user('admin')->getKey(),
+            'reschedule_approved_at' => now(),
+        ]);
+
+        return redirect()->route('admin.bookings.show', $booking)
+            ->with('status', 'Reschedule approved. Staff can now apply the requested dates.');
+    }
+
+    public function rejectReschedule(Booking $booking)
+    {
+        if (!$booking->hasPendingRescheduleRequest()) {
+            return back()->withErrors(['booking' => 'There is no pending reschedule request to reject.']);
+        }
+
+        $booking->update([
+            'requested_check_in' => null,
+            'requested_check_out' => null,
+            'reschedule_request_notes' => null,
+            'reschedule_requested_at' => null,
+            'reschedule_approved_by_admin_id' => null,
+            'reschedule_approved_at' => null,
+        ]);
+
+        return redirect()->route('admin.bookings.show', $booking)
+            ->with('status', 'Reschedule request rejected.');
     }
 
     private function sendBookingMail(Booking $booking, Mailable $mailable): void

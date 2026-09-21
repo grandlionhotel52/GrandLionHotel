@@ -350,11 +350,13 @@ class BookingController extends Controller
                 ? $validated['reschedule_request_notes']
                 : null,
             'reschedule_requested_at' => now(),
+            'reschedule_approved_by_admin_id' => null,
+            'reschedule_approved_at' => null,
         ]);
 
         return redirect()
             ->route('bookings.show', $booking)
-            ->with('status', 'Schedule change request sent. Staff will review your requested dates.');
+            ->with('status', 'Schedule change request sent. An admin must approve it before staff can apply the new dates.');
     }
 
     public function requestRoomTransfer(Request $request, Booking $booking)

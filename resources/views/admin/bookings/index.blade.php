@@ -198,6 +198,11 @@
                             <td>{{ $booking->assignedStaff->name ?? '-' }}</td>
                             <td class="text-end admin-action-col">
                                 <div class="admin-action-group">
+                                    @if($booking->hasPendingRescheduleRequest() && !$booking->isRescheduleApproved())
+                                        <span class="badge text-bg-warning">Reschedule approval needed</span>
+                                    @elseif($booking->isRescheduleApproved())
+                                        <span class="badge text-bg-success">Reschedule approved</span>
+                                    @endif
                                     <a href="{{ route('admin.bookings.show', $booking) }}" class="btn btn-sm btn-ta-outline">
                                         <i class="bi bi-eye"></i>
                                         <span>Review booking</span>

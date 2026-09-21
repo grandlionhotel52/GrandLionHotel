@@ -194,6 +194,58 @@
         @endif
     </section>
 
+    @if($booking->hasPendingRescheduleRequest())
+        <section class="soft-card p-4 mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Reschedule approval</h2>
+                    <p class="small text-secondary mb-0">Staff cannot apply these dates until an admin approves them.</p>
+                </div>
+                <span class="badge {{ $booking->isRescheduleApproved() ? 'text-bg-success' : 'text-bg-warning' }}">
+                    {{ $booking->isRescheduleApproved() ? 'Approved' : 'Awaiting admin approval' }}
+                </span>
+            </div>
+            <div class="booking-admin-grid mb-3">
+                <div class="booking-admin-item">
+                    <p class="booking-admin-label">Current dates</p>
+                    <p class="booking-admin-value">{{ $booking->check_in->format('M d, Y') }} to {{ $booking->check_out->format('M d, Y') }}</p>
+                </div>
+                <div class="booking-admin-item">
+                    <p class="booking-admin-label">Requested dates</p>
+                    <p class="booking-admin-value">{{ $booking->requested_check_in?->format('M d, Y') }} to {{ $booking->requested_check_out?->format('M d, Y') }}</p>
+                </div>
+                <div class="booking-admin-item">
+                    <p class="booking-admin-label">Requested at</p>
+                    <p class="booking-admin-value">{{ optional($booking->reschedule_requested_at)->format('M d, Y h:i A') ?? '-' }}</p>
+                </div>
+                <div class="booking-admin-item">
+                    <p class="booking-admin-label">Request note</p>
+                    <p class="booking-admin-value">{{ $booking->reschedule_request_notes ?: '-' }}</p>
+                </div>
+                @if($booking->isRescheduleApproved())
+                    <div class="booking-admin-item">
+                        <p class="booking-admin-label">Approved by</p>
+                        <p class="booking-admin-value">{{ $booking->rescheduleApprovedByAdmin?->name ?? 'Admin' }} on {{ $booking->reschedule_approved_at->format('M d, Y h:i A') }}</p>
+                    </div>
+                @endif
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                @unless($booking->isRescheduleApproved())
+                    <form method="POST" action="{{ route('admin.bookings.approve-reschedule', $booking) }}" data-confirm="Approve this reschedule request? Staff will then be able to apply it.">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-ta">Approve reschedule</button>
+                    </form>
+                @endunless
+                <form method="POST" action="{{ route('admin.bookings.reject-reschedule', $booking) }}" data-confirm="Reject and clear this reschedule request?">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="btn btn-ta-outline">Reject reschedule</button>
+                </form>
+            </div>
+        </section>
+    @endif
+
     <section class="soft-card p-4 mb-3">
         <h2 class="h5 mb-3">Guest care assignment</h2>
         <form method="POST" action="{{ route('admin.bookings.assign-staff', $booking) }}" class="row g-3 align-items-end" data-confirm="Save this guest care assignment?">
