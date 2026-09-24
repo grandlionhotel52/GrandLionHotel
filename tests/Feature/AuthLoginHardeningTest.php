@@ -95,17 +95,17 @@ class AuthLoginHardeningTest extends TestCase
 
     public function test_staff_login_redirects_to_staff_dashboard_even_with_frontend_intended_url(): void
     {
-        $email = 'staff.login@example.com';
+        $username = 'staff.login';
 
         Staff::factory()->create([
-            'email' => $email,
+            'username' => $username,
             'password' => Hash::make('StaffPass123'),
         ]);
 
         $this->withSession([
             'url.intended' => route('home'),
         ])->post(route('login.perform'), [
-            'email' => $email,
+            'email' => $username,
             'password' => 'StaffPass123',
         ])->assertRedirect(route('staff.dashboard'));
     }
@@ -135,14 +135,14 @@ class AuthLoginHardeningTest extends TestCase
             'is_active' => false,
         ]);
         $staff = Staff::factory()->create([
-            'email' => 'inactive.staff@example.com',
+            'username' => 'inactive.staff',
             'password' => Hash::make('StaffPass123'),
             'is_active' => false,
         ]);
 
         foreach ([
             [$customer->email, 'CustomerPass123', 'customer'],
-            [$staff->email, 'StaffPass123', 'staff'],
+            [$staff->username, 'StaffPass123', 'staff'],
         ] as [$email, $password, $guard]) {
             $this->post(route('login.perform'), compact('email', 'password'))
                 ->assertSessionHasErrors('email');

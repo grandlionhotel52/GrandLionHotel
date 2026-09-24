@@ -91,7 +91,7 @@ class BookingController extends Controller
                 }
             })
             ->orderBy('name')
-            ->get(['staff_id', 'name', 'email', 'is_active']);
+            ->get(['staff_id', 'name', 'username', 'is_active']);
 
         return view('admin.bookings.show', compact('booking', 'staffMembers'));
     }

@@ -51,14 +51,14 @@
                                 <form method="POST" action="{{ route('login.perform') }}" class="row g-3" id="loginForm">
                                     @csrf
                                     <div class="col-12">
-                                        <label class="auth-premium-label">Email address</label>
+                                        <label class="auth-premium-label">Email or staff username</label>
                                         <input
-                                            type="email"
+                                            type="text"
                                             class="form-control auth-premium-input @error('email') is-invalid @enderror"
                                             name="email"
                                             value="{{ old('email', $registrationCompletedEmail) }}"
-                                            placeholder="you@example.com"
-                                            autocomplete="email"
+                                            placeholder="Email or username"
+                                            autocomplete="username"
                                             required
                                             autofocus
                                         >

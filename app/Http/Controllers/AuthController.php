@@ -63,7 +63,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
@@ -76,7 +76,7 @@ class AuthController extends Controller
             ])->onlyInput('email');
         }
 
-        $account = AccountDirectory::findByEmail($credentials['email']);
+        $account = AccountDirectory::findByLogin($credentials['email']);
 
         if (!$account || !Hash::check($credentials['password'], $account->password)) {
             RateLimiter::hit($throttleKey, self::LOGIN_DECAY_SECONDS);

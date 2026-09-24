@@ -109,19 +109,19 @@ class AdminStaffButtonFlowsTest extends TestCase
         $this->post(route('admin.staff.store'), [
             'first_name' => 'Desk',
             'last_name' => 'Staff',
-            'email' => 'desk.staff@example.com',
+            'username' => 'desk.staff',
             'phone' => '09170001111',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertRedirect(route('admin.staff.index'));
 
-        $createdStaff = Staff::query()->where('email', 'desk.staff@example.com')->firstOrFail();
+        $createdStaff = Staff::query()->where('username', 'desk.staff')->firstOrFail();
         $this->assertSame($admin->id, $createdStaff->admin_id);
 
         $this->put(route('admin.staff.update', $createdStaff), [
             'first_name' => 'Desk Staff',
             'last_name' => 'Updated',
-            'email' => 'desk.staff.updated@example.com',
+            'username' => 'desk.staff.updated',
             'phone' => '09170002222',
             'password' => '',
             'password_confirmation' => '',
@@ -221,7 +221,6 @@ class AdminStaffButtonFlowsTest extends TestCase
     public function test_admin_can_create_customer_and_duplicate_emails_are_validation_errors(): void
     {
         $admin = Admin::factory()->create(['email' => 'admin@example.com']);
-        $staff = Staff::factory()->create(['email' => 'staff@example.com']);
 
         $this->actingAs($admin, 'admin')
             ->post(route('admin.users.store'), [
@@ -256,19 +255,6 @@ class AdminStaffButtonFlowsTest extends TestCase
             ->assertSessionHasErrors('email');
 
         $this->actingAs($admin, 'admin')
-            ->from(route('admin.staff.index'))
-            ->post(route('admin.staff.store'), [
-                '_staff_modal_mode' => 'create',
-                'first_name' => 'Duplicate',
-                'last_name' => 'Staff',
-                'email' => ' CUSTOMER@EXAMPLE.COM ',
-                'password' => 'password123',
-                'password_confirmation' => 'password123',
-            ])
-            ->assertRedirect(route('admin.staff.index'))
-            ->assertSessionHasErrors('email');
-
-        $this->actingAs($admin, 'admin')
             ->from(route('admin.users.index'))
             ->put(route('admin.users.update', $customer), [
                 '_user_modal_mode' => 'edit',
@@ -280,17 +266,6 @@ class AdminStaffButtonFlowsTest extends TestCase
             ->assertRedirect(route('admin.users.index'))
             ->assertSessionDoesntHaveErrors();
 
-        $this->actingAs($admin, 'admin')
-            ->from(route('admin.users.index'))
-            ->put(route('admin.users.update', $customer), [
-                '_user_modal_mode' => 'edit',
-                '_user_modal_id' => $customer->id,
-                'first_name' => 'New',
-                'last_name' => 'Customer',
-                'email' => strtoupper($staff->email),
-            ])
-            ->assertRedirect(route('admin.users.index'))
-            ->assertSessionHasErrors('email');
     }
 
     public function test_staff_can_filter_arrivals_board_by_date(): void

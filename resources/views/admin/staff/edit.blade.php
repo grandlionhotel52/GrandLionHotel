@@ -21,8 +21,8 @@
                 <input type="text" name="last_name" class="form-control" value="{{ old('last_name', $staffName['last_name']) }}" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" value="{{ old('email', $staff->email) }}" required>
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" value="{{ old('username', $staff->username) }}" autocomplete="off" required>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Phone (optional)</label>

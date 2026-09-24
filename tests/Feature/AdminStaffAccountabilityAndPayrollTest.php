@@ -62,12 +62,12 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
         $admin = Admin::factory()->create();
         $activeStaff = Staff::factory()->create([
             'name' => 'Active Guide',
-            'email' => 'active.guide@example.com',
+            'username' => 'active.guide',
             'is_active' => true,
         ]);
         $inactiveStaff = Staff::factory()->create([
             'name' => 'Inactive Guide',
-            'email' => 'inactive.guide@example.com',
+            'username' => 'inactive.guide',
             'is_active' => false,
         ]);
         $booking = Booking::factory()->create(['staff_id' => null]);
@@ -75,8 +75,8 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
         $this->actingAs($admin, 'admin')
             ->get(route('admin.bookings.show', $booking))
             ->assertOk()
-            ->assertSee($activeStaff->email)
-            ->assertDontSee($inactiveStaff->email);
+            ->assertSee($activeStaff->username)
+            ->assertDontSee($inactiveStaff->username);
 
         $this->actingAs($admin, 'admin')
             ->patch(route('admin.bookings.assign-staff', $booking), [
@@ -92,7 +92,7 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
         $admin = Admin::factory()->create();
         $inactiveStaff = Staff::factory()->create([
             'name' => 'Former Guest Guide',
-            'email' => 'former.guide@example.com',
+            'username' => 'former.guide',
             'is_active' => false,
         ]);
         $booking = Booking::factory()->create(['staff_id' => $inactiveStaff->id]);

@@ -257,7 +257,7 @@
                     <option value="">Not recorded</option>
                     @foreach($staffMembers as $staffMember)
                         <option value="{{ $staffMember->id }}" @selected((int) $booking->staff_id === (int) $staffMember->id)>
-                            {{ $staffMember->name }} ({{ $staffMember->email }}){{ $staffMember->is_active ? '' : ' — Inactive, existing assignment' }}
+                            {{ $staffMember->name }} ({{ $staffMember->username }}){{ $staffMember->is_active ? '' : ' — Inactive, existing assignment' }}
                         </option>
                     @endforeach
                 </select>

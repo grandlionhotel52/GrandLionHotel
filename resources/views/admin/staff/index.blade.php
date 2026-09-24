@@ -154,7 +154,7 @@
             <div class="row g-2 align-items-end">
                 <div class="col-lg-5">
                     <label class="form-label">Search staff</label>
-                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Name, email, or phone" data-ajax-search>
+                    <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Name, username, or phone" data-ajax-search>
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label class="form-label">Earnings date</label>
@@ -175,7 +175,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Email</th>
+                        <th>Username</th>
                         <th>Phone</th>
                         <th>Account Status</th>
                         <th>Daily Earnings</th>
@@ -190,7 +190,7 @@
                         @php($staffName = \App\Support\PersonName::split($staff->name))
                         <tr>
                             <td>{{ $staff->name }}</td>
-                            <td>{{ $staff->email }}</td>
+                            <td>{{ $staff->username }}</td>
                             <td>{{ $staff->phone ?: '-' }}</td>
                             <td>
                                 <span class="badge {{ $staff->is_active ? 'text-bg-success' : 'text-bg-secondary' }}">
@@ -219,7 +219,7 @@
                                         data-staff-update-url="{{ route('admin.staff.update', $staff) }}"
                                         data-staff-first-name="{{ $staffName['first_name'] }}"
                                         data-staff-last-name="{{ $staffName['last_name'] }}"
-                                        data-staff-email="{{ $staff->email }}"
+                                        data-staff-username="{{ $staff->username }}"
                                         data-staff-phone="{{ $staff->phone ?? '' }}"
                                     >
                                         <i class="bi bi-pencil-square"></i>
@@ -284,9 +284,9 @@
                                 @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" id="create_staff_email" class="form-control @error('email') is-invalid @enderror" value="{{ old('_staff_modal_mode') === 'create' ? old('email') : '' }}" required>
-                                @error('email')
+                                <label class="form-label">Username</label>
+                                <input type="text" name="username" id="create_staff_username" class="form-control @error('username') is-invalid @enderror" value="{{ old('_staff_modal_mode') === 'create' ? old('username') : '' }}" autocomplete="off" required>
+                                @error('username')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -351,9 +351,9 @@
                                 @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" id="edit_staff_email" class="form-control @error('email') is-invalid @enderror" required>
-                                @error('email')
+                                <label class="form-label">Username</label>
+                                <input type="text" name="username" id="edit_staff_username" class="form-control @error('username') is-invalid @enderror" autocomplete="off" required>
+                                @error('username')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -407,14 +407,14 @@
             const oldFormValues = {
                 firstName: @json(old('first_name')),
                 lastName: @json(old('last_name')),
-                email: @json(old('email')),
+                username: @json(old('username')),
                 phone: @json(old('phone')),
             };
 
             const editFieldId = document.getElementById('edit_staff_modal_id');
             const editFieldFirstName = document.getElementById('edit_staff_first_name');
             const editFieldLastName = document.getElementById('edit_staff_last_name');
-            const editFieldEmail = document.getElementById('edit_staff_email');
+            const editFieldUsername = document.getElementById('edit_staff_username');
             const editFieldPhone = document.getElementById('edit_staff_phone');
             const editFieldPassword = document.getElementById('edit_staff_password');
             const editFieldPasswordConfirmation = document.getElementById('edit_staff_password_confirmation');
@@ -435,7 +435,7 @@
                 editFieldId.value = staffId;
                 editFieldFirstName.value = trigger.getAttribute('data-staff-first-name') || '';
                 editFieldLastName.value = trigger.getAttribute('data-staff-last-name') || '';
-                editFieldEmail.value = trigger.getAttribute('data-staff-email') || '';
+                editFieldUsername.value = trigger.getAttribute('data-staff-username') || '';
                 editFieldPhone.value = trigger.getAttribute('data-staff-phone') || '';
                 editFieldPassword.value = '';
                 editFieldPasswordConfirmation.value = '';
@@ -453,7 +453,7 @@
                     editFieldId.value = oldStaffId;
                     if (oldFormValues.firstName !== null) editFieldFirstName.value = oldFormValues.firstName;
                     if (oldFormValues.lastName !== null) editFieldLastName.value = oldFormValues.lastName;
-                    if (oldFormValues.email !== null) editFieldEmail.value = oldFormValues.email;
+                    if (oldFormValues.username !== null) editFieldUsername.value = oldFormValues.username;
                     if (oldFormValues.phone !== null) editFieldPhone.value = oldFormValues.phone;
                 }
             }

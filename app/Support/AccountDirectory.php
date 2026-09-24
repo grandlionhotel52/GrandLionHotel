@@ -46,7 +46,7 @@ class AccountDirectory
             return null;
         }
 
-        foreach (self::guardModelMap() as $modelClass) {
+        foreach ([Admin::class, Customer::class] as $modelClass) {
             $account = $modelClass::query()
                 ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
                 ->first();
@@ -57,6 +57,20 @@ class AccountDirectory
         }
 
         return null;
+    }
+
+    public static function findByLogin(string $login): ?Account
+    {
+        $normalizedLogin = strtolower(trim($login));
+        if ($normalizedLogin === '') {
+            return null;
+        }
+
+        $staff = Staff::query()
+            ->whereRaw('LOWER(username) = ?', [$normalizedLogin])
+            ->first();
+
+        return $staff ?? self::findByEmail($normalizedLogin);
     }
 
     public static function findByGoogleId(string $googleId): ?Account
@@ -90,7 +104,7 @@ class AccountDirectory
             return false;
         }
 
-        foreach (self::guardModelMap() as $modelClass) {
+        foreach ([Admin::class, Customer::class] as $modelClass) {
             $exists = $modelClass::query()
                 ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
                 ->when(

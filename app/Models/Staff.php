@@ -13,7 +13,7 @@ class Staff extends Account
 
     protected $fillable = [
         'name',
-        'email',
+        'username',
         'password',
         'phone',
         'password_changed_at',

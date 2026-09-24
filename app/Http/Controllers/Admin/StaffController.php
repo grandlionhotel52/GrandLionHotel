@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Staff;
-use App\Support\AccountDirectory;
 use App\Support\PersonName;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -31,7 +30,7 @@ class StaffController extends Controller
             ->when($keyword !== '', function (Builder $query) use ($keyword): void {
                 $query->where(function (Builder $nested) use ($keyword): void {
                     $nested->where('name', 'like', '%'.$keyword.'%')
-                        ->orWhere('email', 'like', '%'.$keyword.'%')
+                        ->orWhere('username', 'like', '%'.$keyword.'%')
                         ->orWhere('phone', 'like', '%'.$keyword.'%');
                 });
             });
@@ -88,20 +87,18 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
-        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+        $request->merge(['username' => strtolower(trim((string) $request->input('username')))]);
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:120'],
             'last_name' => ['required', 'string', 'max:120'],
-            'email' => [
+            'username' => [
                 'required',
-                'email',
-                'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (AccountDirectory::emailExists((string) $value)) {
-                        $fail('This email is already registered.');
-                    }
-                },
+                'string',
+                'min:3',
+                'max:50',
+                'regex:/^[a-z0-9][a-z0-9._-]*$/',
+                'unique:staff,username',
             ],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\\-\\s]{7,30}$/'],
             'password' => ['required', 'confirmed', Password::min(8)],
@@ -109,7 +106,7 @@ class StaffController extends Controller
 
         Staff::create([
             'name' => PersonName::combine($validated['first_name'], $validated['last_name']),
-            'email' => $validated['email'],
+            'username' => $validated['username'],
             'phone' => $validated['phone'] ?? null,
             'password' => Hash::make($validated['password']),
             'admin_id' => $request->user()->id,
@@ -205,20 +202,18 @@ class StaffController extends Controller
 
     public function update(Request $request, Staff $staff)
     {
-        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+        $request->merge(['username' => strtolower(trim((string) $request->input('username')))]);
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:120'],
             'last_name' => ['required', 'string', 'max:120'],
-            'email' => [
+            'username' => [
                 'required',
-                'email',
-                'max:255',
-                function (string $attribute, mixed $value, \Closure $fail) use ($staff): void {
-                    if (AccountDirectory::emailExists((string) $value, $staff)) {
-                        $fail('This email is already registered.');
-                    }
-                },
+                'string',
+                'min:3',
+                'max:50',
+                'regex:/^[a-z0-9][a-z0-9._-]*$/',
+                'unique:staff,username,'.$staff->getKey().',staff_id',
             ],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\\-\\s]{7,30}$/'],
             'password' => ['nullable', 'confirmed', Password::min(8)],
@@ -226,7 +221,7 @@ class StaffController extends Controller
 
         $data = [
             'name' => PersonName::combine($validated['first_name'], $validated['last_name']),
-            'email' => $validated['email'],
+            'username' => $validated['username'],
             'phone' => $validated['phone'] ?? null,
             'admin_id' => $staff->admin_id ?? $request->user()->id,
         ];
