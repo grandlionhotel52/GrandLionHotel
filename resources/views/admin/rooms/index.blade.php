@@ -304,7 +304,7 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label">Name</label>
-                                <input type="text" class="form-control {{ $hasCreateRoomErrors && $errors->has('name') ? 'is-invalid' : '' }}" name="name" value="{{ $hasCreateRoomErrors ? old('name') : '' }}" placeholder="Room 101" required autofocus>
+                                <input type="text" class="form-control {{ $hasCreateRoomErrors && $errors->has('name') ? 'is-invalid' : '' }}" name="name" value="{{ $hasCreateRoomErrors ? old('name') : '' }}" placeholder="Deluxe King" required autofocus>
                                 @if($hasCreateRoomErrors) @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
                             </div>
                             <div class="col-md-4">

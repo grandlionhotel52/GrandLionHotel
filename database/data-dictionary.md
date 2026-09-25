@@ -63,7 +63,7 @@ Key legend:
 | FK | `room_status_id` | `bigint` | `20 unsigned` | References the current status of the room. | `2` |
 | FK | `admin_id` | `bigint` | `20 unsigned` | References the admin who last updated the room status. | `1` |
 |  | `status_updated_at` | `timestamp` | `-` | Date and time when the room status was last updated. | `2026-04-19 07:15:00` |
-|  | `name` | `varchar` | `255` | Display name or room label. | `Room 502 - Penthouse West` |
+|  | `name` | `varchar` | `255` | Guest-facing room name without an inventory number. | `Sunset Penthouse` |
 |  | `type` | `varchar` | `100` | Room classification or room type. | `Penthouse` |
 |  | `view_type` | `varchar` | `100` | View category assigned to the room. | `City View` |
 |  | `description` | `text` | `65535` | Detailed room description and features. | `Large suite with balcony and lounge area.` |

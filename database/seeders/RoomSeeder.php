@@ -114,8 +114,8 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 101 - Standard Queen',
-                'previous_name' => 'Metro Solo Studio',
+                'name' => 'Standard Queen',
+                'previous_names' => ['Room 101 - Standard Queen', 'Metro Solo Studio'],
                 'type' => 'Standard',
                 'view_type' => 'City View',
                 'description' => 'Standard room with one queen bed, a work desk, and a city-facing window.',
@@ -125,8 +125,8 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 102 - Standard Twin',
-                'previous_name' => 'Heritage Balcony Queen',
+                'name' => 'Standard Twin',
+                'previous_names' => ['Room 102 - Standard Twin', 'Heritage Balcony Queen'],
                 'type' => 'Standard',
                 'view_type' => 'Courtyard View',
                 'description' => 'Standard room with two single beds, practical storage, and a quiet courtyard view.',
@@ -136,8 +136,8 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 201 - Deluxe King',
-                'previous_name' => 'Lakeside Loft',
+                'name' => 'Deluxe King',
+                'previous_names' => ['Room 201 - Deluxe King', 'Lakeside Loft'],
                 'type' => 'Deluxe',
                 'view_type' => 'Pool View',
                 'description' => 'Deluxe room with one king bed, premium bedding, a lounge chair, and a pool view.',
@@ -147,8 +147,8 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 202 - Accessible King',
-                'previous_name' => 'Accessible Comfort King',
+                'name' => 'Accessible King',
+                'previous_names' => ['Room 202 - Accessible King', 'Accessible Comfort King'],
                 'type' => 'Accessible',
                 'view_type' => 'Courtyard View',
                 'description' => 'Accessible room with one king bed, wide pathways, and step-free bathroom fixtures.',
@@ -158,8 +158,8 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 301 - Junior Suite',
-                'previous_name' => 'Wellness Spa Suite',
+                'name' => 'Junior Suite',
+                'previous_names' => ['Room 301 - Junior Suite', 'Wellness Spa Suite'],
                 'type' => 'Suite',
                 'view_type' => 'City View',
                 'description' => 'Junior suite with one king bed, a separate sitting area, and an expanded bathroom.',
@@ -169,8 +169,8 @@ class RoomSeeder extends Seeder
                 'room_status_slug' => 'clean',
             ],
             [
-                'name' => 'Room 401 - Executive Suite',
-                'previous_name' => 'Presidential Garden Villa',
+                'name' => 'Executive Suite',
+                'previous_names' => ['Room 401 - Executive Suite', 'Presidential Garden Villa'],
                 'type' => 'Executive',
                 'view_type' => 'Mountain View',
                 'description' => 'Executive suite with one king bed, a private living area, dining space, and mountain views.',
@@ -183,15 +183,15 @@ class RoomSeeder extends Seeder
 
         foreach ($sampleRooms as $room) {
             $roomStatusSlug = $room['room_status_slug'];
-            $previousName = $room['previous_name'] ?? null;
+            $previousNames = $room['previous_names'] ?? [];
 
-            unset($room['room_status_slug'], $room['previous_name']);
+            unset($room['room_status_slug'], $room['previous_names']);
 
             $room['room_status_id'] = $roomStatusIds[$roomStatusSlug] ?? null;
 
             $existingRoom = Room::query()
                 ->where('name', $room['name'])
-                ->when($previousName, fn ($query) => $query->orWhere('name', $previousName))
+                ->when($previousNames !== [], fn ($query) => $query->orWhereIn('name', $previousNames))
                 ->first();
 
             if ($existingRoom) {
