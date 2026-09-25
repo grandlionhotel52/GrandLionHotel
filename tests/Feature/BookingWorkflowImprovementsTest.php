@@ -14,11 +14,44 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class BookingWorkflowImprovementsTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_staff_can_view_uploaded_pwd_or_senior_id_for_verification(): void
+    {
+        Storage::fake('public');
+
+        $staff = Staff::factory()->create();
+        $booking = Booking::factory()->create(['status' => 'confirmed']);
+        $proofPath = 'discount-ids/pwd-id.jpg';
+
+        Storage::disk('public')->put($proofPath, 'fake-image-content');
+        $booking->discount()->create([
+            'discount_type' => 'pwd',
+            'discount_id' => 'PWD-VERIFY-001',
+            'discount_id_photo_path' => $proofPath,
+        ]);
+
+        $proofUrl = route('staff.bookings.discount-proof', $booking);
+
+        $this->get($proofUrl)->assertRedirect(route('login'));
+
+        $this->actingAs($staff, 'staff')
+            ->get(route('staff.bookings.show', $booking))
+            ->assertOk()
+            ->assertSee('PWD / Senior ID Verification')
+            ->assertSee('PWD-VERIFY-001')
+            ->assertSee($proofUrl, false);
+
+        $this->actingAs($staff, 'staff')
+            ->get($proofUrl)
+            ->assertOk()
+            ->assertHeader('content-disposition', 'inline; filename=pwd-id.jpg');
+    }
 
     public function test_customer_pre_booking_redirects_to_payment_while_status_remains_pending(): void
     {

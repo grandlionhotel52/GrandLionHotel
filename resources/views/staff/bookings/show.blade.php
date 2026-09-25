@@ -79,6 +79,15 @@
             color: #64748b;
             margin-top: 0.35rem;
         }
+        .discount-proof-preview {
+            display: block;
+            width: 100%;
+            max-height: 360px;
+            object-fit: contain;
+            border: 1px solid #dbe4f0;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
         .booking-side-shell {
             position: sticky;
             top: 84px;
@@ -198,9 +207,13 @@
         $displayName = $booking->guestName();
         $displayEmail = $booking->guestEmail();
         $displayPhone = $booking->guestPhone();
+        $discountType = strtolower((string) data_get($reservationMeta, 'discount_type', ''));
+        $hasGovernmentDiscount = in_array($discountType, ['pwd', 'senior'], true);
         $discountProofPath = (string) data_get($reservationMeta, 'discount_id_photo_path', '');
-        $discountProofUrl = $discountProofPath !== ''
-            ? \Illuminate\Support\Facades\Storage::disk('public')->url($discountProofPath)
+        $discountProofExists = $discountProofPath !== ''
+            && \Illuminate\Support\Facades\Storage::disk('public')->exists($discountProofPath);
+        $discountProofUrl = $hasGovernmentDiscount && $discountProofExists
+            ? route('staff.bookings.discount-proof', $booking)
             : '';
         $paymentProofPath = trim((string) ($booking->payment?->payment_proof_path ?? ''));
         $paymentProofUrl = $paymentProofPath !== ''
@@ -233,6 +246,7 @@
         $currentAdults = max(1, (int) old('adults', $booking->guestDetail?->adults ?? max(1, $booking->guests)));
         $currentKids = max(0, (int) old('kids', $booking->guestDetail?->kids ?? 0));
         $currentOccupancyTotal = $currentAdults + $currentKids;
+        $extraBeddingRequest = $booking->extraBeddingRequest;
         $currentExtraBedding = max(0, $currentOccupancyTotal - $standardGuests);
         $pricingQuote = $booking->pricingQuote();
         $billingQuote = $booking->billingQuote();
@@ -790,6 +804,150 @@
                     <p class="booking-note"><strong>Guest Notes:</strong> {{ $booking->notes }}</p>
                 @endif
             </section>
+
+            @if($hasGovernmentDiscount)
+                <section class="booking-shell p-3 p-lg-4 mb-4" id="discount-verification">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                        <div>
+                            <h2 class="h5 mb-1">PWD / Senior ID Verification</h2>
+                            <p class="booking-note mb-0">Compare the guest's uploaded ID with the discount type and ID number below.</p>
+                        </div>
+                        <span class="badge text-bg-warning">Needs staff verification</span>
+                    </div>
+
+                    <div class="booking-info-grid mb-3">
+                        <div class="booking-info-item">
+                            <p class="booking-info-label">Discount Type</p>
+                            <p class="booking-info-value">{{ $discountType === 'pwd' ? 'PWD' : 'Senior Citizen' }}</p>
+                        </div>
+                        <div class="booking-info-item">
+                            <p class="booking-info-label">Submitted ID Number</p>
+                            <p class="booking-info-value">{{ data_get($reservationMeta, 'discount_id', 'Not provided') }}</p>
+                        </div>
+                    </div>
+
+                    @if($discountProofUrl !== '')
+                        <a href="{{ $discountProofUrl }}" target="_blank" rel="noopener" aria-label="Open uploaded {{ $discountType === 'pwd' ? 'PWD' : 'Senior Citizen' }} ID in a new tab">
+                            <img
+                                src="{{ $discountProofUrl }}"
+                                class="discount-proof-preview mb-3"
+                                alt="Uploaded {{ $discountType === 'pwd' ? 'PWD' : 'Senior Citizen' }} ID for verification"
+                            >
+                        </a>
+                        <a href="{{ $discountProofUrl }}" class="btn btn-staff" target="_blank" rel="noopener">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                            View full-size ID
+                        </a>
+                    @else
+                        <div class="alert alert-warning mb-0" role="alert">
+                            No uploaded ID file is available for this discount request.
+                        </div>
+                    @endif
+                </section>
+            @endif
+
+            @if($booking->extra_bedding_count > 0 || $extraBeddingRequest)
+                <section class="booking-shell p-3 p-lg-4 mb-4" id="extra-bedding-coordination">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                        <div>
+                            <h2 class="h5 mb-1">Extra Bedding Coordination</h2>
+                            <p class="booking-note mb-0">Review the customer's message and send a decision they can see on their booking.</p>
+                        </div>
+                        @if($extraBeddingRequest)
+                            @php
+                                $beddingStatusClass = match ($extraBeddingRequest->status) {
+                                    'approved' => 'text-bg-success',
+                                    'declined' => 'text-bg-danger',
+                                    default => 'text-bg-warning',
+                                };
+                            @endphp
+                            <span class="badge {{ $beddingStatusClass }}">{{ ucfirst($extraBeddingRequest->status) }}</span>
+                        @endif
+                    </div>
+
+                    <div class="booking-info-grid mb-3">
+                        <div class="booking-info-item">
+                            <p class="booking-info-label">Guests</p>
+                            <p class="booking-info-value">{{ $booking->guests }}</p>
+                        </div>
+                        <div class="booking-info-item">
+                            <p class="booking-info-label">Approved / Charged Beds</p>
+                            <p class="booking-info-value">{{ $booking->extra_bedding_count }}</p>
+                        </div>
+                    </div>
+
+                    @error('extra_bedding')
+                        <div class="alert alert-danger small">{{ $message }}</div>
+                    @enderror
+
+                    @if($extraBeddingRequest)
+                        <div class="alert alert-light border mb-3">
+                            <small class="text-secondary d-block mb-1">Customer message</small>
+                            <p class="mb-1"><strong>Requested beds: {{ $extraBeddingRequest->requested_count }}</strong></p>
+                            <p class="mb-1">{{ $extraBeddingRequest->customer_message }}</p>
+                            <small class="text-secondary">Sent {{ $extraBeddingRequest->requested_at?->format('M d, Y h:i A') }}</small>
+                        </div>
+
+                        <form method="POST" action="{{ route('staff.bookings.extra-bedding-response', $booking) }}" class="row g-3">
+                            @csrf
+                            @method('PATCH')
+                            @if(!empty($returnTo))
+                                <input type="hidden" name="return_to" value="{{ $returnTo }}">
+                            @endif
+                            <input type="hidden" name="stay_on_booking" value="1">
+                            <input type="hidden" name="redirect_section" value="extra-bedding-coordination">
+                            <div class="col-md-4">
+                                <label for="extra_bedding_status" class="form-label">Decision</label>
+                                <select id="extra_bedding_status" name="extra_bedding_status" class="form-select @error('extra_bedding_status') is-invalid @enderror" required>
+                                    <option value="pending" @selected(old('extra_bedding_status', $extraBeddingRequest->status) === 'pending')>Pending</option>
+                                    <option value="approved" @selected(old('extra_bedding_status', $extraBeddingRequest->status) === 'approved')>Approved</option>
+                                    <option value="declined" @selected(old('extra_bedding_status', $extraBeddingRequest->status) === 'declined')>Declined</option>
+                                </select>
+                                @error('extra_bedding_status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label for="approved_count" class="form-label">Beds to approve</label>
+                                <select id="approved_count" name="approved_count" class="form-select @error('approved_count') is-invalid @enderror">
+                                    <option value="">Select quantity</option>
+                                    @for($count = 1; $count <= $extraBeddingRequest->requested_count; $count++)
+                                        <option value="{{ $count }}" @selected((int) old('approved_count', $extraBeddingRequest->approved_count ?: $extraBeddingRequest->requested_count) === $count)>{{ $count }}</option>
+                                    @endfor
+                                </select>
+                                @error('approved_count')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-8">
+                                <label for="staff_response" class="form-label">Response to customer</label>
+                                <textarea
+                                    id="staff_response"
+                                    name="staff_response"
+                                    class="form-control @error('staff_response') is-invalid @enderror"
+                                    rows="3"
+                                    maxlength="1000"
+                                    placeholder="Confirm availability, preparation time, or explain why it is unavailable."
+                                    required
+                                >{{ old('staff_response', $extraBeddingRequest->staff_response) }}</textarea>
+                                @error('staff_response')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-staff w-100">Send response</button>
+                            </div>
+                            <div class="col-12">
+                                <p class="booking-note mb-0">Approving recalculates the booking payment. If payment was already completed, the added bedding charge becomes a new balance due.</p>
+                            </div>
+                        </form>
+                    @else
+                        <div class="alert alert-info mb-0">
+                            The customer has not sent an extra bedding message yet. The request form is available on their booking page.
+                        </div>
+                    @endif
+                </section>
+            @endif
 
             <section class="booking-shell p-3 p-lg-4 mb-4" id="occupancy-update">
                 <h2 class="h5 mb-2">Occupancy Update</h2>

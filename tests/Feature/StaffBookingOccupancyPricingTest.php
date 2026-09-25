@@ -8,7 +8,9 @@ use App\Models\Payment;
 use App\Models\Room;
 use App\Models\RoomStatus;
 use App\Models\Staff;
+use App\Notifications\ExtraBeddingResponseNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class StaffBookingOccupancyPricingTest extends TestCase
@@ -86,6 +88,112 @@ class StaffBookingOccupancyPricingTest extends TestCase
         $this->assertSame(2, $booking->guests);
         $this->assertSame('4000.00', number_format((float) $booking->payment->amount, 2, '.', ''));
         $this->assertSame(2, (int) $booking->guestDetail->adults);
+    }
+
+    public function test_customer_and_staff_can_coordinate_an_extra_bedding_request(): void
+    {
+        Notification::fake();
+
+        $staff = Staff::factory()->create();
+        $customer = Customer::factory()->create();
+        $room = $this->createRoom();
+        $booking = $this->createBooking($customer, $room, $staff);
+
+        $this->actingAs($customer, 'customer')
+            ->post(route('bookings.request-extra-bedding', $booking), [
+                'requested_count' => 1,
+                'customer_message' => 'Please prepare the extra bed before our afternoon arrival.',
+            ])
+            ->assertRedirect(route('bookings.show', $booking))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('booking_extra_bedding_requests', [
+            'booking_id' => $booking->id,
+            'requested_count' => 1,
+            'status' => 'pending',
+            'customer_message' => 'Please prepare the extra bed before our afternoon arrival.',
+        ]);
+
+        $this->actingAs($staff, 'staff')
+            ->get(route('staff.bookings.show', $booking))
+            ->assertOk()
+            ->assertSee('Please prepare the extra bed before our afternoon arrival.');
+
+        $this->actingAs($staff, 'staff')
+            ->get(route('staff.bookings.index'))
+            ->assertOk()
+            ->assertSee('Bedding request')
+            ->assertSee('New extra bedding message');
+
+        $this->actingAs($staff, 'staff')
+            ->patch(route('staff.bookings.extra-bedding-response', $booking), [
+                'extra_bedding_status' => 'approved',
+                'approved_count' => 1,
+                'staff_response' => 'Approved. The extra bed will be ready before check-in.',
+            ])
+            ->assertRedirect(route('staff.bookings.show', $booking));
+
+        $this->assertDatabaseHas('booking_extra_bedding_requests', [
+            'booking_id' => $booking->id,
+            'status' => 'approved',
+            'approved_count' => 1,
+            'staff_response' => 'Approved. The extra bed will be ready before check-in.',
+            'responded_by_staff_id' => $staff->id,
+        ]);
+
+        $booking->refresh()->load(['payment', 'extraBeddingRequest']);
+        $this->assertSame(1, $booking->extra_bedding_count);
+        $this->assertSame(
+            number_format((float) $booking->billingQuote()['total'], 2, '.', ''),
+            number_format((float) $booking->payment->amount, 2, '.', '')
+        );
+
+        Notification::assertSentTo($customer, ExtraBeddingResponseNotification::class);
+
+        $this->actingAs($customer, 'customer')
+            ->get(route('bookings.show', $booking))
+            ->assertOk()
+            ->assertSee('Approved')
+            ->assertSee('The extra bed will be ready before check-in.');
+    }
+
+    public function test_approved_extra_bedding_becomes_a_balance_due_after_existing_payment(): void
+    {
+        Notification::fake();
+
+        $staff = Staff::factory()->create();
+        $customer = Customer::factory()->create();
+        $room = $this->createRoom(['price_per_night' => 2000]);
+        $booking = $this->createBooking($customer, $room, $staff);
+        $originalAmount = (float) $booking->billingQuote()['total'];
+
+        $booking->payment()->create([
+            'amount' => $originalAmount,
+            'balance_due' => 0,
+            'method' => Payment::METHOD_CASH,
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
+
+        $this->actingAs($customer, 'customer')->post(route('bookings.request-extra-bedding', $booking), [
+            'requested_count' => 1,
+            'customer_message' => 'Please add one extra bed.',
+        ])->assertSessionHasNoErrors();
+
+        $this->actingAs($staff, 'staff')->patch(route('staff.bookings.extra-bedding-response', $booking), [
+            'extra_bedding_status' => 'approved',
+            'approved_count' => 1,
+            'staff_response' => 'Approved and added to your payment balance.',
+        ])->assertSessionHasNoErrors();
+
+        $payment = $booking->fresh()->payment;
+
+        $this->assertSame('unpaid', $payment->status);
+        $this->assertGreaterThan($originalAmount, (float) $payment->amount);
+        $this->assertSame(
+            number_format((float) $payment->amount - $originalAmount, 2, '.', ''),
+            number_format((float) $payment->balance_due, 2, '.', '')
+        );
     }
 
     private function createRoom(array $attributes = []): Room

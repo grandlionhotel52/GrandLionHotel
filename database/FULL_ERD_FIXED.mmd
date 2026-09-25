@@ -1,48 +1,34 @@
 erDiagram
-    %% Admin exclusively manages room records in the system.
-    %% Staff access is limited to dashboard, arrivals, and bookings.
+    %% BUSINESS-ONLY ERD
+    %% Technical/process tables intentionally excluded:
+    %% migrations, jobs, job_batches, failed_jobs, sessions,
+    %% password_reset_tokens, registration_verifications,
+    %% and paymongo_checkout_sessions.
+    %% created_at/updated_at and other framework-only columns are omitted for clarity.
+
     ADMINS {
         bigint admin_id PK
         string name
-        string email
-        string google_id
+        string email UK
         string phone
-        string address_line
-        string city
-        string province
-        string country
-        datetime email_verified_at
         string password
-        datetime password_changed_at
-        string remember_token
-        datetime created_at
-        datetime updated_at
     }
 
     STAFF {
         bigint staff_id PK
         bigint admin_id FK
         string name
-        string email
-        string google_id
+        string username UK
         string phone
-        string address_line
-        string city
-        string province
-        string country
-        datetime email_verified_at
         string password
-        datetime password_changed_at
-        string remember_token
-        datetime created_at
-        datetime updated_at
+        boolean is_active
     }
 
     CUSTOMERS {
         bigint customer_id PK
         string name
-        string email
-        string google_id
+        string email UK
+        string google_id UK
         string phone
         string address_line
         string city
@@ -50,23 +36,20 @@ erDiagram
         string country
         datetime email_verified_at
         string password
-        datetime password_changed_at
-        string remember_token
-        datetime created_at
-        datetime updated_at
+        boolean is_active
     }
 
     ROOM_STATUS {
         bigint room_status_id PK
         string name
-        string slug
+        string slug UK
         string description
-        datetime created_at
-        datetime updated_at
     }
 
     ROOMS {
         bigint room_id PK
+        bigint room_status_id FK
+        bigint admin_id FK
         string name
         string type
         string view_type
@@ -74,32 +57,34 @@ erDiagram
         decimal price_per_night
         int capacity
         string image
-        bigint room_status_id FK
-        bigint admin_id FK
         datetime status_updated_at
-        datetime created_at
-        datetime updated_at
     }
 
     BOOKINGS {
         bigint booking_id PK
         bigint customer_id FK
         bigint room_id FK
+        bigint staff_id FK
+        bigint reschedule_approved_by_admin_id FK
         date check_in
         date check_out
+        date requested_check_in
+        date requested_check_out
         string status
-        string notes
+        text notes
+        text staff_notes
+        text cancellation_reason
+        text reschedule_request_notes
+        text room_transfer_request_reason
         datetime actual_check_in_at
         datetime actual_check_out_at
-        bigint staff_id FK
-        text staff_notes
-        datetime created_at
-        datetime updated_at
+        datetime no_show_at
+        datetime payment_due_at
     }
 
     BOOKING_GUEST_DETAILS {
         bigint guest_detail_id PK
-        bigint booking_id FK
+        bigint booking_id FK, UK
         string first_name
         string last_name
         string email
@@ -111,51 +96,85 @@ erDiagram
         string postal_code
         int adults
         int kids
+        string meal_plan
         string payment_preference
-        bigint staff_id FK
-        datetime created_at
-        datetime updated_at
-    }
-
-    BOOKING_DISCOUNTS {
-        bigint booking_discount_id PK
-        bigint booking_id FK
-        string discount_type
-        string discount_id
-        string discount_id_photo_path
-        datetime created_at
-        datetime updated_at
     }
 
     PAYMENTS {
         bigint payment_id PK
-        bigint booking_id FK
+        bigint booking_id FK, UK
         decimal amount
+        decimal balance_due
         string method
         string status
         string source
-        string qr_reference
+        string transaction_reference UK
         string customer_reference
         string payment_proof_path
         decimal original_amount
         decimal discount_rate
         decimal discount_amount
-        string transaction_reference
         datetime paid_at
         datetime verified_at
-        bigint staff_id FK
-        datetime created_at
-        datetime updated_at
     }
 
-    ADMINS ||--o{ STAFF : creates
-    ADMINS ||--o{ ROOMS : updates
-    CUSTOMERS ||--o{ BOOKINGS : makes
-    STAFF ||--o{ BOOKINGS : assigned_to
-    STAFF ||--o{ BOOKING_GUEST_DETAILS : encodes
-    STAFF ||--o{ PAYMENTS : verifies
-    ROOM_STATUS ||--o{ ROOMS : defines
-    ROOMS ||--o{ BOOKINGS : reserved_for
-    BOOKINGS ||--|| BOOKING_GUEST_DETAILS : has
-    BOOKINGS ||--o| BOOKING_DISCOUNTS : includes
-    BOOKINGS ||--|| PAYMENTS : has
+    BOOKING_DISCOUNTS {
+        bigint booking_discount_id PK
+        bigint booking_id FK, UK
+        bigint promo_code_id FK
+        string discount_type
+        string discount_id
+        string discount_id_photo_path
+    }
+
+    PROMO_CODES {
+        bigint promo_code_id PK
+        string code UK
+        decimal discount_percent
+        date starts_at
+        date ends_at
+        boolean is_active
+    }
+
+    ROOM_DATE_DISCOUNTS {
+        bigint room_date_discount_id PK
+        bigint room_id FK
+        date discount_date_start
+        date discount_date_end
+        decimal discount_percent
+    }
+
+    NOTIFICATIONS {
+        uuid id PK
+        string type
+        string notifiable_type
+        bigint notifiable_id
+        text data
+        datetime read_at
+    }
+
+    ACTIVITY_LOGS {
+        bigint activity_log_id PK
+        string actor_type
+        bigint actor_id
+        string action
+        string subject_type
+        bigint subject_id
+        json changes
+        string ip_address
+        text user_agent
+    }
+
+    ADMINS o|--o{ STAFF : creates
+    ADMINS o|--o{ ROOMS : updates_status
+    ADMINS o|--o{ BOOKINGS : approves_reschedule
+    CUSTOMERS o|--o{ BOOKINGS : makes
+    STAFF o|--o{ BOOKINGS : handles
+    ROOM_STATUS o|--o{ ROOMS : classifies
+    ROOMS ||--o{ BOOKINGS : receives
+    ROOMS ||--o{ ROOM_DATE_DISCOUNTS : has
+    BOOKINGS ||--o| BOOKING_GUEST_DETAILS : has
+    BOOKINGS ||--o| PAYMENTS : has
+    BOOKINGS ||--o| BOOKING_DISCOUNTS : receives
+    PROMO_CODES o|--o{ BOOKING_DISCOUNTS : applies_to
+    CUSTOMERS ||--o{ NOTIFICATIONS : receives

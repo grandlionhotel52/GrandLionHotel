@@ -10,6 +10,7 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Room;
 use App\Models\RoomStatus;
+use App\Notifications\ExtraBeddingResponseNotification;
 use App\Services\AvailabilityService;
 use App\Services\PaymentService;
 use App\Services\PricingService;
@@ -22,6 +23,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 use Illuminate\Validation\ValidationException;
@@ -100,7 +102,7 @@ class BookingController extends Controller
         };
 
         $bookingsQuery = Booking::query()
-            ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+            ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff', 'extraBeddingRequest']);
 
         $applyCommonFilters($bookingsQuery);
         $applyQueueFilter($bookingsQuery, $queue);
@@ -144,6 +146,7 @@ class BookingController extends Controller
             'payment',
             'guestDetail',
             'assignedStaff',
+            'extraBeddingRequest.respondedByStaff',
             'rescheduleApprovedByAdmin',
         ]);
         $this->ensurePaidTransactionReference($booking);
@@ -163,6 +166,24 @@ class BookingController extends Controller
             'currentStayTotal',
             'transferRequiresSameTotal'
         ));
+    }
+
+    public function discountProof(Booking $booking)
+    {
+        $discount = $booking->discount;
+        $discountType = strtolower(trim((string) ($discount?->discount_type ?? '')));
+        $path = str_replace('\\', '/', trim((string) ($discount?->discount_id_photo_path ?? '')));
+        $isAllowedPath = str_starts_with($path, 'discount-ids/')
+            || str_starts_with($path, 'discounts/ids/');
+
+        abort_unless(in_array($discountType, ['pwd', 'senior'], true), 404);
+        abort_unless($path !== '' && $isAllowedPath && !str_contains($path, '..'), 404);
+
+        $disk = Storage::disk('public');
+
+        abort_unless($disk->exists($path), 404);
+
+        return $disk->response($path, basename($path), [], 'inline');
     }
 
     public function updateStatus(Request $request, Booking $booking)
@@ -494,6 +515,93 @@ class BookingController extends Controller
         }
 
         return $this->redirectAfterBookingAction($request, $booking, $message);
+    }
+
+    public function respondToExtraBedding(Request $request, Booking $booking)
+    {
+        if (!in_array($booking->status, ['pending', 'confirmed'], true) || $booking->actual_check_out_at) {
+            return back()->withErrors([
+                'extra_bedding' => 'Extra bedding responses are available only for active bookings before check-out.',
+            ]);
+        }
+
+        $beddingRequest = $booking->extraBeddingRequest;
+
+        if (!$beddingRequest) {
+            return back()->withErrors([
+                'extra_bedding' => 'The customer has not submitted an extra bedding message yet.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'extra_bedding_status' => ['required', Rule::in(['pending', 'approved', 'declined'])],
+            'approved_count' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:'.$beddingRequest->requested_count,
+                Rule::requiredIf($request->input('extra_bedding_status') === 'approved'),
+            ],
+            'staff_response' => ['required', 'string', 'max:1000'],
+        ], [
+            'staff_response.required' => 'Please include a response for the customer.',
+        ]);
+
+        $proposedApprovedCount = $validated['extra_bedding_status'] === 'approved'
+            ? (int) $validated['approved_count']
+            : 0;
+
+        if ($booking->payment_status === 'pending_verification'
+            && $proposedApprovedCount !== (int) $beddingRequest->approved_count) {
+            return back()->withErrors([
+                'extra_bedding' => 'Payment is awaiting verification. Verify or reject that payment before changing the bedding charge.',
+            ]);
+        }
+
+        $beddingRequest->update([
+            'status' => $validated['extra_bedding_status'],
+            'approved_count' => $proposedApprovedCount,
+            'staff_response' => trim($validated['staff_response']),
+            'responded_by_staff_id' => auth('staff')->id(),
+            'responded_at' => now(),
+        ]);
+
+        $booking->unsetRelation('extraBeddingRequest');
+        $booking->loadMissing(['room', 'payment', 'extraBeddingRequest']);
+        $pricingQuote = $this->pricingService->quoteBooking($booking);
+        $billingQuote = $this->pricingService->quoteBookingBill($booking);
+        $newPayableAmount = round((float) $billingQuote['total'], 2);
+        $currentAmount = round((float) ($booking->payment?->amount ?? 0), 2);
+
+        if ($booking->payment_status === 'paid' && $newPayableAmount > $currentAmount) {
+            $this->lockHigherReschedulePrice($booking, $newPayableAmount);
+        } elseif (!in_array($booking->payment_status, ['paid', 'pending_verification'], true)) {
+            $payment = $booking->payment;
+            $discountRate = (float) ($billingQuote['discount_rate'] ?? 0);
+
+            if ($payment) {
+                $payment->update([
+                    'amount' => $newPayableAmount,
+                    'original_amount' => $discountRate > 0 ? round((float) $pricingQuote['total'], 2) : null,
+                    'discount_amount' => $discountRate > 0
+                        ? round((float) ($billingQuote['discount_amount_applied'] ?? 0), 2)
+                        : null,
+                ]);
+                $booking->setRelation('payment', $payment->fresh());
+            } else {
+                $this->syncBookingAmount($booking, $newPayableAmount);
+            }
+        }
+
+        if ($booking->customer) {
+            $booking->customer->notify(new ExtraBeddingResponseNotification($booking, $beddingRequest));
+        }
+
+        return $this->redirectAfterBookingAction(
+            $request,
+            $booking,
+            'Extra bedding response sent to the customer.'
+        );
     }
 
     public function transferRoom(Request $request, Booking $booking)

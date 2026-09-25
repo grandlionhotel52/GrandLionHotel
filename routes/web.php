@@ -74,6 +74,7 @@ Route::middleware('auth:customer')->group(function () {
     Route::patch('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
     Route::patch('/bookings/{booking}/request-reschedule', [BookingController::class, 'requestReschedule'])->name('bookings.request-reschedule');
     Route::patch('/bookings/{booking}/request-room-transfer', [BookingController::class, 'requestRoomTransfer'])->name('bookings.request-room-transfer');
+    Route::post('/bookings/{booking}/extra-bedding-request', [BookingController::class, 'requestExtraBedding'])->name('bookings.request-extra-bedding');
     Route::get('/bookings/{booking}/success', [BookingController::class, 'success'])->name('bookings.success');
 
     Route::get('/payments/{booking}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
@@ -135,6 +136,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth:staff', 'staff'])->gro
     Route::get('/bookings/create', [StaffBookingController::class, 'create'])->name('bookings.create');
     Route::post('/bookings', [StaffBookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings', [StaffBookingController::class, 'index'])->name('bookings.index');
+    Route::get('/bookings/{booking}/discount-proof', [StaffBookingController::class, 'discountProof'])->name('bookings.discount-proof');
     Route::get('/bookings/{booking}', [StaffBookingController::class, 'show'])->name('bookings.show');
     Route::get('/bookings/{booking}/receipt', [StaffBookingController::class, 'receipt'])->name('bookings.receipt');
     Route::patch('/bookings/{booking}/confirm', [StaffBookingController::class, 'confirm'])->name('bookings.confirm');
@@ -148,6 +150,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth:staff', 'staff'])->gro
     Route::patch('/bookings/{booking}/apply-reschedule-request', [StaffBookingController::class, 'applyRescheduleRequest'])->name('bookings.apply-reschedule-request');
     Route::patch('/bookings/{booking}/decline-room-transfer-request', [StaffBookingController::class, 'declineRoomTransferRequest'])->name('bookings.decline-room-transfer-request');
     Route::patch('/bookings/{booking}/occupancy', [StaffBookingController::class, 'updateOccupancy'])->name('bookings.occupancy');
+    Route::patch('/bookings/{booking}/extra-bedding-response', [StaffBookingController::class, 'respondToExtraBedding'])->name('bookings.extra-bedding-response');
     Route::patch('/bookings/{booking}/staff-notes', [StaffBookingController::class, 'updateStaffNotes'])->name('bookings.staff-notes');
     Route::patch('/bookings/{booking}/status', [StaffBookingController::class, 'updateStatus'])->name('bookings.update-status');
 });

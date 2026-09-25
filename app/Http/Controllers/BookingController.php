@@ -265,10 +265,53 @@ class BookingController extends Controller
     public function show(Booking $booking)
     {
         $this->authorizeOwner($booking);
-        $booking->loadMissing(['room', 'payment', 'guestDetail']);
+        $booking->loadMissing(['room', 'payment', 'guestDetail', 'extraBeddingRequest.respondedByStaff']);
         $this->ensurePaidTransactionReference($booking);
 
         return view('bookings.show', compact('booking'));
+    }
+
+    public function requestExtraBedding(Request $request, Booking $booking)
+    {
+        $this->authorizeOwner($booking);
+
+        if (!in_array($booking->status, ['pending', 'confirmed'], true) || $booking->actual_check_out_at) {
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->withErrors(['extra_bedding' => 'Extra bedding requests are available only for active bookings before check-out.']);
+        }
+
+        $maxExtraBedding = max(0, (int) config('pricing.max_extra_bedding_per_booking', 5));
+
+        if ($maxExtraBedding < 1) {
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->withErrors(['extra_bedding' => 'This room cannot accommodate an extra bed.']);
+        }
+
+        $validated = $request->validate([
+            'requested_count' => ['required', 'integer', 'min:1', 'max:'.$maxExtraBedding],
+            'customer_message' => ['required', 'string', 'max:1000'],
+        ], [
+            'customer_message.required' => 'Please include a message for the hotel staff.',
+        ]);
+
+        $booking->extraBeddingRequest()->updateOrCreate(
+            ['booking_id' => $booking->id],
+            [
+                'requested_count' => (int) $validated['requested_count'],
+                'customer_message' => trim($validated['customer_message']),
+                'status' => 'pending',
+                'staff_response' => null,
+                'responded_by_staff_id' => null,
+                'requested_at' => now(),
+                'responded_at' => null,
+            ]
+        );
+
+        return redirect()
+            ->route('bookings.show', $booking)
+            ->with('status', 'Your extra bedding message was sent to the hotel staff.');
     }
 
     public function cancel(Request $request, Booking $booking)

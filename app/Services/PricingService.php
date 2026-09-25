@@ -15,7 +15,8 @@ class PricingService
         string $checkIn,
         string $checkOut,
         ?int $guests = null,
-        bool $includeBreakfast = false
+        bool $includeBreakfast = false,
+        ?int $extraBeddingCount = null
     ): array
     {
         $start = Carbon::parse($checkIn)->startOfDay();
@@ -33,7 +34,10 @@ class PricingService
         $nightlyRate = round((float) $room->price_per_night, 2);
         $nights = $start->diffInDays($end);
         $guestCount = max(1, (int) ($guests ?? Room::standardGuestCapacity()));
-        $extraBeddingCount = $this->calculateExtraBeddingCount($guestCount);
+        $extraBeddingCount = max(
+            $this->calculateExtraBeddingCount($guestCount),
+            max(0, (int) ($extraBeddingCount ?? 0))
+        );
         $extraBeddingFeePerNight = $this->extraBeddingFeePerNight();
         $baseTotal = round($nightlyRate * $nights, 2);
         $total = 0.0;
@@ -117,10 +121,11 @@ class PricingService
         string $checkIn,
         string $checkOut,
         ?int $guests = null,
-        bool $includeBreakfast = false
+        bool $includeBreakfast = false,
+        ?int $extraBeddingCount = null
     ): float
     {
-        return $this->quoteStay($room, $checkIn, $checkOut, $guests, $includeBreakfast)['total'];
+        return $this->quoteStay($room, $checkIn, $checkOut, $guests, $includeBreakfast, $extraBeddingCount)['total'];
     }
 
     public function quoteBooking(Booking $booking): array
@@ -176,7 +181,8 @@ class PricingService
             $booking->check_in->toDateString(),
             $booking->check_out->toDateString(),
             $booking->guests,
-            $mealPlan === 'breakfast_included'
+            $mealPlan === 'breakfast_included',
+            $booking->extra_bedding_count
         );
     }
 

@@ -18,6 +18,11 @@ class AuditLogger
         'token',
     ];
 
+    private const IGNORED_FIELDS = [
+        'created_at',
+        'updated_at',
+    ];
+
     public function recordModel(Model $model, string $action, array $before = [], array $after = []): ?ActivityLog
     {
         if (! Schema::hasTable('activity_logs')) {
@@ -77,7 +82,14 @@ class AuditLogger
     private function sanitize(array $values): array
     {
         foreach ($values as $key => $value) {
-            if (in_array(strtolower((string) $key), self::SENSITIVE_FIELDS, true)) {
+            $normalizedKey = strtolower((string) $key);
+
+            if (in_array($normalizedKey, self::IGNORED_FIELDS, true)) {
+                unset($values[$key]);
+                continue;
+            }
+
+            if ($this->isSensitiveField($normalizedKey)) {
                 $values[$key] = '[redacted]';
                 continue;
             }
@@ -88,6 +100,21 @@ class AuditLogger
         }
 
         return $values;
+    }
+
+    private function isSensitiveField(string $field): bool
+    {
+        if (in_array($field, self::SENSITIVE_FIELDS, true)) {
+            return true;
+        }
+
+        foreach (['password', 'secret', 'token', 'proof_path', 'id_photo_path'] as $sensitiveFragment) {
+            if (str_contains($field, $sensitiveFragment)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function requestValue(string $method): ?string

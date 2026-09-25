@@ -132,6 +132,11 @@ class Booking extends Model
         return $this->hasOne(BookingDiscount::class, 'booking_id', 'booking_id');
     }
 
+    public function extraBeddingRequest(): HasOne
+    {
+        return $this->hasOne(BookingExtraBeddingRequest::class, 'booking_id', 'booking_id');
+    }
+
     public function assignedStaff(): BelongsTo
     {
         return $this->belongsTo(Staff::class, 'staff_id', 'staff_id');
@@ -184,7 +189,15 @@ class Booking extends Model
 
     public function getExtraBeddingCountAttribute(): int
     {
-        return app(PricingService::class)->calculateExtraBeddingCount($this->guests);
+        $requiredCount = app(PricingService::class)->calculateExtraBeddingCount($this->guests);
+        $request = $this->getRelationValue('extraBeddingRequest');
+
+        if (!$request && !$this->relationLoaded('extraBeddingRequest') && !is_null($this->id)) {
+            $request = $this->extraBeddingRequest()->first();
+            $this->setRelation('extraBeddingRequest', $request);
+        }
+
+        return max($requiredCount, (int) ($request?->approved_count ?? 0));
     }
 
     public function getTotalPriceAttribute(mixed $value = null): float

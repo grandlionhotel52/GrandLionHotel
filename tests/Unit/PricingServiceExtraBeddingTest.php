@@ -58,6 +58,24 @@ class PricingServiceExtraBeddingTest extends TestCase
         $this->assertSame(2500.0, $quote['average_nightly_rate']);
     }
 
+    public function test_approved_extra_bed_is_charged_even_when_guest_count_is_two(): void
+    {
+        $room = $this->createRoom(['price_per_night' => 2000]);
+
+        $quote = app(PricingService::class)->quoteStay(
+            $room,
+            now()->addDay()->toDateString(),
+            now()->addDays(3)->toDateString(),
+            2,
+            false,
+            1
+        );
+
+        $this->assertSame(1, $quote['extra_bedding_count']);
+        $this->assertSame(1000.0, $quote['extra_bedding_total']);
+        $this->assertSame(5000.0, $quote['chargeable_subtotal']);
+    }
+
     public function test_quote_stay_combines_date_discounts_and_extra_bedding_surcharge(): void
     {
         $room = $this->createRoom([

@@ -156,6 +156,11 @@
         $hasPendingRescheduleRequest = $booking->hasPendingRescheduleRequest();
         $canRequestRoomTransfer = $booking->canRequestRoomTransfer();
         $hasPendingRoomTransferRequest = $booking->hasPendingRoomTransferRequest();
+        $extraBeddingRequest = $booking->extraBeddingRequest;
+        $maxExtraBedding = max(0, (int) config('pricing.max_extra_bedding_per_booking', 5));
+        $canMessageExtraBedding = $maxExtraBedding > 0
+            && in_array($booking->status, ['pending', 'confirmed'], true)
+            && !$booking->actual_check_out_at;
         $isPaid = $booking->payment_status === 'paid';
         $canCancel = $booking->canBeCancelled();
         $isCashAwaitingVerification = $booking->payment_status !== 'paid'
@@ -386,6 +391,101 @@
                     <hr>
                     <small class="text-secondary d-block">Special request</small>
                     <p class="mb-0">{{ $booking->notes }}</p>
+                @endif
+
+                @if($canMessageExtraBedding || $extraBeddingRequest)
+                    <hr>
+                    <div id="extra-bedding-coordination">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <div>
+                                <h3 class="h6 mb-1">Extra Bedding Coordination</h3>
+                                <p class="small text-secondary mb-0">Send details to the hotel and check the staff response here.</p>
+                            </div>
+                            @if($extraBeddingRequest)
+                                @php
+                                    $beddingStatusClass = match ($extraBeddingRequest->status) {
+                                        'approved' => 'text-bg-success',
+                                        'declined' => 'text-bg-danger',
+                                        default => 'text-bg-warning',
+                                    };
+                                @endphp
+                                <span class="badge {{ $beddingStatusClass }}">{{ ucfirst($extraBeddingRequest->status) }}</span>
+                            @endif
+                        </div>
+
+                        <div class="alert alert-light border small">
+                            <strong>{{ $booking->extra_bedding_count }} approved extra bed{{ $booking->extra_bedding_count === 1 ? '' : 's' }}</strong>
+                            for {{ $booking->guests }} guests.
+                            @if($booking->extra_bedding_count > 0)
+                                The approved charge is included in the payment summary.
+                            @else
+                                A charge is added only after staff approval.
+                            @endif
+                        </div>
+
+                        @if($extraBeddingRequest)
+                            <div class="border rounded-3 p-3 mb-3 bg-light">
+                                <small class="text-secondary d-block mb-1">Your message</small>
+                                <p class="mb-1"><strong>Requested beds: {{ $extraBeddingRequest->requested_count }}</strong></p>
+                                <p class="mb-1">{{ $extraBeddingRequest->customer_message }}</p>
+                                <small class="text-secondary">Sent {{ $extraBeddingRequest->requested_at?->format('M d, Y h:i A') }}</small>
+                            </div>
+
+                            @if(filled($extraBeddingRequest->staff_response))
+                                <div class="border rounded-3 p-3 mb-3">
+                                    <small class="text-secondary d-block mb-1">Hotel staff response</small>
+                                    <p class="mb-1">{{ $extraBeddingRequest->staff_response }}</p>
+                                    <small class="text-secondary">
+                                        {{ $extraBeddingRequest->respondedByStaff?->name ?? 'Hotel staff' }}
+                                        @if($extraBeddingRequest->responded_at)
+                                            &middot; {{ $extraBeddingRequest->responded_at->format('M d, Y h:i A') }}
+                                        @endif
+                                    </small>
+                                </div>
+                            @endif
+                        @endif
+
+                        @error('extra_bedding')
+                            <div class="alert alert-danger small">{{ $message }}</div>
+                        @enderror
+
+                        @if($canMessageExtraBedding)
+                            <form method="POST" action="{{ route('bookings.request-extra-bedding', $booking) }}" class="row g-3">
+                                @csrf
+                                <div class="col-md-4">
+                                    <label for="requested_count" class="form-label">Extra beds requested</label>
+                                    <select id="requested_count" name="requested_count" class="form-select @error('requested_count') is-invalid @enderror" required>
+                                        @for($count = 1; $count <= $maxExtraBedding; $count++)
+                                            <option value="{{ $count }}" @selected((int) old('requested_count', $extraBeddingRequest?->requested_count ?? 1) === $count)>{{ $count }}</option>
+                                        @endfor
+                                    </select>
+                                    @error('requested_count')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12">
+                                    <label for="customer_message" class="form-label">Message for hotel staff</label>
+                                    <textarea
+                                        id="customer_message"
+                                        name="customer_message"
+                                        class="form-control @error('customer_message') is-invalid @enderror"
+                                        rows="3"
+                                        maxlength="1000"
+                                        placeholder="Example: Please prepare the extra bed before our 3:00 PM arrival."
+                                        required
+                                    >{{ old('customer_message', $extraBeddingRequest?->customer_message) }}</textarea>
+                                    @error('customer_message')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-ta">
+                                        {{ $extraBeddingRequest ? 'Update message and request review' : 'Send message to staff' }}
+                                    </button>
+                                </div>
+                            </form>
+                        @endif
+                    </div>
                 @endif
 
                 @if($canRequestReschedule || $hasPendingRescheduleRequest)

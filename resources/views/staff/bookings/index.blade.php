@@ -369,10 +369,14 @@
                             $isArrivalToday = $booking->check_in->isToday() && is_null($booking->actual_check_in_at);
                             $isDepartureToday = $booking->check_out->isToday() && !is_null($booking->actual_check_in_at) && is_null($booking->actual_check_out_at);
                             $hasPendingRescheduleRequest = $booking->hasPendingRescheduleRequest();
+                            $hasPendingBeddingRequest = $booking->extraBeddingRequest?->status === 'pending';
 
                             if ($booking->status === 'pending') {
                                 $priorityTone = 'high';
                                 $priorityText = 'Approve';
+                            } elseif ($hasPendingBeddingRequest) {
+                                $priorityTone = 'high';
+                                $priorityText = 'Bedding request';
                             } elseif ($hasPendingRescheduleRequest) {
                                 $priorityTone = 'high';
                                 $priorityText = 'Reschedule';
@@ -406,6 +410,9 @@
                                     <div class="ops-guest-meta text-info">
                                         Requested: {{ $booking->requested_check_in?->format('M d, Y') }} - {{ $booking->requested_check_out?->format('M d, Y') }}
                                     </div>
+                                @endif
+                                @if($hasPendingBeddingRequest)
+                                    <div class="ops-guest-meta text-warning fw-semibold">New extra bedding message</div>
                                 @endif
                             </td>
                             <td>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-09-25T00:00:00.000Z" agent="Codex" version="26.0.11" type="device">
+  <diagram id="hotel-business-erd" name="Business ERD">
+    <mxGraphModel dx="2200" dy="1700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="HOTEL RESERVATION SYSTEM — BUSINESS ERD" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=28;fontColor=#3f2a12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="25" width="900" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Business tables only • Framework queues, sessions, migrations, verification/reset, and PayMongo checkout-processing tables are excluded." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=14;fontColor=#7a5b2f;" vertex="1" parent="1">
+          <mxGeometry x="40" y="65" width="1300" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="admins" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;ADMINS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; admin_id&lt;br&gt;name&lt;br&gt;email &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;phone&lt;br&gt;password" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff4dc;strokeColor=#c98b2e;strokeWidth=2;fontColor=#3f2a12;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="130" width="280" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="staff" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;STAFF&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; staff_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; admin_id&lt;br&gt;name&lt;br&gt;username &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;phone&lt;br&gt;password&lt;br&gt;is_active" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff4dc;strokeColor=#c98b2e;strokeWidth=2;fontColor=#3f2a12;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="410" width="280" height="245" as="geometry"/>
+        </mxCell>
+        <mxCell id="customers" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;CUSTOMERS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; customer_id&lt;br&gt;name&lt;br&gt;email &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;google_id &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;phone&lt;br&gt;address_line&lt;br&gt;city&lt;br&gt;province&lt;br&gt;country&lt;br&gt;email_verified_at&lt;br&gt;password&lt;br&gt;is_active" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#e9f5ff;strokeColor=#3c78a8;strokeWidth=2;fontColor=#17324d;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="725" width="280" height="350" as="geometry"/>
+        </mxCell>
+        <mxCell id="notifications" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;NOTIFICATIONS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; id&lt;br&gt;type&lt;br&gt;notifiable_type&lt;br&gt;notifiable_id&lt;br&gt;data&lt;br&gt;read_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#f3efff;strokeColor=#7654a8;strokeWidth=2;fontColor=#35224f;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="280" height="230" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="room_status" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;ROOM_STATUS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; room_status_id&lt;br&gt;name&lt;br&gt;slug &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;description" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#eaf8ee;strokeColor=#4d9a62;strokeWidth=2;fontColor=#1e4a2b;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="130" width="300" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;ROOMS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; room_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; room_status_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; admin_id&lt;br&gt;name&lt;br&gt;type&lt;br&gt;view_type&lt;br&gt;description&lt;br&gt;price_per_night&lt;br&gt;capacity&lt;br&gt;image&lt;br&gt;status_updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#eaf8ee;strokeColor=#4d9a62;strokeWidth=2;fontColor=#1e4a2b;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="390" width="300" height="340" as="geometry"/>
+        </mxCell>
+        <mxCell id="room_discounts" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;ROOM_DATE_DISCOUNTS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; room_date_discount_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; room_id&lt;br&gt;discount_date_start&lt;br&gt;discount_date_end&lt;br&gt;discount_percent" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#eaf8ee;strokeColor=#4d9a62;strokeWidth=2;fontColor=#1e4a2b;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="810" width="300" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="activity_logs" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;ACTIVITY_LOGS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; activity_log_id&lt;br&gt;actor_type + actor_id&lt;br&gt;action&lt;br&gt;subject_type + subject_id&lt;br&gt;changes&lt;br&gt;ip_address&lt;br&gt;user_agent" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#f3efff;strokeColor=#7654a8;strokeWidth=2;fontColor=#35224f;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1130" width="300" height="250" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="bookings" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;BOOKINGS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; booking_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; customer_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; room_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; staff_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; reschedule_approved_by_admin_id&lt;br&gt;check_in / check_out&lt;br&gt;requested_check_in / requested_check_out&lt;br&gt;status&lt;br&gt;notes&lt;br&gt;staff_notes&lt;br&gt;cancellation_reason&lt;br&gt;reschedule_request_notes&lt;br&gt;room_transfer_request_reason&lt;br&gt;actual_check_in_at&lt;br&gt;actual_check_out_at&lt;br&gt;no_show_at&lt;br&gt;payment_due_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff0ef;strokeColor=#b9574e;strokeWidth=3;fontColor=#57201c;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="820" y="330" width="350" height="520" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="guest_details" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;BOOKING_GUEST_DETAILS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; guest_detail_id&lt;br&gt;&lt;b&gt;FK, UK&lt;/b&gt; booking_id&lt;br&gt;first_name&lt;br&gt;last_name&lt;br&gt;email&lt;br&gt;phone&lt;br&gt;address_line&lt;br&gt;street_address_line_2&lt;br&gt;city&lt;br&gt;province&lt;br&gt;postal_code&lt;br&gt;adults / kids&lt;br&gt;meal_plan&lt;br&gt;payment_preference" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff0ef;strokeColor=#b9574e;strokeWidth=2;fontColor=#57201c;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="120" width="330" height="410" as="geometry"/>
+        </mxCell>
+        <mxCell id="payments" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;PAYMENTS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; payment_id&lt;br&gt;&lt;b&gt;FK, UK&lt;/b&gt; booking_id&lt;br&gt;amount&lt;br&gt;balance_due&lt;br&gt;method&lt;br&gt;status&lt;br&gt;source&lt;br&gt;transaction_reference &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;customer_reference&lt;br&gt;payment_proof_path&lt;br&gt;original_amount&lt;br&gt;discount_rate / discount_amount&lt;br&gt;paid_at / verified_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff0ef;strokeColor=#b9574e;strokeWidth=2;fontColor=#57201c;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="590" width="330" height="390" as="geometry"/>
+        </mxCell>
+        <mxCell id="booking_discounts" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;BOOKING_DISCOUNTS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; booking_discount_id&lt;br&gt;&lt;b&gt;FK, UK&lt;/b&gt; booking_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; promo_code_id&lt;br&gt;discount_type&lt;br&gt;discount_id&lt;br&gt;discount_id_photo_path" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff0ef;strokeColor=#b9574e;strokeWidth=2;fontColor=#57201c;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="1050" width="330" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="promo_codes" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;PROMO_CODES&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; promo_code_id&lt;br&gt;code &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;discount_percent&lt;br&gt;starts_at&lt;br&gt;ends_at&lt;br&gt;is_active" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff8df;strokeColor=#b79a38;strokeWidth=2;fontColor=#4e4317;fontSize=14;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1710" y="1050" width="300" height="240" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e_admin_staff" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERzeroToOne;endArrow=ERzeroToMany;strokeColor=#8b6a34;fontSize=12;" edge="1" parent="1" source="admins" target="staff"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_admin_rooms" value="updates status" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERzeroToOne;endArrow=ERzeroToMany;strokeColor=#8b6a34;fontSize=12;" edge="1" parent="1" source="admins" target="rooms"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_admin_bookings" value="approves reschedule" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERzeroToOne;endArrow=ERzeroToMany;strokeColor=#8b6a34;fontSize=12;" edge="1" parent="1" source="admins" target="bookings"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_customer_bookings" value="makes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERzeroToOne;endArrow=ERzeroToMany;strokeColor=#3c78a8;fontSize=12;" edge="1" parent="1" source="customers" target="bookings"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_staff_bookings" value="handles" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERzeroToOne;endArrow=ERzeroToMany;strokeColor=#8b6a34;fontSize=12;" edge="1" parent="1" source="staff" target="bookings"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_status_rooms" value="classifies" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERzeroToOne;endArrow=ERzeroToMany;strokeColor=#4d9a62;fontSize=12;" edge="1" parent="1" source="room_status" target="rooms"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_rooms_bookings" value="reserved for" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;endArrow=ERzeroToMany;strokeColor=#4d9a62;fontSize=12;" edge="1" parent="1" source="rooms" target="bookings"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_rooms_discounts" value="has" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;endArrow=ERzeroToMany;strokeColor=#4d9a62;fontSize=12;" edge="1" parent="1" source="rooms" target="room_discounts"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_booking_guest" value="has" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;endArrow=ERzeroToOne;strokeColor=#b9574e;fontSize=12;" edge="1" parent="1" source="bookings" target="guest_details"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_booking_payment" value="has" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;endArrow=ERzeroToOne;strokeColor=#b9574e;fontSize=12;" edge="1" parent="1" source="bookings" target="payments"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_booking_discount" value="receives" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;endArrow=ERzeroToOne;strokeColor=#b9574e;fontSize=12;" edge="1" parent="1" source="bookings" target="booking_discounts"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_promo_discount" value="applies to" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERzeroToOne;endArrow=ERzeroToMany;strokeColor=#b79a38;fontSize=12;" edge="1" parent="1" source="promo_codes" target="booking_discounts"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_customer_notifications" value="receives" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;endArrow=ERzeroToMany;strokeColor=#7654a8;fontSize=12;" edge="1" parent="1" source="customers" target="notifications"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="legend" value="&lt;b&gt;LEGEND&lt;/b&gt;&lt;br&gt;PK = Primary Key • FK = Foreign Key • UK = Unique Key&lt;br&gt;Activity log actor/subject fields are polymorphic references, so they do not use physical foreign-key lines." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=10;fillColor=#f7f7f7;strokeColor=#999999;fontColor=#444444;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="820" y="1400" width="770" height="100" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
