@@ -241,6 +241,10 @@
         }
     }
     @media (max-width: 991.98px) {
+        .auth-premium-shell {
+            max-width: 680px;
+            margin-inline: auto;
+        }
         .auth-premium-form-pane {
             padding: 1.15rem;
         }
@@ -250,6 +254,75 @@
         .auth-brand-mark {
             width: 64px;
             height: 64px;
+        }
+    }
+    @media (max-width: 575.98px) {
+        .auth-page-row {
+            margin-inline: 0;
+        }
+        .auth-page-column {
+            padding-inline: 0;
+        }
+        .auth-premium-shell {
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(18, 24, 39, 0.1);
+        }
+        .auth-premium-form-pane {
+            padding: 1rem;
+        }
+        .auth-brand-signature {
+            margin-bottom: 0.45rem;
+        }
+        .auth-brand-mark {
+            width: 54px;
+            height: 54px;
+        }
+        .auth-premium-form-pane > .mb-4 {
+            margin-bottom: 1rem !important;
+            text-align: center;
+        }
+        .auth-premium-switch {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            width: 100%;
+        }
+        .auth-premium-switch-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding-inline: 0.55rem;
+            text-align: center;
+        }
+        .auth-premium-card {
+            border-radius: 16px;
+            padding: 1rem;
+        }
+        .auth-login-options {
+            align-items: flex-start !important;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .auth-login-options .form-check-label,
+        .auth-login-options a {
+            font-size: 0.875rem;
+        }
+        .auth-oauth-btn {
+            min-height: 48px;
+            padding-inline: 0.75rem;
+        }
+        .auth-premium-form-pane > p:last-child {
+            margin-top: 1rem !important;
+            text-align: center;
+        }
+    }
+    @media (max-width: 359.98px) {
+        .auth-premium-form-pane,
+        .auth-premium-card {
+            padding: 0.8rem;
+        }
+        .auth-premium-switch-link {
+            font-size: 0.72rem;
         }
     }
 </style>

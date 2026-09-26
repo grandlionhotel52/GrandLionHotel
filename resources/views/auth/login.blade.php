@@ -10,8 +10,8 @@
     @php
         $registrationCompletedEmail = session('registration_completed_email');
     @endphp
-    <div class="row justify-content-center">
-        <div class="col-xl-11 col-xxl-10">
+    <div class="row justify-content-center auth-page-row">
+        <div class="col-xl-11 col-xxl-10 auth-page-column">
             <section class="soft-card overflow-hidden auth-premium-shell">
                 <div class="row g-0">
                     <div class="col-lg-6 d-none d-lg-block auth-premium-visual">
@@ -84,7 +84,7 @@
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <div class="col-12 d-flex justify-content-between align-items-center">
+                                    <div class="col-12 d-flex justify-content-between align-items-center auth-login-options">
                                         <div class="form-check m-0">
                                             <input class="form-check-input" type="checkbox" name="remember" value="1" id="remember" @checked(old('remember'))>
                                             <label class="form-check-label" for="remember">Keep me signed in</label>
@@ -93,10 +93,12 @@
                                     </div>
                                     <div class="col-12">
                                         <button type="submit" class="btn btn-ta auth-premium-action" data-submitting-text="Signing in...">Sign in</button>
-                                        </div>
+                                    </div>
 
-                                    <div class="auth-oauth-divider mb-3">or continue with Google</div>
-                                    <div class="mb-3">
+                                    <div class="col-12">
+                                        <div class="auth-oauth-divider">or continue with Google</div>
+                                    </div>
+                                    <div class="col-12">
                                         <a href="{{ route('auth.google.redirect.login') }}" class="auth-oauth-btn">
                                             <span class="auth-oauth-icon"></span>
                                             Continue with Google

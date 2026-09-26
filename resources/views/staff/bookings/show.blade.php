@@ -198,6 +198,26 @@
             .booking-command-item:nth-child(2) { border-right: 0; }
             .booking-command-item:nth-child(-n+2) { border-bottom: 1px solid #e2e8f3; }
         }
+        @media (max-width: 419.98px) {
+            .booking-info-grid,
+            .booking-log-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            .booking-command-bar {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            .booking-command-item,
+            .booking-command-item:nth-child(2) {
+                border-right: 0;
+                border-bottom: 1px solid #e2e8f3;
+            }
+            .booking-command-item:last-child {
+                border-bottom: 0;
+            }
+            .booking-next-step {
+                align-items: flex-start;
+            }
+        }
     </style>
 @endpush
 

@@ -88,6 +88,16 @@
         max-width: 100%;
     }
 
+    .mobile-nav-label {
+        display: none;
+    }
+
+    .notification-count {
+        position: absolute;
+        top: 0;
+        right: -0.35rem;
+    }
+
     @media (max-width: 991.98px) {
         .navbar {
             padding-block: .35rem;
@@ -122,6 +132,7 @@
         }
 
         .navbar-nav {
+            width: 100%;
             gap: .2rem;
         }
 
@@ -131,6 +142,27 @@
             min-height: 44px;
             padding: .68rem .8rem;
             border-radius: 10px;
+        }
+
+        .navbar-nav .dropdown-toggle {
+            justify-content: space-between;
+            width: 100%;
+            text-align: left;
+        }
+
+        .navbar-nav .dropdown-toggle::after {
+            margin-left: auto;
+        }
+
+        .mobile-nav-label {
+            display: inline;
+            margin-left: .55rem;
+        }
+
+        .notification-count {
+            position: static;
+            margin-left: auto;
+            transform: none;
         }
 
         .navbar-nav .nav-link:hover,
@@ -150,6 +182,11 @@
             transform: none !important;
             border-color: rgba(184, 146, 84, .22);
             box-shadow: none !important;
+        }
+
+        .navbar-nav .dropdown-menu[style] {
+            width: 100% !important;
+            max-width: 100% !important;
         }
 
         .navbar-nav .dropdown-item {
@@ -222,6 +259,7 @@
             max-height: calc(100dvh - 76px);
             overflow-y: auto;
             overscroll-behavior: contain;
+            scrollbar-width: thin;
         }
 
         main > :where(header, .page-header),
@@ -278,6 +316,12 @@
             font-size: 16px;
         }
 
+        input[type="date"],
+        input[type="datetime-local"],
+        input[type="time"] {
+            min-width: 0;
+        }
+
         textarea.form-control {
             min-height: 7rem;
         }
@@ -291,6 +335,21 @@
         .table-shell,
         .search-filter-shell {
             border-radius: 16px !important;
+        }
+
+        .nav-tabs,
+        .nav-pills.mobile-scroll {
+            flex-wrap: nowrap;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tabs .nav-link,
+        .nav-pills.mobile-scroll .nav-link {
+            white-space: nowrap;
         }
 
         .admin-action-col,
@@ -341,6 +400,37 @@
         .card-footer {
             padding-left: .9rem;
             padding-right: .9rem;
+        }
+
+        .soft-card.p-4,
+        .soft-card.p-5,
+        .booking-shell.p-4,
+        .booking-side-shell.p-4,
+        .ops-booking-shell.p-4 {
+            padding: 1rem !important;
+        }
+
+        .modal-footer {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .modal-footer > :where(.btn, form),
+        .modal-footer > form > .btn {
+            width: 100%;
+            margin: 0;
+        }
+
+        .page-actions,
+        .action-buttons {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            width: 100%;
+        }
+
+        .page-actions > *,
+        .action-buttons > * {
+            width: 100%;
         }
 
         .alert {
@@ -420,6 +510,16 @@
             wrapper.setAttribute('aria-label', table.getAttribute('aria-label') || 'Scrollable data table');
             table.parentNode.insertBefore(wrapper, table);
             wrapper.appendChild(table);
+        });
+
+        document.querySelectorAll('.navbar-collapse').forEach((collapseElement) => {
+            collapseElement.querySelectorAll('a:not(.dropdown-toggle)').forEach((link) => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth >= 992 || !collapseElement.classList.contains('show')) return;
+
+                    window.bootstrap?.Collapse.getOrCreateInstance(collapseElement).hide();
+                });
+            });
         });
     });
 </script>

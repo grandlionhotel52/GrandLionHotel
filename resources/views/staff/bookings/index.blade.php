@@ -208,6 +208,19 @@
             justify-content: space-between;
             gap: 0.85rem;
         }
+        @media (max-width: 575.98px) {
+            .ops-queue-tabs {
+                flex-wrap: nowrap;
+                margin-inline: -0.25rem;
+                overflow-x: auto;
+                padding: 0 0.25rem 0.4rem;
+                scrollbar-width: thin;
+                -webkit-overflow-scrolling: touch;
+            }
+            .ops-queue-tab {
+                flex: 0 0 auto;
+            }
+        }
     </style>
 @endpush
 

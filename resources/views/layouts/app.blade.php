@@ -575,8 +575,9 @@
                                     @endphp
                                     <button class="nav-link position-relative border-0 bg-transparent" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Booking notifications">
                                         <i class="bi bi-bell"></i>
+                                        <span class="mobile-nav-label">Notifications</span>
                                         @if($unreadNotificationCount > 0)
-                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}</span>
+                                            <span class="notification-count badge rounded-pill bg-danger">{{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}</span>
                                         @endif
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end p-2 shadow" style="width: min(340px, 92vw)">

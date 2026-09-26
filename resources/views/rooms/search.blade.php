@@ -132,6 +132,11 @@
             }
             .search-card-actions .btn { width: 100%; }
         }
+        @media (max-width: 389.98px) {
+            .search-card-actions {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 @endpush
 
