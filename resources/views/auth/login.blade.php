@@ -51,7 +51,7 @@
                                 <form method="POST" action="{{ route('login.perform') }}" class="row g-3" id="loginForm">
                                     @csrf
                                     <div class="col-12">
-                                        <label class="auth-premium-label">Email or staff username</label>
+                                        <label class="auth-premium-label">Email or username</label>
                                         <input
                                             type="text"
                                             class="form-control auth-premium-input @error('email') is-invalid @enderror"
