@@ -115,6 +115,10 @@
                 <p class="booking-admin-value">{{ $booking->room->name ?? '-' }}</p>
             </div>
             <div class="booking-admin-item">
+                <p class="booking-admin-label">Booked On</p>
+                <p class="booking-admin-value">{{ $booking->created_at?->format('M d, Y h:i A') ?? '-' }}</p>
+            </div>
+            <div class="booking-admin-item">
                 <p class="booking-admin-label">Stay Dates</p>
                 <p class="booking-admin-value">{{ $booking->check_in->format('M d, Y') }} to {{ $booking->check_out->format('M d, Y') }}</p>
             </div>

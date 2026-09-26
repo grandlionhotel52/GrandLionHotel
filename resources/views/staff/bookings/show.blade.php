@@ -168,8 +168,13 @@
             background: #fff;
             overflow: hidden;
         }
-        .booking-command-item { padding: .9rem 1rem; border-right: 1px solid #e2e8f3; }
-        .booking-command-item:last-child { border-right: 0; }
+        .booking-command-item {
+            padding: .9rem 1rem;
+            border-right: 1px solid #e2e8f3;
+            border-bottom: 1px solid #e2e8f3;
+        }
+        .booking-command-item:nth-child(4n) { border-right: 0; }
+        .booking-command-item:nth-last-child(-n+4) { border-bottom: 0; }
         .booking-command-value { color: #172033; font-size: .95rem; font-weight: 800; line-height: 1.35; }
         .booking-next-step {
             display: flex;
@@ -195,8 +200,13 @@
         .booking-section-nav a:focus { border-color: var(--staff-brand); color: var(--theme-primary); }
         @media (max-width: 767.98px) {
             .booking-command-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .booking-command-item:nth-child(2) { border-right: 0; }
-            .booking-command-item:nth-child(-n+2) { border-bottom: 1px solid #e2e8f3; }
+            .booking-command-item,
+            .booking-command-item:nth-child(4n) {
+                border-right: 1px solid #e2e8f3;
+                border-bottom: 1px solid #e2e8f3;
+            }
+            .booking-command-item:nth-child(even) { border-right: 0; }
+            .booking-command-item:nth-last-child(-n+2) { border-bottom: 0; }
         }
         @media (max-width: 419.98px) {
             .booking-info-grid,
@@ -207,7 +217,9 @@
                 grid-template-columns: minmax(0, 1fr);
             }
             .booking-command-item,
-            .booking-command-item:nth-child(2) {
+            .booking-command-item:nth-child(4n),
+            .booking-command-item:nth-child(even),
+            .booking-command-item:nth-last-child(-n+2) {
                 border-right: 0;
                 border-bottom: 1px solid #e2e8f3;
             }
@@ -308,6 +320,10 @@
 
     <section class="mb-3" aria-label="Booking operational summary">
         <div class="booking-command-bar mb-3">
+            <div class="booking-command-item">
+                <p class="booking-info-label">Booked On</p>
+                <div class="booking-command-value">{{ $booking->created_at?->format('M d, Y h:i A') ?? '-' }}</div>
+            </div>
             <div class="booking-command-item">
                 <p class="booking-info-label">Stay</p>
                 <div class="booking-command-value">{{ $booking->check_in->format('M d') }} - {{ $booking->check_out->format('M d, Y') }}</div>

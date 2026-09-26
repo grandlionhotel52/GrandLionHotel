@@ -180,6 +180,7 @@
                     <tr>
                         <th>Guest</th>
                         <th>Room Type</th>
+                        <th>Booked On</th>
                         <th>Check in/out Dates</th>
                         <th>Status</th>
                         <th>Payment</th>
@@ -192,6 +193,10 @@
                         <tr>
                             <td>{{ $booking->guestName() }}</td>
                             <td>{{ $booking->room->name ?? '-' }}</td>
+                            <td class="text-nowrap">
+                                <strong class="d-block">{{ $booking->created_at?->format('M d, Y') ?? '-' }}</strong>
+                                <small class="text-secondary">{{ $booking->created_at?->format('h:i A') ?? '' }}</small>
+                            </td>
                             <td>{{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</td>
                             <td><span class="badge {{ $statusClass($booking->status) }}">{{ \App\Models\Booking::statusLabel($booking->status) }}</span></td>
                             <td><span class="badge {{ $paymentClass($booking->payment_status) }}">{{ ucfirst(str_replace('_', ' ', $booking->payment_status)) }}</span></td>
@@ -212,7 +217,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
                                 <i class="bi bi-search fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
                                 <strong class="d-block">No matching bookings</strong>
                                 <span class="text-secondary">Change or reset the filters.</span>
