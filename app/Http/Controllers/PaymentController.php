@@ -111,6 +111,8 @@ class PaymentController extends Controller
                 ->first();
 
             if ($existingSession) {
+                $this->publishBooking($booking);
+
                 return redirect()->away($existingSession->checkout_url);
             }
 
@@ -128,7 +130,7 @@ class PaymentController extends Controller
                 ['booking_id' => $booking->id],
                 [
                     'amount' => $bookingTotal,
-                    'method' => Payment::METHOD_CREDIT_DEBIT_CARD,
+                    'method' => $validated['method'],
                     'status' => 'unpaid',
                     'source' => 'paymongo_checkout_pending',
                     'provider_session_id' => $session['id'],
@@ -149,6 +151,8 @@ class PaymentController extends Controller
                 'amount_centavos' => $amountCentavos,
                 'status' => 'pending',
             ]);
+
+            $this->publishBooking($booking);
 
             return redirect()->away($session['checkout_url']);
         }
@@ -171,6 +175,8 @@ class PaymentController extends Controller
                     'verified_at' => null,
                 ]
             );
+
+            $this->publishBooking($booking);
 
             return redirect()
                 ->route('bookings.show', $booking)
@@ -202,6 +208,8 @@ class PaymentController extends Controller
                 ]
             );
 
+            $this->publishBooking($booking);
+
             return redirect()
                 ->route('bookings.show', $booking)
                 ->with('status', 'Payment proof submitted. Staff will review your online payment before marking it as paid.');
@@ -210,6 +218,13 @@ class PaymentController extends Controller
         return back()->withErrors([
             'method' => 'The selected payment method cannot be processed. Please choose a supported option.',
         ]);
+    }
+
+    private function publishBooking(Booking $booking): void
+    {
+        if ($booking->status === Booking::STATUS_DRAFT) {
+            $booking->update(['status' => 'pending']);
+        }
     }
 
     public function payMongoReturn(Booking $booking)

@@ -185,7 +185,7 @@ class BookingController extends Controller
                     'room_id' => $lockedRoom->id,
                     'check_in' => $request->date('check_in'),
                     'check_out' => $request->date('check_out'),
-                    'status' => 'pending',
+                    'status' => Booking::STATUS_DRAFT,
                     'notes' => $request->input('notes'),
                 ]);
 
@@ -222,16 +222,16 @@ class BookingController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Pre-booking submitted. Choose your payment method while staff reviews the booking.',
+                'message' => 'Reservation details saved. Choose a payment method to submit your pre-booking.',
                 'booking_id' => $booking->id,
                 'redirect' => $nextRedirect,
-                'next_step' => 'Proceed to payment checkout. Only staff can confirm the booking.',
+                'next_step' => 'Choose a payment method to place the booking in the staff review queue.',
             ], 201);
         }
 
         return redirect()
             ->route('payments.checkout', $booking)
-            ->with('status', 'Pre-booking submitted. Choose online payment or cash. Staff will confirm the booking separately.');
+            ->with('status', 'Choose online payment or cash to submit your pre-booking for staff review.');
     }
 
     public function success(Booking $booking)
@@ -245,18 +245,23 @@ class BookingController extends Controller
 
     public function myBookings(Request $request)
     {
-        $bookings = $request->user()->bookings()->with(['room', 'payment', 'guestDetail'])->latest()->paginate(10);
+        $bookings = $request->user()->bookings()
+            ->visibleToOperations()
+            ->with(['room', 'payment', 'guestDetail'])
+            ->latest()
+            ->paginate(10);
         $bookings->getCollection()->each(function (Booking $booking): void {
             $this->ensurePaidTransactionReference($booking);
         });
 
         $stats = [
             'upcoming' => $request->user()->bookings()
+                ->visibleToOperations()
                 ->whereDate('check_in', '>=', Carbon::today())
                 ->whereIn('status', ['pending', 'confirmed'])
                 ->count(),
-            'completed' => $request->user()->bookings()->where('status', 'completed')->count(),
-            'cancelled' => $request->user()->bookings()->where('status', 'cancelled')->count(),
+            'completed' => $request->user()->bookings()->visibleToOperations()->where('status', 'completed')->count(),
+            'cancelled' => $request->user()->bookings()->visibleToOperations()->where('status', 'cancelled')->count(),
         ];
 
         return view('bookings.my-bookings', compact('bookings', 'stats'));

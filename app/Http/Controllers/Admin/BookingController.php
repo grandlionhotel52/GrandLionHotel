@@ -49,6 +49,7 @@ class BookingController extends Controller
         };
 
         $bookingsQuery = Booking::query()
+            ->visibleToOperations()
             ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
         $applyFilters($bookingsQuery);
 
@@ -57,7 +58,7 @@ class BookingController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $counterQuery = Booking::query();
+        $counterQuery = Booking::query()->visibleToOperations();
         $applyFilters($counterQuery);
 
         $summary = [

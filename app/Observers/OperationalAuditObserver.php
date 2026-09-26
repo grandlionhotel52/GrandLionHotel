@@ -16,12 +16,29 @@ class OperationalAuditObserver
 
     public function created(Model $model): void
     {
+        if ($this->belongsToDraftBooking($model)) {
+            return;
+        }
+
         $this->auditLogger->recordModel($model, 'created', [], $model->getAttributes());
         $this->notifyCustomer($model, 'created');
     }
 
     public function updated(Model $model): void
     {
+        if ($model instanceof Payment && $this->belongsToDraftBooking($model)) {
+            return;
+        }
+
+        if ($model instanceof Booking
+            && $model->getOriginal('status') === Booking::STATUS_DRAFT
+            && $model->status === 'pending') {
+            $this->auditLogger->recordModel($model, 'created', [], $model->getAttributes());
+            $this->notifyCustomer($model, 'created');
+
+            return;
+        }
+
         $changes = $model->getChanges();
         unset($changes['updated_at']);
 
@@ -61,5 +78,18 @@ class OperationalAuditObserver
         }
 
         $booking->customer->notify(new BookingActivityNotification($booking, $model, $event));
+    }
+
+    private function belongsToDraftBooking(Model $model): bool
+    {
+        if ($model instanceof Booking) {
+            return $model->status === Booking::STATUS_DRAFT;
+        }
+
+        if ($model instanceof Payment) {
+            return $model->booking?->status === Booking::STATUS_DRAFT;
+        }
+
+        return false;
     }
 }

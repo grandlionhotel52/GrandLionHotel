@@ -28,7 +28,7 @@ class UserController extends Controller
         }
 
         $customersQuery = Customer::query()
-            ->withCount('bookings')
+            ->withCount(['bookings' => fn (Builder $query) => $query->visibleToOperations()])
             ->when($keyword !== '', function (Builder $query) use ($keyword): void {
                 $query->where(function (Builder $nested) use ($keyword): void {
                     $nested->where('name', 'like', '%'.$keyword.'%')
@@ -45,10 +45,10 @@ class UserController extends Controller
                 $this->applyCompleteProfileFilter($query, false);
             })
             ->when($bookings === 'with', function (Builder $query): void {
-                $query->has('bookings');
+                $query->whereHas('bookings', fn (Builder $bookingQuery) => $bookingQuery->visibleToOperations());
             })
             ->when($bookings === 'without', function (Builder $query): void {
-                $query->doesntHave('bookings');
+                $query->whereDoesntHave('bookings', fn (Builder $bookingQuery) => $bookingQuery->visibleToOperations());
             });
 
         $customers = $customersQuery
@@ -60,7 +60,9 @@ class UserController extends Controller
 
         $stats = [
             'total_customers' => (clone $baseCustomerQuery)->count(),
-            'with_bookings' => (clone $baseCustomerQuery)->has('bookings')->count(),
+            'with_bookings' => (clone $baseCustomerQuery)
+                ->whereHas('bookings', fn (Builder $query) => $query->visibleToOperations())
+                ->count(),
             'incomplete_profiles' => $this->countIncompleteProfiles((clone $baseCustomerQuery)),
             'recent_30_days' => (clone $baseCustomerQuery)
                 ->whereDate('created_at', '>=', now()->subDays(30))

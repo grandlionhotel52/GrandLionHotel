@@ -31,7 +31,7 @@ class DashboardController extends Controller
             'customers' => Customer::count(),
             'rooms' => Room::count(),
             'available_rooms' => Room::query()->availableForBooking()->count(),
-            'bookings' => Booking::count(),
+            'bookings' => Booking::visibleToOperations()->count(),
             'pending_bookings' => Booking::where('status', 'pending')->count(),
             'confirmed_bookings' => Booking::where('status', 'confirmed')->count(),
             'daily_paid_revenue' => Payment::query()
@@ -65,6 +65,7 @@ class DashboardController extends Controller
         ];
 
         $recentBookings = Booking::query()
+            ->visibleToOperations()
             ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff'])
             ->latest()
             ->take(10)

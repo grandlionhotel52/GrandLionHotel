@@ -62,6 +62,7 @@ class RoomController extends Controller
             : $room->is_available;
 
         $unavailableDateRanges = $room->bookings()
+            ->visibleToOperations()
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereDate('check_out', '>', today()->toDateString())
             ->orderBy('check_in')

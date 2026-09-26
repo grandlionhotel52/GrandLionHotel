@@ -23,6 +23,8 @@ class Booking extends Model
 
     protected static ?bool $bookingDiscountsTableExists = null;
 
+    public const STATUS_DRAFT = 'draft';
+
     protected $primaryKey = 'booking_id';
 
     protected $fillable = [
@@ -284,6 +286,11 @@ class Booking extends Model
         }
 
         return $query->whereHas('payment', static fn (Builder $paymentQuery) => $paymentQuery->where('status', $status));
+    }
+
+    public function scopeVisibleToOperations(Builder $query): Builder
+    {
+        return $query->where('bookings.status', '!=', self::STATUS_DRAFT);
     }
 
     public function canTransitionTo(string $targetStatus): bool

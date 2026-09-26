@@ -22,6 +22,7 @@ class AvailabilityService
         [$requestedStart, $requestedEnd] = $requestedRange;
 
         $bookings = $room->bookings()
+            ->visibleToOperations()
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereDate('check_in', '<=', $requestedEnd->toDateString())
             ->whereDate('check_out', '>=', $requestedStart->toDateString())

@@ -53,7 +53,7 @@ class BookingWorkflowImprovementsTest extends TestCase
             ->assertHeader('content-disposition', 'inline; filename=pwd-id.jpg');
     }
 
-    public function test_customer_pre_booking_redirects_to_payment_while_status_remains_pending(): void
+    public function test_customer_booking_stays_hidden_until_payment_method_is_selected(): void
     {
         $customer = Customer::factory()->create([
             'phone' => '+639000000001',
@@ -82,12 +82,66 @@ class BookingWorkflowImprovementsTest extends TestCase
         $booking = Booking::query()->firstOrFail();
 
         $response->assertRedirect(route('payments.checkout', $booking));
-        $response->assertSessionHas('status', 'Pre-booking submitted. Choose online payment or cash. Staff will confirm the booking separately.');
-        $this->assertSame('pending', $booking->status);
+        $response->assertSessionHas('status', 'Choose online payment or cash to submit your pre-booking for staff review.');
+        $this->assertSame(Booking::STATUS_DRAFT, $booking->status);
         $this->assertSame('unpaid', $booking->payment_status);
         $this->assertSame('breakfast_included', $booking->fresh('guestDetail')->guestDetail->meal_plan);
         $this->assertSame('3330.00', $booking->fresh('payment')->payment->amount);
         $this->assertSame('792.86', $booking->payment->discount_amount);
+        $this->assertDatabaseMissing('activity_logs', [
+            'subject_type' => 'Booking',
+            'subject_id' => $booking->id,
+        ]);
+        $this->assertTrue(app(\App\Services\AvailabilityService::class)->isRoomAvailable(
+            $room,
+            now()->addDay()->toDateString(),
+            now()->addDays(3)->toDateString(),
+        ));
+
+        $this->actingAs($customer)
+            ->get(route('bookings.my'))
+            ->assertOk()
+            ->assertViewHas('bookings', fn ($bookings): bool => $bookings->total() === 0);
+
+        $admin = Admin::factory()->create();
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.bookings.index'))
+            ->assertOk()
+            ->assertViewHas('bookings', fn ($bookings): bool => $bookings->total() === 0);
+
+        $staff = Staff::factory()->create();
+        $this->actingAs($staff, 'staff')
+            ->get(route('staff.bookings.index'))
+            ->assertOk()
+            ->assertViewHas('bookings', fn ($bookings): bool => $bookings->total() === 0);
+
+        $this->actingAs($customer)->post(route('payments.process', $booking), [
+            'method' => 'cash',
+        ])->assertSessionHasNoErrors();
+
+        $booking->refresh()->load('payment');
+        $this->assertSame('pending', $booking->status);
+        $this->assertSame('cash', $booking->payment->method);
+        $this->assertDatabaseHas('activity_logs', [
+            'subject_type' => 'Booking',
+            'subject_id' => $booking->id,
+            'action' => 'created',
+        ]);
+        $this->assertFalse(app(\App\Services\AvailabilityService::class)->isRoomAvailable(
+            $room,
+            now()->addDay()->toDateString(),
+            now()->addDays(3)->toDateString(),
+        ));
+
+        $this->actingAs($customer)
+            ->get(route('bookings.my'))
+            ->assertViewHas('bookings', fn ($bookings): bool => $bookings->total() === 1);
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.bookings.index'))
+            ->assertViewHas('bookings', fn ($bookings): bool => $bookings->total() === 1);
+        $this->actingAs($staff, 'staff')
+            ->get(route('staff.bookings.index'))
+            ->assertViewHas('bookings', fn ($bookings): bool => $bookings->total() === 1);
     }
 
     public function test_active_admin_promo_code_is_validated_and_applied_to_booking_total(): void
