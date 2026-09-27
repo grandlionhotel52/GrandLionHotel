@@ -11,7 +11,7 @@ use RuntimeException;
 
 class RequestedCustomerHistorySeeder extends Seeder
 {
-    private const NAMES = [
+    private const LEGACY_NAMES = [
         'Desiree T. Daroy',
         'Ryza Barbadillo',
         'Maurice Gew',
@@ -60,6 +60,68 @@ class RequestedCustomerHistorySeeder extends Seeder
         'Aliah O. Balansay',
     ];
 
+    private const NAMES = [
+        'Desiree T. Daroy',
+        'Ryza Barbadillo',
+        'Maurice Valdez',
+        'Jane Cruz',
+        'Mark Dave Deucalion',
+        'Jazmine Ramos',
+        'Mariella Santos',
+        'Zhad Navarro',
+        'Rayver Mendoza',
+        'Justine Tamondong',
+        'Zyril V. Deguzman',
+        'John Marc Villanueva',
+        'Josh Castillo',
+        'Lovely Joy G. Baig',
+        'Mariz Ballesteros',
+        'Gil Allen C. Bautista',
+        'Jaybee Estabillo',
+        'Inoue De Leon',
+        'Trisha Mae Gatpo',
+        'Kyla V. Domingo',
+        'Justine Garcia',
+        'Rene Salazar',
+        'Jericho Orala',
+        'Sebastian Padilla',
+        'Syrel L. Solomon',
+        'Maruin S. Ferrer',
+        'Lester Aquino',
+        'Camila Hara',
+        'Rane Gabrielle A. Palisoc',
+        'Hans S. Mercado',
+        'Anne Flores',
+        'Ange Cabrera',
+        'Jam Reyes',
+        'Mark Soriano',
+        'Jay Manalo',
+        'Rogelyn De Vera',
+        'Claire Pascual',
+        'Renz Evangelista',
+        'Mae Fernandez',
+        'Clare Macaraeg',
+        'Mike Dizon',
+        'Jericho Alonzo',
+        'Vincent Rivera',
+        'Kien Hilomen',
+        'Diether G. Estrada',
+        'Aliah O. Balansay',
+    ];
+
+    private const PHONE_NUMBERS = [
+        '09178342619', '09286519347', '09561284730', '09073418652', '09692570418',
+        '09156293847', '09918437526', '09273485169', '09661429753', '09184736205',
+        '09507841362', '09218753649', '09956312874', '09163847025', '09684721530',
+        '09265938147', '09172640583', '09518472630', '09927531684', '09086342715',
+        '09631857240', '09147582639', '09284617350', '09563728419', '09918426375',
+        '09075263814', '09647318520', '09183627495', '09251734860', '09528641379',
+        '09963417285', '09152874630', '09681532749', '09064728315', '09273841650',
+        '09514782639', '09928536417', '09167423850', '09635281749', '09082647135',
+        '09246371850', '09571826439', '09934617285', '09125783460', '09678423159',
+        '09053862714',
+    ];
+
     private const LOCATIONS = [
         ['Calasiao', 'Pangasinan'],
         ['San Carlos City', 'Pangasinan'],
@@ -90,33 +152,40 @@ class RequestedCustomerHistorySeeder extends Seeder
         DB::transaction(function () use ($rooms, $adminId, $password): void {
             foreach (self::NAMES as $index => $name) {
                 $number = $index + 1;
+                $legacyName = self::LEGACY_NAMES[$index];
+                $phone = self::PHONE_NUMBERS[$index];
                 $joinedAt = Carbon::parse('2026-09-14 08:00:00')
                     ->addDays($index % 5)
                     ->addMinutes($index * 17);
-                $email = Str::of($name)
-                    ->ascii()
-                    ->lower()
-                    ->replaceMatches('/[^a-z0-9]+/', '.')
-                    ->trim('.')
-                    ->append('.demo@gmail.com')
-                    ->toString();
+                $legacyEmail = $this->legacyEmail($legacyName);
+                $email = $this->naturalEmail($name, $phone);
                 [$city, $province] = self::LOCATIONS[$index % count(self::LOCATIONS)];
                 $profileIsComplete = $index % 4 !== 0;
 
-                DB::table('customers')->insertOrIgnore([
-                    'name' => $name,
-                    'email' => $email,
-                    'password' => $password,
-                    'phone' => '0917'.str_pad((string) (1000000 + $number), 7, '0', STR_PAD_LEFT),
-                    'address_line' => $profileIsComplete ? $number.' Demo Street' : null,
-                    'city' => $profileIsComplete ? $city : null,
-                    'province' => $profileIsComplete ? $province : null,
-                    'country' => 'Philippines',
-                    'email_verified_at' => $joinedAt,
-                    'is_active' => true,
-                    'created_at' => $joinedAt,
-                    'updated_at' => $joinedAt->copy()->addMinutes(5),
-                ]);
+                $legacyCustomerId = DB::table('customers')->where('email', $legacyEmail)->value('customer_id');
+
+                if ($legacyCustomerId) {
+                    DB::table('customers')->where('customer_id', $legacyCustomerId)->update([
+                        'name' => $name,
+                        'email' => $email,
+                        'phone' => $phone,
+                    ]);
+                } elseif (! DB::table('customers')->where('email', $email)->exists()) {
+                    DB::table('customers')->insert([
+                        'name' => $name,
+                        'email' => $email,
+                        'password' => $password,
+                        'phone' => $phone,
+                        'address_line' => $profileIsComplete ? $number.' '.self::LOCATIONS[($index + 1) % count(self::LOCATIONS)][0].' Road' : null,
+                        'city' => $profileIsComplete ? $city : null,
+                        'province' => $profileIsComplete ? $province : null,
+                        'country' => 'Philippines',
+                        'email_verified_at' => $joinedAt,
+                        'is_active' => true,
+                        'created_at' => $joinedAt,
+                        'updated_at' => $joinedAt->copy()->addMinutes(5),
+                    ]);
+                }
 
                 $customerId = (int) DB::table('customers')->where('email', $email)->value('customer_id');
 
@@ -128,7 +197,8 @@ class RequestedCustomerHistorySeeder extends Seeder
                         $customerId,
                         $name,
                         $email,
-                        $number,
+                        $legacyEmail,
+                        $phone,
                         $joinedAt,
                         $index,
                         $bookingIndex,
@@ -178,24 +248,50 @@ class RequestedCustomerHistorySeeder extends Seeder
         int $customerId,
         string $name,
         string $email,
-        int $number,
+        string $legacyEmail,
+        string $phone,
         Carbon $joinedAt,
         int $index,
         int $bookingIndex,
         $rooms
     ): void {
-        $marker = "Requested demo history: {$email} #".($bookingIndex + 1);
-        $existingBookingId = DB::table('bookings')->where('notes', $marker)->value('booking_id');
-
-        if ($existingBookingId) {
-            return;
-        }
-
         $room = $rooms[($index + $bookingIndex) % $rooms->count()];
         $createdAt = $joinedAt->copy()->addHours(2 + $bookingIndex);
         $checkIn = Carbon::parse('2026-09-19')->addDays($index + ($bookingIndex * 2));
         $checkOut = $checkIn->copy()->addDays(2);
         $status = $checkOut->isPast() ? 'completed' : 'confirmed';
+        $legacyMarker = "Requested demo history: {$legacyEmail} #".($bookingIndex + 1);
+        $notes = [
+            'Late arrival requested.',
+            'Quiet room preferred.',
+            'Please call before check-in.',
+            'Near the elevator if available.',
+            null,
+        ][$index % 5];
+        $existingBookingId = DB::table('bookings')
+            ->where('customer_id', $customerId)
+            ->where(function ($query) use ($createdAt, $legacyMarker): void {
+                $query->where('created_at', $createdAt)
+                    ->orWhere('notes', $legacyMarker);
+            })
+            ->value('booking_id');
+
+        $parts = preg_split('/\s+/', trim($name), 2);
+
+        if ($existingBookingId) {
+            DB::table('bookings')->where('booking_id', $existingBookingId)->update(['notes' => $notes]);
+            DB::table('booking_guest_details')->where('booking_id', $existingBookingId)->update([
+                'first_name' => $parts[0],
+                'last_name' => $parts[1],
+                'email' => $email,
+                'phone' => $phone,
+            ]);
+            DB::table('payments')->where('booking_id', $existingBookingId)->update([
+                'transaction_reference' => $this->transactionReference($createdAt, (int) $existingBookingId),
+            ]);
+
+            return;
+        }
 
         $bookingId = DB::table('bookings')->insertGetId([
             'customer_id' => $customerId,
@@ -203,18 +299,17 @@ class RequestedCustomerHistorySeeder extends Seeder
             'check_in' => $checkIn->toDateString(),
             'check_out' => $checkOut->toDateString(),
             'status' => $status,
-            'notes' => $marker,
+            'notes' => $notes,
             'created_at' => $createdAt,
             'updated_at' => $createdAt->copy()->addHour(),
         ], 'booking_id');
 
-        $parts = preg_split('/\s+/', trim($name), 2);
         DB::table('booking_guest_details')->insert([
             'booking_id' => $bookingId,
             'first_name' => $parts[0],
-            'last_name' => $parts[1] ?? 'Gew',
+            'last_name' => $parts[1],
             'email' => $email,
-            'phone' => '0917'.str_pad((string) (1000000 + $number), 7, '0', STR_PAD_LEFT),
+            'phone' => $phone,
             'adults' => 2,
             'kids' => 0,
             'meal_plan' => 'room_only',
@@ -230,7 +325,7 @@ class RequestedCustomerHistorySeeder extends Seeder
             'balance_due' => 0,
             'method' => 'cash',
             'status' => 'paid',
-            'transaction_reference' => 'DEMO-'.str_pad((string) $bookingId, 6, '0', STR_PAD_LEFT),
+            'transaction_reference' => $this->transactionReference($createdAt, (int) $bookingId),
             'paid_at' => $createdAt->copy()->addMinutes(30),
             'created_at' => $createdAt,
             'updated_at' => $createdAt->copy()->addMinutes(30),
@@ -248,6 +343,33 @@ class RequestedCustomerHistorySeeder extends Seeder
             $userAgent,
             $createdAt
         );
+    }
+
+    private function legacyEmail(string $name): string
+    {
+        return Str::of($name)
+            ->ascii()
+            ->lower()
+            ->replaceMatches('/[^a-z0-9]+/', '.')
+            ->trim('.')
+            ->append('.demo@gmail.com')
+            ->toString();
+    }
+
+    private function naturalEmail(string $name, string $phone): string
+    {
+        $localPart = Str::of($name)
+            ->ascii()
+            ->lower()
+            ->replaceMatches('/[^a-z0-9]+/', '')
+            ->append(substr($phone, -2));
+
+        return $localPart.'@gmail.com';
+    }
+
+    private function transactionReference(Carbon $createdAt, int $bookingId): string
+    {
+        return 'GLH-'.$createdAt->format('ymd').'-'.str_pad((string) $bookingId, 6, '0', STR_PAD_LEFT);
     }
 
     private function updateOrInsertActivity(
