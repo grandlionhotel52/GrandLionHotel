@@ -26,6 +26,12 @@
         z-index: 1;
         color: #f8fafc;
     }
+    .auth-premium-copy h1,
+    .auth-premium-copy h2,
+    .auth-premium-copy p {
+        color: #fff;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+    }
     .auth-premium-chip {
         display: inline-flex;
         align-items: center;
