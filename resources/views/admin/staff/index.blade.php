@@ -32,14 +32,61 @@
             background: #fff;
             box-shadow: var(--admin-shadow);
         }
+        .staff-table {
+            min-width: 1080px;
+        }
+        .staff-identity-col {
+            min-width: 220px;
+            width: 23%;
+        }
+        .staff-identity-name {
+            color: #182235;
+            font-weight: 800;
+            line-height: 1.3;
+            overflow-wrap: normal;
+            word-break: normal;
+        }
+        .staff-identity-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem 0.7rem;
+            margin-top: 0.3rem;
+            color: #667085;
+            font-size: 0.8rem;
+            line-height: 1.35;
+        }
+        .staff-identity-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.28rem;
+            white-space: nowrap;
+        }
+        .staff-status-col {
+            min-width: 115px;
+        }
+        .staff-earnings-col {
+            min-width: 210px;
+            width: 20%;
+        }
+        .staff-bookings-col {
+            min-width: 145px;
+            text-align: center;
+        }
         .staff-actions-col {
-            min-width: 330px;
+            min-width: 310px;
         }
         .staff-created-col {
             min-width: 170px;
         }
         .staff-created-at {
             white-space: nowrap;
+        }
+        .staff-earnings-meta {
+            display: block;
+            max-width: 190px;
+            margin-top: 0.18rem;
+            line-height: 1.35;
         }
         .staff-actions {
             display: inline-flex;
@@ -94,12 +141,8 @@
             color: #fff;
         }
         @media (max-width: 991.98px) {
-            .staff-actions-col,
-            .staff-created-col {
-                min-width: 330px;
-            }
-            .staff-created-at {
-                white-space: normal;
+            .staff-table {
+                min-width: 1040px;
             }
         }
     </style>
@@ -170,17 +213,14 @@
     <div id="admin_staff_results" aria-live="polite">
     <div class="table-shell p-2 p-lg-3">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <caption class="visually-hidden">Staff accounts, assignments, earnings, and management actions</caption>
+            <table class="table table-hover align-middle mb-0 staff-table">
+                <caption class="visually-hidden">Staff contact information, status, assignments, earnings, creation date, and management actions</caption>
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Username</th>
-                        <th>Phone</th>
-                        <th>Account Status</th>
-                        <th>Daily Earnings</th>
-                        <th>Assigned Bookings</th>
-                        <th>Paid Bookings (Day)</th>
+                        <th class="staff-identity-col">Staff</th>
+                        <th class="staff-status-col">Status</th>
+                        <th class="staff-earnings-col">Daily Performance</th>
+                        <th class="staff-bookings-col">Assigned Bookings</th>
                         <th class="staff-created-col">Created</th>
                         <th class="text-end staff-actions-col">Actions</th>
                     </tr>
@@ -189,22 +229,25 @@
                     @forelse($staffMembers as $staff)
                         @php($staffName = \App\Support\PersonName::split($staff->name))
                         <tr>
-                            <td>{{ $staff->name }}</td>
-                            <td>{{ $staff->username }}</td>
-                            <td>{{ $staff->phone ?: '-' }}</td>
-                            <td>
+                            <td class="staff-identity-col">
+                                <div class="staff-identity-name">{{ $staff->name }}</div>
+                                <div class="staff-identity-meta">
+                                    <span><i class="bi bi-person" aria-hidden="true"></i>{{ $staff->username }}</span>
+                                    <span><i class="bi bi-telephone" aria-hidden="true"></i>{{ $staff->phone ?: 'No phone' }}</span>
+                                </div>
+                            </td>
+                            <td class="staff-status-col">
                                 <span class="badge {{ $staff->is_active ? 'text-bg-success' : 'text-bg-secondary' }}">
                                     {{ $staff->is_active ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td>
+                            <td class="staff-earnings-col">
                                 <div class="fw-semibold">&#8369;{{ number_format((float) ($staff->daily_revenue ?? 0), 2) }}</div>
-                                <small class="text-secondary">{{ (int) ($staff->daily_paid_bookings ?? 0) }} paid booking(s) on {{ $selectedDateLabel }}</small>
+                                <small class="text-secondary staff-earnings-meta">{{ (int) ($staff->daily_paid_bookings ?? 0) }} paid booking(s) on {{ $selectedDateLabel }}</small>
                             </td>
-                            <td>{{ $staff->assigned_bookings_count }}</td>
-                            <td>{{ (int) ($staff->daily_paid_bookings ?? 0) }}</td>
+                            <td class="staff-bookings-col"><span class="fw-semibold">{{ $staff->assigned_bookings_count }}</span></td>
                             <td class="staff-created-at">{{ $staff->created_at?->format('M d, Y h:i A') }}</td>
-                            <td class="text-end">
+                            <td class="text-end staff-actions-col">
                                 <div class="staff-actions">
                                     <a href="{{ route('admin.staff.show', $staff) }}" class="btn btn-sm btn-ta">
                                         <i class="bi bi-people"></i>
@@ -238,7 +281,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <i class="bi bi-person-plus fs-3 text-secondary d-block mb-2" aria-hidden="true"></i>
                                 <strong class="d-block">No staff accounts</strong>
                                 <span class="text-secondary">Create an account to assign booking work.</span>
