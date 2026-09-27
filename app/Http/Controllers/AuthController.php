@@ -447,6 +447,8 @@ class AuthController extends Controller
         }
 
         try {
+            $token->forceFill(['token' => Str::random(64)])->save();
+
             $code = (string) random_int(100000, 999999);
             $this->resetService->send($token, $code);
 
@@ -454,7 +456,7 @@ class AuthController extends Controller
             $request->session()->put(self::PENDING_RESET_EMAIL_KEY, $email);
 
             return redirect()
-                ->route('password.reset', ['email' => $email])
+                ->route('password.reset', ['resetToken' => $token->token])
                 ->with('status', 'Reset code sent to your email. Enter the 6-digit code below.');
         } catch (Throwable $e) {
             report($e);
@@ -462,16 +464,17 @@ class AuthController extends Controller
         }
     }
 
-    public function showResetPassword(Request $request, string $email)
+    public function showResetPassword(Request $request, string $resetToken)
     {
-        $token = PasswordResetToken::findValidByEmail($email);
+        $token = PasswordResetToken::findValidByToken($resetToken);
         if (!$token) {
             abort(404, 'Invalid or expired reset request.');
         }
 
+        $email = $token->email;
         $request->session()->put(self::PENDING_RESET_EMAIL_KEY, $email);
 
-        return view('auth.reset-password', ['email' => $email]);
+        return view('auth.reset-password', compact('email', 'resetToken'));
     }
 
     public function verifyResetCode(Request $request)
@@ -509,26 +512,27 @@ class AuthController extends Controller
         $request->session()->put(self::VERIFIED_RESET_EMAIL_KEY, $email);
 
         return redirect()
-            ->route('password.reset.new', ['email' => $email])
+            ->route('password.reset.new', ['resetToken' => $token->token])
             ->with('status', 'Code verified. Create your new password.');
     }
 
-    public function showNewPasswordForm(Request $request, string $email)
+    public function showNewPasswordForm(Request $request, string $resetToken)
     {
-        $token = PasswordResetToken::findValidByEmail($email);
+        $token = PasswordResetToken::findValidByToken($resetToken);
         if (!$token) {
             return redirect()
                 ->route('password.request')
                 ->withErrors(['email' => 'Invalid or expired reset request. Please request a new code.']);
         }
 
+        $email = $token->email;
         if ($request->session()->get(self::VERIFIED_RESET_EMAIL_KEY) !== $email) {
             return redirect()
-                ->route('password.reset', ['email' => $email])
+                ->route('password.reset', ['resetToken' => $resetToken])
                 ->withErrors(['code' => 'Verify the 6-digit code first.']);
         }
 
-        return view('auth.reset-password-new', ['email' => $email]);
+        return view('auth.reset-password-new', compact('email', 'resetToken'));
     }
 
     public function resetPassword(Request $request)
@@ -541,8 +545,16 @@ class AuthController extends Controller
         $email = $validated['email'];
 
         if ($request->session()->get(self::VERIFIED_RESET_EMAIL_KEY) !== $email) {
+            $resetToken = (string) PasswordResetToken::where('email', $email)->value('token');
+
+            if ($resetToken === '') {
+                return redirect()
+                    ->route('password.request')
+                    ->withErrors(['code' => 'Invalid or expired reset request. Please request a new code.']);
+            }
+
             return redirect()
-                ->route('password.reset', ['email' => $email])
+                ->route('password.reset', ['resetToken' => $resetToken])
                 ->withErrors(['code' => 'Verify the 6-digit code first.']);
         }
 
@@ -550,7 +562,7 @@ class AuthController extends Controller
 
         if (!$token || $token->isExpired()) {
             return redirect()
-                ->route('password.reset', ['email' => $email])
+                ->route('password.request')
                 ->withErrors(['code' => 'Invalid or expired code.']);
         }
 

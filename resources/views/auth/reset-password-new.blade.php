@@ -94,7 +94,7 @@
 
                         <div class="row g-2 mt-3">
                             <div class="col-md-6">
-                                <x-back-button :href="route('password.reset', ['email' => $email])" label="Back to verification code" class="w-100" />
+                                <x-back-button :href="route('password.reset', ['resetToken' => $resetToken])" label="Back to verification code" class="w-100" />
                             </div>
                             <div class="col-md-6">
                                 <x-back-button :href="route('login')" label="Back to sign in" class="w-100" />

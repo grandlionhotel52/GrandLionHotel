@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasEncryptedRouteKey;
 use App\Models\Concerns\HasLegacyIdAttribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,7 @@ use Illuminate\Support\Str;
 class Payment extends Model
 {
     use HasFactory;
+    use HasEncryptedRouteKey;
     use HasLegacyIdAttribute;
 
     public const METHOD_CASH = 'cash';

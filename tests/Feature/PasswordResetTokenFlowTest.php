@@ -26,11 +26,11 @@ class PasswordResetTokenFlowTest extends TestCase
             'email' => $user->email,
         ]);
 
-        $response->assertRedirect(route('password.reset', ['email' => $user->email]));
-        $response->assertSessionHas('status', 'Reset code sent to your email. Enter the 6-digit code below.');
-
         $token = PasswordResetToken::query()->where('email', $user->email)->first();
         $this->assertNotNull($token);
+        $response->assertRedirect(route('password.reset', ['resetToken' => $token->token]));
+        $this->assertStringNotContainsString($user->email, (string) $response->headers->get('Location'));
+        $response->assertSessionHas('status', 'Reset code sent to your email. Enter the 6-digit code below.');
         $this->assertNotNull($token->code_hash);
         $this->assertNotNull($token->code_expires_at);
         $this->assertSame(0, $token->attempts);
@@ -63,10 +63,10 @@ class PasswordResetTokenFlowTest extends TestCase
             'code' => '123456',
         ]);
 
-        $response->assertRedirect(route('password.reset.new', ['email' => $user->email]));
+        $response->assertRedirect(route('password.reset.new', ['resetToken' => 'legacy-token']));
         $response->assertSessionHas('status', 'Code verified. Create your new password.');
 
-        $this->get(route('password.reset.new', ['email' => $user->email]))
+        $this->get(route('password.reset.new', ['resetToken' => 'legacy-token']))
             ->assertOk()
             ->assertSee('Create New Password');
     }
@@ -94,7 +94,7 @@ class PasswordResetTokenFlowTest extends TestCase
             'password_confirmation' => 'NewPass123',
         ]);
 
-        $response->assertRedirect(route('password.reset', ['email' => $user->email]));
+        $response->assertRedirect(route('password.reset', ['resetToken' => 'legacy-token']));
         $response->assertSessionHasErrors('code');
 
         $user->refresh();
@@ -121,7 +121,7 @@ class PasswordResetTokenFlowTest extends TestCase
         $this->post(route('password.verify'), [
             'email' => $user->email,
             'code' => '123456',
-        ])->assertRedirect(route('password.reset.new', ['email' => $user->email]));
+        ])->assertRedirect(route('password.reset.new', ['resetToken' => 'legacy-token']));
 
         $response = $this->post(route('password.update'), [
             'email' => $user->email,

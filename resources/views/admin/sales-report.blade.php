@@ -405,7 +405,7 @@
                                     <td class="text-end fw-semibold">&#8369;{{ number_format((float) $sale->amount, 2) }}</td>
                                     <td class="text-end admin-report-actions">
                                         <a
-                                            href="{{ route('admin.sales-report.receipt', $sale->payment_id) }}"
+                                            href="{{ route('admin.sales-report.receipt', \App\Models\Payment::encryptRouteKey((int) $sale->payment_id)) }}"
                                             class="btn btn-sm btn-ta-outline"
                                             target="_blank"
                                             rel="noopener"

@@ -6,6 +6,7 @@ use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 trait HasEncryptedRouteKey
 {
@@ -32,9 +33,28 @@ trait HasEncryptedRouteKey
     public static function encryptRouteKey(string|int $key): string
     {
         $key = (string) $key;
-        $signature = hash_hmac('sha256', $key, self::routeSigningKey());
+        if (!ctype_digit($key) || (int) $key < 1) {
+            throw new RuntimeException('Route keys must be positive integers.');
+        }
 
-        return rtrim(strtr(base64_encode($key.'.'.$signature), '+/', '-_'), '=');
+        $packedKey = pack('J', (int) $key);
+        $authenticationTag = substr(
+            hash_hmac('sha256', static::class.'|'.$packedKey, self::routeAuthenticationKey(), true),
+            0,
+            8
+        );
+        $encrypted = openssl_encrypt(
+            $packedKey.$authenticationTag,
+            'aes-256-ecb',
+            self::routeEncryptionKey(),
+            OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING
+        );
+
+        if ($encrypted === false) {
+            throw new RuntimeException('Unable to encrypt the route key.');
+        }
+
+        return rtrim(strtr(base64_encode($encrypted), '+/', '-_'), '=');
     }
 
     public static function decryptRouteKey(string $value): ?string
@@ -49,6 +69,37 @@ trait HasEncryptedRouteKey
             return null;
         }
 
+        if (strlen($payload) === 16) {
+            $decrypted = openssl_decrypt(
+                $payload,
+                'aes-256-ecb',
+                self::routeEncryptionKey(),
+                OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING
+            );
+
+            if ($decrypted === false || strlen($decrypted) !== 16) {
+                return null;
+            }
+
+            $packedKey = substr($decrypted, 0, 8);
+            $authenticationTag = substr($decrypted, 8, 8);
+            $expectedTag = substr(
+                hash_hmac('sha256', static::class.'|'.$packedKey, self::routeAuthenticationKey(), true),
+                0,
+                8
+            );
+
+            if (!hash_equals($expectedTag, $authenticationTag)) {
+                return null;
+            }
+
+            $unpacked = unpack('Jkey', $packedKey);
+            $key = $unpacked['key'] ?? null;
+
+            return is_int($key) && $key > 0 ? (string) $key : null;
+        }
+
+        // Keep previously issued signed links working during deployments.
         if (preg_match('/^(\d+)\.([a-f0-9]{64})$/', $payload, $matches) === 1) {
             $key = $matches[1];
             $expectedSignature = hash_hmac('sha256', $key, self::routeSigningKey());
@@ -76,5 +127,15 @@ trait HasEncryptedRouteKey
         return Str::startsWith($appKey, 'base64:')
             ? (base64_decode(Str::after($appKey, 'base64:'), true) ?: $appKey)
             : $appKey;
+    }
+
+    private static function routeEncryptionKey(): string
+    {
+        return hash('sha256', 'route-encryption|'.self::routeSigningKey(), true);
+    }
+
+    private static function routeAuthenticationKey(): string
+    {
+        return hash('sha256', 'route-authentication|'.self::routeSigningKey(), true);
     }
 }

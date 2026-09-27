@@ -42,6 +42,13 @@ class PasswordResetToken extends Model
             ->first();
     }
 
+    public static function findValidByToken(string $token): ?static
+    {
+        return static::where('token', $token)
+            ->where('code_expires_at', '>', now())
+            ->first();
+    }
+
     public function incrementAttempts(): void
     {
         $this->increment('attempts');

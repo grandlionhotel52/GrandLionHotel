@@ -123,7 +123,7 @@
                                     @endif
                                 </td>
                                 <td class="text-end sales-metric-receipt">
-                                    <a href="{{ route('admin.sales-report.receipt', $sale->payment_id) }}" class="btn btn-sm btn-ta-outline" target="_blank" rel="noopener">
+                                    <a href="{{ route('admin.sales-report.receipt', \App\Models\Payment::encryptRouteKey((int) $sale->payment_id)) }}" class="btn btn-sm btn-ta-outline" target="_blank" rel="noopener">
                                         <i class="bi bi-printer me-1" aria-hidden="true"></i>View / Print
                                     </a>
                                 </td>

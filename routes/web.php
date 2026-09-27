@@ -42,9 +42,9 @@ Route::middleware('guest:admin,staff,customer')->group(function () {
 
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetCode'])->name('password.email');
-    Route::get('/reset-password/{email}', [AuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::get('/reset-password/{resetToken}', [AuthController::class, 'showResetPassword'])->name('password.reset');
     Route::post('/reset-password/verify', [AuthController::class, 'verifyResetCode'])->name('password.verify');
-    Route::get('/reset-password/{email}/new', [AuthController::class, 'showNewPasswordForm'])->name('password.reset.new');
+    Route::get('/reset-password/{resetToken}/new', [AuthController::class, 'showNewPasswordForm'])->name('password.reset.new');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 
     Route::get('/auth/google/redirect/login', [AuthController::class, 'redirectToGoogleForLogin'])->name('auth.google.redirect.login');

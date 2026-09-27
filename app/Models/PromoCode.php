@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasEncryptedRouteKey;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PromoCode extends Model
 {
+    use HasEncryptedRouteKey;
+
     protected $primaryKey = 'promo_code_id';
 
     protected $fillable = ['code', 'discount_percent', 'starts_at', 'ends_at', 'is_active'];
