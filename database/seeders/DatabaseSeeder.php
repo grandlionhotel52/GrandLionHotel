@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RoomStatusSeeder::class,
             UserSeeder::class,
             RoomSeeder::class,
+            RequestedCustomerHistorySeeder::class,
         ]);
     }
 }

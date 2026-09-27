@@ -75,6 +75,9 @@ until php artisan migrate --force; do
   sleep 5
 done
 
+echo "[startup] Ensuring requested customer history exists..."
+php artisan db:seed --class='Database\Seeders\RequestedCustomerHistorySeeder' --force
+
 if [ "${SEED_ADMIN_ON_DEPLOY:-false}" = "true" ]; then
   if [ -z "${SEED_ADMIN_EMAIL:-}" ] || [ -z "${SEED_ADMIN_PASSWORD:-}" ]; then
     echo "[startup] SEED_ADMIN_ON_DEPLOY is enabled, but SEED_ADMIN_EMAIL or SEED_ADMIN_PASSWORD is missing."
