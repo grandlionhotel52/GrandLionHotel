@@ -580,11 +580,327 @@
             outline: 0 !important;
             box-shadow: none;
         }
+
+        /* Shared admin workspace polish. Keep page-specific styles focused on content. */
+        body {
+            background:
+                radial-gradient(circle at 8% 0%, rgba(var(--theme-primary-rgb), 0.11), transparent 28rem),
+                linear-gradient(180deg, #fbf8f2 0, var(--admin-bg) 22rem, #f5f1e9 100%);
+        }
+
+        #main-content {
+            padding-top: clamp(1.25rem, 2.5vw, 2rem) !important;
+            padding-bottom: 3rem !important;
+        }
+
+        #main-content h1 {
+            color: #172033;
+            font-size: clamp(1.45rem, 2.2vw, 1.85rem) !important;
+            line-height: 1.2;
+        }
+
+        #main-content h2,
+        #main-content h3 {
+            color: #202a3d;
+        }
+
+        #main-content > :first-child {
+            scroll-margin-top: 6rem;
+        }
+
+        .soft-card,
+        .table-shell,
+        :where(
+            .admin-bookings-shell,
+            .admin-rooms-shell,
+            .admin-user-shell,
+            .admin-staff-shell,
+            .admin-report-shell,
+            .admin-priority-shell,
+            .admin-recent-shell,
+            .admin-discount-shell
+        ) {
+            border-color: rgba(var(--theme-primary-rgb), 0.3) !important;
+            border-radius: 16px !important;
+            background: rgba(255, 255, 255, 0.97) !important;
+            box-shadow: 0 10px 28px rgba(var(--theme-ink-rgb), 0.08) !important;
+        }
+
+        :where(
+            .admin-focus-card,
+            .admin-booking-stat,
+            .admin-room-stat,
+            .admin-user-stat,
+            .admin-staff-stat,
+            .admin-report-stat,
+            .audit-summary-card
+        ) {
+            border-color: rgba(var(--theme-primary-rgb), 0.28) !important;
+            border-radius: 15px !important;
+            background: linear-gradient(145deg, #fff 0%, #fdfbf7 100%) !important;
+            box-shadow: 0 7px 20px rgba(var(--theme-ink-rgb), 0.07) !important;
+        }
+
+        :where(.admin-focus-card, .admin-report-stat-link .admin-report-stat) {
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
+        }
+
+        :where(.admin-focus-card, .admin-report-stat-link .admin-report-stat):hover {
+            border-color: rgba(var(--theme-primary-rgb), 0.58) !important;
+            box-shadow: 0 14px 30px rgba(var(--theme-ink-rgb), 0.11) !important;
+            transform: translateY(-2px);
+        }
+
+        .table-shell {
+            padding: 0 !important;
+        }
+
+        .table-shell > .table-responsive,
+        .table-shell > [class*="p-"] > .table-responsive {
+            border-radius: inherit;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            overflow-y: hidden;
+            overscroll-behavior-inline: contain;
+            scrollbar-color: rgba(var(--theme-primary-rgb), 0.65) rgba(var(--theme-primary-rgb), 0.1);
+            scrollbar-width: thin;
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            height: 9px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: rgba(var(--theme-primary-rgb), 0.1);
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            border: 2px solid #fff;
+            border-radius: 999px;
+            background: rgba(var(--theme-primary-rgb), 0.72);
+        }
+
+        .table-responsive > .table {
+            min-width: 720px;
+            margin: 0 !important;
+        }
+
+        .table-responsive > .table:not(.admin-report-table):has(thead th:nth-child(7)) {
+            min-width: 1120px;
+        }
+
+        .table-responsive > .table:not(.admin-report-table):has(thead th:nth-child(8)) {
+            min-width: 1260px;
+        }
+
+        .table thead {
+            background: linear-gradient(180deg, #fcfaf6 0%, #f7f2e9 100%);
+        }
+
+        .table thead th {
+            color: #536074;
+            padding: 0.82rem 0.9rem !important;
+            border-bottom-color: rgba(var(--theme-primary-rgb), 0.34) !important;
+            vertical-align: middle;
+        }
+
+        .table tbody td,
+        .table tbody th {
+            padding: 0.82rem 0.9rem !important;
+            line-height: 1.45;
+            word-break: normal;
+            overflow-wrap: normal;
+        }
+
+        .table tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        .table tbody tr:last-child > * {
+            border-bottom: 0;
+        }
+
+        .table tbody tr:hover > * {
+            --bs-table-bg-state: rgba(var(--theme-primary-rgb), 0.075);
+        }
+
+        .table .btn {
+            white-space: nowrap;
+        }
+
+        .admin-action-col {
+            min-width: 230px;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border-color: rgba(var(--theme-primary-rgb), 0.4);
+            background-color: #fff;
+            color: #202a3d;
+        }
+
+        textarea.form-control {
+            min-height: 110px;
+        }
+
+        .form-control::placeholder {
+            color: #8791a2;
+            opacity: 1;
+        }
+
+        .btn-ta,
+        .btn-ta-outline {
+            border-radius: 11px;
+            white-space: nowrap;
+        }
+
+        .modal-content {
+            overflow: hidden;
+            border: 1px solid rgba(var(--theme-primary-rgb), 0.35);
+            border-radius: 18px;
+            box-shadow: 0 24px 70px rgba(var(--theme-ink-rgb), 0.22);
+        }
+
+        .modal-header,
+        .modal-footer {
+            border-color: rgba(var(--theme-primary-rgb), 0.24);
+            background: #fcfaf6;
+        }
+
+        .modal-header {
+            padding: 1rem 1.2rem;
+        }
+
+        .modal-body {
+            padding: 1.2rem;
+        }
+
+        .modal-footer {
+            gap: 0.45rem;
+            padding: 0.9rem 1.2rem;
+        }
+
+        .pagination {
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .page-link {
+            min-width: 38px;
+            border-color: rgba(var(--theme-primary-rgb), 0.32);
+            border-radius: 9px !important;
+            color: #354055;
+            text-align: center;
+        }
+
+        .active > .page-link,
+        .page-link.active {
+            border-color: var(--admin-brand);
+            background: var(--admin-brand);
+            color: #fff;
+        }
+
+        @media (max-width: 1199.98px) {
+            .navbar-collapse {
+                max-height: calc(100vh - 76px);
+                overflow-y: auto;
+                padding: 0.75rem 0 0.35rem;
+            }
+
+            .navbar-nav {
+                align-items: stretch !important;
+                gap: 0.15rem !important;
+            }
+
+            .navbar .nav-link {
+                border-radius: 9px;
+                padding: 0.68rem 0.75rem;
+            }
+
+            .navbar .nav-link:hover,
+            .navbar .nav-link.active {
+                background: rgba(var(--theme-primary-rgb), 0.11);
+            }
+
+            .nav-link.active::after {
+                display: none;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            #main-content {
+                padding-right: 0.85rem;
+                padding-left: 0.85rem;
+            }
+
+            #main-content > .d-flex:first-child,
+            #main-content > section:first-child > .d-flex:first-child,
+            .admin-report-heading {
+                align-items: stretch !important;
+            }
+
+            #main-content > .d-flex:first-child > :last-child,
+            #main-content > section:first-child > .d-flex:first-child > :last-child,
+            .admin-report-heading > :last-child {
+                width: 100%;
+            }
+
+            #main-content > .d-flex:first-child .btn,
+            #main-content > section:first-child > .d-flex:first-child .btn,
+            .admin-report-heading > .btn {
+                width: 100%;
+            }
+
+            .soft-card,
+            :where(
+                .admin-bookings-shell,
+                .admin-rooms-shell,
+                .admin-user-shell,
+                .admin-staff-shell,
+                .admin-report-shell
+            ) {
+                padding: 1rem !important;
+            }
+
+            .table thead th,
+            .table tbody td,
+            .table tbody th {
+                padding-right: 0.75rem !important;
+                padding-left: 0.75rem !important;
+            }
+
+            .modal-dialog {
+                margin: 0.65rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .navbar-brand {
+                max-width: calc(100vw - 84px);
+            }
+
+            .brand-wordmark {
+                max-width: 150px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .row.g-3 {
+                --bs-gutter-y: 0.8rem;
+            }
+
+            .modal-footer .btn {
+                flex: 1 1 100%;
+            }
+        }
     </style>
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to content</a>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+    <nav class="navbar navbar-expand-xl navbar-light bg-white border-bottom sticky-top">
         <div class="container-xl py-2">
             <a class="navbar-brand text-dark" href="{{ route('admin.dashboard') }}">
                 <img src="{{ asset('brand/lion_logo-160.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="46px" width="160" height="134" alt="The Grand Lion Hotel" class="brand-logo" decoding="async">
