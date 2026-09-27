@@ -64,7 +64,9 @@ class AdminStaffButtonFlowsTest extends TestCase
         $this->actingAs($admin, 'admin');
 
         $this->get(route('admin.dashboard'))->assertOk();
-        $roomsIndexResponse = $this->get(route('admin.rooms.index'));
+        $roomsIndexResponse = $this->get(route('admin.rooms.index', [
+            'q' => $room->name,
+        ]));
         $roomsIndexResponse->assertOk();
         $roomsIndexResponse->assertSee('Room Status');
         $roomsIndexResponse->assertSee(
