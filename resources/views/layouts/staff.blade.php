@@ -533,10 +533,11 @@
     @stack('head')
     @include('layouts.partials.contrast-fixes')
     @include('layouts.partials.responsive-fixes')
+    @include('layouts.partials.staff-workspace-polish')
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to content</a>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+    <nav class="navbar navbar-expand-xl navbar-light bg-white border-bottom sticky-top">
         <div class="container-xl py-2">
             <a class="navbar-brand text-dark" href="{{ route('staff.dashboard') }}">
                 <img src="{{ asset('brand/lion_logo-160.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="46px" width="160" height="134" alt="The Grand Lion Hotel" class="brand-logo" decoding="async">
