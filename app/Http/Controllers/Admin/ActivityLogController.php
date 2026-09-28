@@ -45,7 +45,6 @@ class ActivityLogController extends Controller
                         ->where('subject_type', 'like', '%'.$search.'%')
                         ->orWhere('actor_type', 'like', '%'.$search.'%')
                         ->orWhere('action', 'like', '%'.$search.'%')
-                        ->orWhere('user_agent', 'like', '%'.$search.'%')
                         ->orWhere('changes', 'like', '%'.$search.'%');
 
                     foreach ($this->matchingActors($search) as $actorType => $actorIds) {

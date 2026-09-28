@@ -73,7 +73,7 @@ class ActivityLogExperienceTest extends TestCase
         $this->assertStringNotContainsString('new-secret', json_encode($log->changes));
     }
 
-    public function test_activity_logs_do_not_capture_or_display_ip_addresses(): void
+    public function test_activity_logs_do_not_capture_or_display_connection_information(): void
     {
         $admin = Admin::factory()->create();
         $room = Room::factory()->create();
@@ -88,14 +88,17 @@ class ActivityLogExperienceTest extends TestCase
             ->firstOrFail();
 
         $this->assertNull($log->ip_address);
+        $this->assertNull($log->user_agent);
 
         $this->get(route('admin.activity-logs.index'))
             ->assertOk()
-            ->assertDontSee('IP address');
+            ->assertDontSee('IP address')
+            ->assertDontSee('Device');
 
         $this->get(route('admin.activity-logs.show', $log))
             ->assertOk()
-            ->assertDontSee('IP address');
+            ->assertDontSee('IP address')
+            ->assertDontSee('Browser / device');
     }
 
     public function test_login_and_logout_events_are_recorded(): void

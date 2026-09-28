@@ -47,25 +47,6 @@
             if ($value === '') return '(empty)';
             return (string) $value;
         };
-        $deviceLabel = static function (?string $userAgent): string {
-            if (blank($userAgent)) return 'Not available';
-            $browser = match (true) {
-                str_contains($userAgent, 'Edg/') => 'Microsoft Edge',
-                str_contains($userAgent, 'Chrome/') => 'Google Chrome',
-                str_contains($userAgent, 'Firefox/') => 'Mozilla Firefox',
-                str_contains($userAgent, 'Safari/') => 'Safari',
-                default => 'Other browser',
-            };
-            $platform = match (true) {
-                str_contains($userAgent, 'Windows') => 'Windows',
-                str_contains($userAgent, 'Android') => 'Android',
-                str_contains($userAgent, 'iPhone'), str_contains($userAgent, 'iPad') => 'iOS',
-                str_contains($userAgent, 'Macintosh') => 'macOS',
-                str_contains($userAgent, 'Linux') => 'Linux',
-                default => 'Unknown OS',
-            };
-            return $browser.' on '.$platform;
-        };
     @endphp
 
     <section class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
@@ -90,7 +71,6 @@
             <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-person"></i></span><small class="text-secondary d-block">Performed by</small><strong>{{ $actorName ?: ($activityLog->actor_type ?: 'System') }}</strong><div class="small text-secondary">{{ $activityLog->actor_type ?: 'Automated process' }}</div></div>
             <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-bullseye"></i></span><small class="text-secondary d-block">Affected record</small><strong class="audit-value">{{ $subjectLabel }}</strong><div class="small text-secondary">{{ str($activityLog->subject_type)->headline() }} #{{ $activityLog->subject_id }}</div></div>
             <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-clock"></i></span><small class="text-secondary d-block">Occurred</small><strong>{{ $activityLog->created_at?->format('M d, Y') }}</strong><div class="small text-secondary">{{ $activityLog->created_at?->format('h:i:s A') }}</div></div>
-            <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-laptop"></i></span><small class="text-secondary d-block">Browser / device</small><strong>{{ $deviceLabel($activityLog->user_agent) }}</strong><div class="audit-value small text-secondary mt-1">{{ $activityLog->user_agent ?: 'User agent not recorded' }}</div></div>
             <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-fingerprint"></i></span><small class="text-secondary d-block">Event identifier</small><strong>#{{ $activityLog->activity_log_id }}</strong><div class="small text-secondary">{{ $event['label'] }}</div></div>
         </div>
     </section>

@@ -21,7 +21,6 @@
         .audit-meta { color: var(--admin-muted); font-size: 0.76rem; }
         .audit-field-list { display: flex; flex-wrap: wrap; gap: 0.3rem; min-width: 170px; max-width: 280px; }
         .audit-field { border: 1px solid var(--admin-line); border-radius: 999px; background: #f8fafc; padding: 0.16rem 0.45rem; color: #475569; font-size: 0.7rem; font-weight: 700; }
-        .audit-source { min-width: 135px; max-width: 200px; }
         .audit-empty { padding: 4rem 1rem !important; }
         @media (max-width: 991.98px) { .audit-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (max-width: 575.98px) { .audit-summary { grid-template-columns: 1fr; } }
@@ -37,29 +36,6 @@
             'logged_in' => ['label' => 'Signed in', 'icon' => 'bi-box-arrow-in-right', 'tone' => 'success'],
             'logged_out' => ['label' => 'Signed out', 'icon' => 'bi-box-arrow-right', 'tone' => 'danger'],
         ];
-        $deviceLabel = static function (?string $userAgent): string {
-            if (blank($userAgent)) {
-                return 'Unknown device';
-            }
-
-            $browser = match (true) {
-                str_contains($userAgent, 'Edg/') => 'Edge',
-                str_contains($userAgent, 'Chrome/') => 'Chrome',
-                str_contains($userAgent, 'Firefox/') => 'Firefox',
-                str_contains($userAgent, 'Safari/') => 'Safari',
-                default => 'Other browser',
-            };
-            $platform = match (true) {
-                str_contains($userAgent, 'Windows') => 'Windows',
-                str_contains($userAgent, 'Android') => 'Android',
-                str_contains($userAgent, 'iPhone'), str_contains($userAgent, 'iPad') => 'iOS',
-                str_contains($userAgent, 'Macintosh') => 'macOS',
-                str_contains($userAgent, 'Linux') => 'Linux',
-                default => 'Unknown OS',
-            };
-
-            return $browser.' on '.$platform;
-        };
     @endphp
 
     <section class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
@@ -87,7 +63,7 @@
         <form method="GET" action="{{ route('admin.activity-logs.index') }}" class="row g-2 align-items-end">
             <div class="col-lg-3">
                 <label class="form-label" for="auditSearch">Search activity</label>
-                <input id="auditSearch" class="form-control" type="search" name="q" value="{{ request('q') }}" placeholder="Name, email, record ID, IP...">
+                <input id="auditSearch" class="form-control" type="search" name="q" value="{{ request('q') }}" placeholder="Name, email, or record ID...">
             </div>
             <div class="col-sm-6 col-lg-2">
                 <label class="form-label" for="auditAction">Event</label>
@@ -128,7 +104,7 @@
     <section class="table-shell">
         <div class="table-responsive">
             <table class="table align-middle">
-                <thead><tr><th>Event</th><th>Performed by</th><th>Record</th><th>Changes</th><th>Device</th><th>Occurred</th><th class="text-end"><span class="visually-hidden">Actions</span></th></tr></thead>
+                <thead><tr><th>Event</th><th>Performed by</th><th>Record</th><th>Changes</th><th>Occurred</th><th class="text-end"><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>
                     @forelse($logs as $log)
                         @php
@@ -150,12 +126,11 @@
                                 @forelse($changedFields->take(3) as $field)<span class="audit-field">{{ str($field)->headline() }}</span>@empty<span class="audit-meta">No field changes</span>@endforelse
                                 @if($changedFields->count() > 3)<span class="audit-field">+{{ $changedFields->count() - 3 }} more</span>@endif
                             </div></td>
-                            <td><div class="audit-source"><span class="audit-primary">{{ $deviceLabel($log->user_agent) }}</span></div></td>
                             <td class="text-nowrap"><strong>{{ $log->created_at?->format('M d, Y') }}</strong><span class="audit-meta d-block">{{ $log->created_at?->format('h:i:s A') }}</span><span class="audit-meta d-block">{{ $log->created_at?->diffForHumans() }}</span></td>
                             <td class="text-end"><a class="btn btn-ta-outline btn-sm" href="{{ route('admin.activity-logs.show', $log) }}" aria-label="View event {{ $log->activity_log_id }}">View <i class="bi bi-chevron-right ms-1"></i></a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="audit-empty text-center"><i class="bi bi-clock-history fs-2 d-block mb-2 text-secondary"></i><strong>No activity found</strong><p class="text-secondary mb-0">Try adjusting or clearing the selected filters.</p></td></tr>
+                        <tr><td colspan="6" class="audit-empty text-center"><i class="bi bi-clock-history fs-2 d-block mb-2 text-secondary"></i><strong>No activity found</strong><p class="text-secondary mb-0">Try adjusting or clearing the selected filters.</p></td></tr>
                     @endforelse
                 </tbody>
             </table>

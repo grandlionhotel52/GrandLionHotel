@@ -41,7 +41,6 @@ class AuditLogger
                 'before' => $this->sanitize($before),
                 'after' => $this->sanitize($after),
             ],
-            'user_agent' => $this->requestValue('userAgent'),
         ]);
     }
 
@@ -61,7 +60,6 @@ class AuditLogger
                 'before' => [],
                 'after' => array_filter(['guard' => $guard]),
             ],
-            'user_agent' => $this->requestValue('userAgent'),
         ]);
     }
 
@@ -115,14 +113,4 @@ class AuditLogger
         return false;
     }
 
-    private function requestValue(string $method): ?string
-    {
-        if (app()->runningInConsole() || ! app()->bound('request')) {
-            return null;
-        }
-
-        $value = request()->{$method}();
-
-        return filled($value) ? (string) $value : null;
-    }
 }
