@@ -81,7 +81,7 @@
         <span class="audit-event-mark audit-tone-{{ $event['tone'] }}"><i class="bi {{ $event['icon'] }}"></i></span>
         <div>
             <strong class="d-block">{{ $actorName ?: ($activityLog->actor_type ?: 'System') }} {{ $event['verb'] }} {{ $subjectLabel }}.</strong>
-            <span class="small text-secondary">This immutable event records who performed the action, its source, and the captured field changes.</span>
+            <span class="small text-secondary">This immutable event records who performed the action, when it occurred, and the captured field changes.</span>
         </div>
     </section>
 
@@ -90,7 +90,6 @@
             <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-person"></i></span><small class="text-secondary d-block">Performed by</small><strong>{{ $actorName ?: ($activityLog->actor_type ?: 'System') }}</strong><div class="small text-secondary">{{ $activityLog->actor_type ?: 'Automated process' }}</div></div>
             <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-bullseye"></i></span><small class="text-secondary d-block">Affected record</small><strong class="audit-value">{{ $subjectLabel }}</strong><div class="small text-secondary">{{ str($activityLog->subject_type)->headline() }} #{{ $activityLog->subject_id }}</div></div>
             <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-clock"></i></span><small class="text-secondary d-block">Occurred</small><strong>{{ $activityLog->created_at?->format('M d, Y') }}</strong><div class="small text-secondary">{{ $activityLog->created_at?->format('h:i:s A') }}</div></div>
-            <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-globe2"></i></span><small class="text-secondary d-block">IP address</small><strong>{{ $activityLog->ip_address ?: 'Not available' }}</strong></div>
             <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-laptop"></i></span><small class="text-secondary d-block">Browser / device</small><strong>{{ $deviceLabel($activityLog->user_agent) }}</strong><div class="audit-value small text-secondary mt-1">{{ $activityLog->user_agent ?: 'User agent not recorded' }}</div></div>
             <div class="audit-detail-item"><span class="audit-detail-icon"><i class="bi bi-fingerprint"></i></span><small class="text-secondary d-block">Event identifier</small><strong>#{{ $activityLog->activity_log_id }}</strong><div class="small text-secondary">{{ $event['label'] }}</div></div>
         </div>

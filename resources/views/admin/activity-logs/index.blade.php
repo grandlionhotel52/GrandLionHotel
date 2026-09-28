@@ -128,7 +128,7 @@
     <section class="table-shell">
         <div class="table-responsive">
             <table class="table align-middle">
-                <thead><tr><th>Event</th><th>Performed by</th><th>Record</th><th>Changes</th><th>Source</th><th>Occurred</th><th class="text-end"><span class="visually-hidden">Actions</span></th></tr></thead>
+                <thead><tr><th>Event</th><th>Performed by</th><th>Record</th><th>Changes</th><th>Device</th><th>Occurred</th><th class="text-end"><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>
                     @forelse($logs as $log)
                         @php
@@ -150,7 +150,7 @@
                                 @forelse($changedFields->take(3) as $field)<span class="audit-field">{{ str($field)->headline() }}</span>@empty<span class="audit-meta">No field changes</span>@endforelse
                                 @if($changedFields->count() > 3)<span class="audit-field">+{{ $changedFields->count() - 3 }} more</span>@endif
                             </div></td>
-                            <td><div class="audit-source"><span class="audit-primary">{{ $log->ip_address ?: 'Not available' }}</span><span class="audit-meta">{{ $deviceLabel($log->user_agent) }}</span></div></td>
+                            <td><div class="audit-source"><span class="audit-primary">{{ $deviceLabel($log->user_agent) }}</span></div></td>
                             <td class="text-nowrap"><strong>{{ $log->created_at?->format('M d, Y') }}</strong><span class="audit-meta d-block">{{ $log->created_at?->format('h:i:s A') }}</span><span class="audit-meta d-block">{{ $log->created_at?->diffForHumans() }}</span></td>
                             <td class="text-end"><a class="btn btn-ta-outline btn-sm" href="{{ route('admin.activity-logs.show', $log) }}" aria-label="View event {{ $log->activity_log_id }}">View <i class="bi bi-chevron-right ms-1"></i></a></td>
                         </tr>

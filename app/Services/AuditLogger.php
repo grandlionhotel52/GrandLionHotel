@@ -41,7 +41,6 @@ class AuditLogger
                 'before' => $this->sanitize($before),
                 'after' => $this->sanitize($after),
             ],
-            'ip_address' => $this->requestValue('ip'),
             'user_agent' => $this->requestValue('userAgent'),
         ]);
     }
@@ -62,7 +61,6 @@ class AuditLogger
                 'before' => [],
                 'after' => array_filter(['guard' => $guard]),
             ],
-            'ip_address' => $this->requestValue('ip'),
             'user_agent' => $this->requestValue('userAgent'),
         ]);
     }

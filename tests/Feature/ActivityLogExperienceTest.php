@@ -73,6 +73,31 @@ class ActivityLogExperienceTest extends TestCase
         $this->assertStringNotContainsString('new-secret', json_encode($log->changes));
     }
 
+    public function test_activity_logs_do_not_capture_or_display_ip_addresses(): void
+    {
+        $admin = Admin::factory()->create();
+        $room = Room::factory()->create();
+
+        $this->actingAs($admin, 'admin');
+        $room->update(['name' => 'Privacy Safe Room Name']);
+
+        $log = ActivityLog::query()
+            ->where('subject_type', 'Room')
+            ->where('subject_id', $room->getKey())
+            ->latest('activity_log_id')
+            ->firstOrFail();
+
+        $this->assertNull($log->ip_address);
+
+        $this->get(route('admin.activity-logs.index'))
+            ->assertOk()
+            ->assertDontSee('IP address');
+
+        $this->get(route('admin.activity-logs.show', $log))
+            ->assertOk()
+            ->assertDontSee('IP address');
+    }
+
     public function test_login_and_logout_events_are_recorded(): void
     {
         $admin = Admin::factory()->create();
