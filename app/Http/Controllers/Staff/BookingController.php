@@ -419,14 +419,13 @@ class BookingController extends Controller
         $stats = [
             'total_arrivals' => Booking::whereDate('check_in', $selectedDate)
                 ->whereIn('status', ['pending', 'confirmed'])
-                ->whereNull('actual_check_in_at')
                 ->count(),
             'checked_in' => Booking::whereDate('check_in', $selectedDate)
                 ->whereIn('status', ['confirmed'])
                 ->whereNotNull('actual_check_in_at')
                 ->count(),
             'pending' => Booking::whereDate('check_in', $selectedDate)
-                ->where('status', 'pending')
+                ->whereIn('status', ['pending', 'confirmed'])
                 ->whereNull('actual_check_in_at')
                 ->count(),
         ];

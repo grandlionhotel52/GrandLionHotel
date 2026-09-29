@@ -301,6 +301,44 @@ class AdminStaffButtonFlowsTest extends TestCase
             ->assertDontSee('Show arrivals');
     }
 
+    public function test_arrivals_summary_counts_confirmed_guests_as_pending_check_in(): void
+    {
+        $staff = Staff::factory()->create();
+        $customer = Customer::factory()->create();
+        $room = $this->createRoom();
+
+        $confirmedArrival = $this->createBooking(
+            customer: $customer,
+            room: $room,
+            status: 'confirmed',
+            paymentStatus: 'paid'
+        );
+        $pendingArrival = $this->createBooking(
+            customer: $customer,
+            room: $room,
+            status: 'pending',
+            paymentStatus: 'unpaid'
+        );
+        $checkedInArrival = $this->createBooking(
+            customer: $customer,
+            room: $room,
+            status: 'confirmed',
+            paymentStatus: 'paid'
+        );
+        $checkedInArrival->update(['actual_check_in_at' => now()->subHour()]);
+
+        $response = $this->actingAs($staff, 'staff')->get(route('staff.arrivals'));
+
+        $response->assertOk()->assertViewHas('stats', [
+            'total_arrivals' => 3,
+            'checked_in' => 1,
+            'pending' => 2,
+        ]);
+        $response->assertSee(route('staff.bookings.show', $confirmedArrival), false);
+        $response->assertSee(route('staff.bookings.show', $pendingArrival), false);
+        $response->assertDontSee(route('staff.bookings.show', $checkedInArrival), false);
+    }
+
     public function test_staff_pages_and_operational_actions_work(): void
     {
         Mail::fake();
