@@ -112,17 +112,17 @@ class AuthLoginHardeningTest extends TestCase
 
     public function test_admin_login_redirects_to_admin_dashboard_even_with_frontend_intended_url(): void
     {
-        $email = 'admin.login@example.com';
+        $username = 'admin.login';
 
         Admin::factory()->create([
-            'email' => $email,
+            'username' => $username,
             'password' => Hash::make('AdminPass123'),
         ]);
 
         $this->withSession([
             'url.intended' => route('home'),
         ])->post(route('login.perform'), [
-            'email' => $email,
+            'email' => $username,
             'password' => 'AdminPass123',
         ])->assertRedirect(route('admin.dashboard'));
     }

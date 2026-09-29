@@ -16,12 +16,13 @@ class RequestedCustomerHistorySeederTest extends TestCase
         $this->seed();
 
         $seededCustomerIds = DB::table('customers')
-            ->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-18 23:59:59'])
+            ->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-17 23:59:59'])
             ->pluck('customer_id');
         $customerCount = $seededCustomerIds->count();
         $bookingCount = DB::table('bookings')->whereIn('customer_id', $seededCustomerIds)->count();
 
-        $this->assertSame(46, $customerCount);
+        $this->assertSame(76, $customerCount);
+        $this->assertSame(0, DB::table('customers')->whereDate('created_at', '2026-09-18')->count());
         $this->assertGreaterThan(0, $bookingCount);
         $this->assertTrue(DB::table('customers')->where('name', 'Maurice Valdez')->exists());
         $this->assertTrue(DB::table('customers')->where('name', 'Jazmine Ramos')->exists());
@@ -30,7 +31,7 @@ class RequestedCustomerHistorySeederTest extends TestCase
 
         $this->seed(RequestedCustomerHistorySeeder::class);
 
-        $this->assertSame($customerCount, DB::table('customers')->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-18 23:59:59'])->count());
+        $this->assertSame($customerCount, DB::table('customers')->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-17 23:59:59'])->count());
         $this->assertSame($bookingCount, DB::table('bookings')->whereIn('customer_id', $seededCustomerIds)->count());
     }
 }

@@ -177,7 +177,7 @@
         $profileChecklist = [
             'First name' => filled($nameParts['first_name']),
             'Last name' => filled($nameParts['last_name']),
-            'Email address' => filled($user->email),
+            $user->isCustomer() ? 'Email address' : 'Username' => filled($user->isCustomer() ? $user->email : $user->username),
             'Phone number' => filled($user->phone),
         ];
         if ($isCustomerProfile) {
@@ -261,12 +261,12 @@
                                     </div>
 
                                     <div class="col-md-6 profile-field">
-                                        <label class="profile-label" for="profileEmail">Email address</label>
+                                        <label class="profile-label" for="profileLogin">{{ $isCustomerProfile ? 'Email address' : 'Username' }}</label>
                                         <div class="input-group profile-input-group">
-                                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                            <input id="profileEmail" type="email" class="form-control" value="{{ $user->email }}" disabled>
+                                            <span class="input-group-text"><i class="bi {{ $isCustomerProfile ? 'bi-envelope' : 'bi-person-circle' }}"></i></span>
+                                            <input id="profileLogin" type="{{ $isCustomerProfile ? 'email' : 'text' }}" class="form-control" value="{{ $isCustomerProfile ? $user->email : $user->username }}" disabled>
                                         </div>
-                                        <small class="text-secondary">Email cannot be changed.</small>
+                                        <small class="text-secondary">{{ $isCustomerProfile ? 'Email' : 'Username' }} cannot be changed.</small>
                                     </div>
                                 </div>
                             </div>

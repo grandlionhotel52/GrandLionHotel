@@ -46,17 +46,9 @@ class AccountDirectory
             return null;
         }
 
-        foreach ([Admin::class, Customer::class] as $modelClass) {
-            $account = $modelClass::query()
-                ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
-                ->first();
-
-            if ($account) {
-                return $account;
-            }
-        }
-
-        return null;
+        return Customer::query()
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->first();
     }
 
     public static function findByLogin(string $login): ?Account
@@ -66,11 +58,17 @@ class AccountDirectory
             return null;
         }
 
-        $staff = Staff::query()
-            ->whereRaw('LOWER(username) = ?', [$normalizedLogin])
-            ->first();
+        foreach ([Admin::class, Staff::class] as $modelClass) {
+            $account = $modelClass::query()
+                ->whereRaw('LOWER(username) = ?', [$normalizedLogin])
+                ->first();
 
-        return $staff ?? self::findByEmail($normalizedLogin);
+            if ($account) {
+                return $account;
+            }
+        }
+
+        return self::findByEmail($normalizedLogin);
     }
 
     public static function findByGoogleId(string $googleId): ?Account
@@ -83,6 +81,30 @@ class AccountDirectory
         return Customer::query()
             ->where('google_id', $normalizedGoogleId)
             ->first();
+    }
+
+    public static function usernameExists(string $username, ?Account $ignoreAccount = null): bool
+    {
+        $normalizedUsername = strtolower(trim($username));
+        if ($normalizedUsername === '') {
+            return false;
+        }
+
+        foreach ([Admin::class, Staff::class] as $modelClass) {
+            $exists = $modelClass::query()
+                ->whereRaw('LOWER(username) = ?', [$normalizedUsername])
+                ->when(
+                    $ignoreAccount instanceof $modelClass,
+                    static fn (Builder $query) => $query->whereKeyNot($ignoreAccount->getKey())
+                )
+                ->exists();
+
+            if ($exists) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function findCustomerByEmail(string $email): ?Customer
@@ -104,20 +126,12 @@ class AccountDirectory
             return false;
         }
 
-        foreach ([Admin::class, Customer::class] as $modelClass) {
-            $exists = $modelClass::query()
-                ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
-                ->when(
-                    $ignoreAccount instanceof $modelClass,
-                    static fn (Builder $query) => $query->whereKeyNot($ignoreAccount->getKey())
-                )
-                ->exists();
-
-            if ($exists) {
-                return true;
-            }
-        }
-
-        return false;
+        return Customer::query()
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->when(
+                $ignoreAccount instanceof Customer,
+                static fn (Builder $query) => $query->whereKeyNot($ignoreAccount->getKey())
+            )
+            ->exists();
     }
 }

@@ -29,7 +29,7 @@ To create or update the initial administrator during the next deployment, add:
 
 ```env
 SEED_ADMIN_ON_DEPLOY=true
-SEED_ADMIN_EMAIL=admin@example.com
+SEED_ADMIN_USERNAME=admin
 SEED_ADMIN_PASSWORD=use-a-strong-private-password
 SEED_ADMIN_NAME=Administrator
 SEED_ADMIN_PHONE=09170000001

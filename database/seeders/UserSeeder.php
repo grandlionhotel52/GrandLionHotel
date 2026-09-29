@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
         $defaultPassword = (string) env('SEED_DEFAULT_PASSWORD', 'password');
 
         Admin::updateOrCreate(
-            ['email' => (string) env('SEED_ADMIN_EMAIL', 'admin@hotel.test')],
+            ['username' => strtolower(trim((string) env('SEED_ADMIN_USERNAME', 'admin')))],
             [
                 'name' => (string) env('SEED_ADMIN_NAME', 'Admin User'),
                 'phone' => (string) env('SEED_ADMIN_PHONE', '09170000001'),

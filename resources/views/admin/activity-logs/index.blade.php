@@ -63,7 +63,7 @@
         <form method="GET" action="{{ route('admin.activity-logs.index') }}" class="row g-2 align-items-end">
             <div class="col-lg-3">
                 <label class="form-label" for="auditSearch">Search activity</label>
-                <input id="auditSearch" class="form-control" type="search" name="q" value="{{ request('q') }}" placeholder="Name, email, or record ID...">
+                <input id="auditSearch" class="form-control" type="search" name="q" value="{{ request('q') }}" placeholder="Name, username, email, or record ID...">
             </div>
             <div class="col-sm-6 col-lg-2">
                 <label class="form-label" for="auditAction">Event</label>

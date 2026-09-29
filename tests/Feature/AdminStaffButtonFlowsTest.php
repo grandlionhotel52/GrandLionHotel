@@ -222,7 +222,7 @@ class AdminStaffButtonFlowsTest extends TestCase
 
     public function test_admin_can_create_customer_and_duplicate_emails_are_validation_errors(): void
     {
-        $admin = Admin::factory()->create(['email' => 'admin@example.com']);
+        $admin = Admin::factory()->create(['username' => 'admin']);
 
         $this->actingAs($admin, 'admin')
             ->post(route('admin.users.store'), [

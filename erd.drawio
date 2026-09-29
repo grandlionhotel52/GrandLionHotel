@@ -13,7 +13,7 @@
           <mxGeometry x="40" y="65" width="1300" height="30" as="geometry"/>
         </mxCell>
 
-        <mxCell id="admins" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;ADMINS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; admin_id&lt;br&gt;name&lt;br&gt;email &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;phone&lt;br&gt;password" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff4dc;strokeColor=#c98b2e;strokeWidth=2;fontColor=#3f2a12;fontSize=14;shadow=1;" vertex="1" parent="1">
+        <mxCell id="admins" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;ADMINS&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; admin_id&lt;br&gt;name&lt;br&gt;username &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;phone&lt;br&gt;password" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff4dc;strokeColor=#c98b2e;strokeWidth=2;fontColor=#3f2a12;fontSize=14;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="130" width="280" height="210" as="geometry"/>
         </mxCell>
         <mxCell id="staff" value="&lt;div style=&quot;font-size:17px;font-weight:700;margin-bottom:8px&quot;&gt;STAFF&lt;/div&gt;&lt;b&gt;PK&lt;/b&gt; staff_id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; admin_id&lt;br&gt;name&lt;br&gt;username &lt;b&gt;UK&lt;/b&gt;&lt;br&gt;phone&lt;br&gt;password&lt;br&gt;is_active" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff4dc;strokeColor=#c98b2e;strokeWidth=2;fontColor=#3f2a12;fontSize=14;shadow=1;" vertex="1" parent="1">

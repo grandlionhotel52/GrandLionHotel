@@ -57,4 +57,21 @@ class StaffUsernameAccountTest extends TestCase
             ->assertRedirect(route('admin.staff.index'))
             ->assertSessionHasErrors('username');
     }
+
+    public function test_staff_username_cannot_duplicate_an_admin_username(): void
+    {
+        $admin = Admin::factory()->create(['username' => 'hotel.admin']);
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('admin.staff.index'))
+            ->post(route('admin.staff.store'), [
+                'first_name' => 'Another',
+                'last_name' => 'Administrator',
+                'username' => 'HOTEL.ADMIN',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ])
+            ->assertRedirect(route('admin.staff.index'))
+            ->assertSessionHasErrors('username');
+    }
 }

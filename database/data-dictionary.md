@@ -12,7 +12,7 @@ Key legend:
 | --- | --- | --- | --- | --- | --- |
 | PK | `admin_id` | `bigint` | `20 unsigned` | Unique identifier for each admin account. | `1` |
 |  | `name` | `varchar` | `255` | Combined full name of the admin. | `Anne Flores` |
-| UQ | `email` | `varchar` | `255` | Admin login email address. | `admin@grandlionhotel.com` |
+| UQ | `username` | `varchar` | `50` | Unique username used for admin login. | `admin` |
 |  | `phone` | `varchar` | `30` | Contact number of the admin. | `+639171234567` |
 |  | `password` | `varchar` | `255` | Hashed password used for authentication. | `$2y$12$...` |
 |  | `password_changed_at` | `timestamp` | `-` | Date and time when the password was last updated. | `2026-04-19 10:30:00` |

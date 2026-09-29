@@ -217,7 +217,7 @@ class ActivityLogController extends Controller
         $matches = [];
 
         foreach ([
-            'Admin' => [Admin::class, 'email'],
+            'Admin' => [Admin::class, 'username'],
             'Staff' => [Staff::class, 'username'],
             'Customer' => [Customer::class, 'email'],
         ] as $type => [$modelClass, $loginColumn]) {

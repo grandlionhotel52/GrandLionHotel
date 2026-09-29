@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Staff;
+use App\Support\AccountDirectory;
 use App\Support\PersonName;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -98,7 +99,11 @@ class StaffController extends Controller
                 'min:3',
                 'max:50',
                 'regex:/^[a-z0-9][a-z0-9._-]*$/',
-                'unique:staff,username',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (AccountDirectory::usernameExists((string) $value)) {
+                        $fail('This username is already in use.');
+                    }
+                },
             ],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\\-\\s]{7,30}$/'],
             'password' => ['required', 'confirmed', Password::min(8)],
@@ -213,7 +218,11 @@ class StaffController extends Controller
                 'min:3',
                 'max:50',
                 'regex:/^[a-z0-9][a-z0-9._-]*$/',
-                'unique:staff,username,'.$staff->getKey().',staff_id',
+                function (string $attribute, mixed $value, \Closure $fail) use ($staff): void {
+                    if (AccountDirectory::usernameExists((string) $value, $staff)) {
+                        $fail('This username is already in use.');
+                    }
+                },
             ],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\\-\\s]{7,30}$/'],
             'password' => ['nullable', 'confirmed', Password::min(8)],
