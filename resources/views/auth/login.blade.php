@@ -57,7 +57,7 @@
                                             class="form-control auth-premium-input @error('email') is-invalid @enderror"
                                             name="email"
                                             value="{{ old('email', $registrationCompletedEmail) }}"
-                                            placeholder="Customer email or staff/admin username"
+                                            placeholder="Enter username/email"
                                             autocomplete="username"
                                             required
                                             autofocus
