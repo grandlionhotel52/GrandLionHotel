@@ -123,36 +123,36 @@ class RequestedCustomerHistorySeeder extends Seeder
     ];
 
     private const ADDITIONAL_CUSTOMERS = [
-        ['name' => 'Andrea Villareal', 'phone' => '09170001001'],
-        ['name' => 'Paolo Mendoza', 'phone' => '09170001002'],
-        ['name' => 'Bianca Torres', 'phone' => '09170001003'],
-        ['name' => 'Carlo Ramirez', 'phone' => '09170001004'],
-        ['name' => 'Denise Santiago', 'phone' => '09170001005'],
-        ['name' => 'Elijah Fernandez', 'phone' => '09170001006'],
-        ['name' => 'Faith Gonzales', 'phone' => '09170001007'],
-        ['name' => 'Gabriel Lim', 'phone' => '09170001008'],
-        ['name' => 'Hannah Bautista', 'phone' => '09170001009'],
-        ['name' => 'Ivan Castillo', 'phone' => '09170001010'],
-        ['name' => 'Julia Navarro', 'phone' => '09170001011'],
-        ['name' => 'Kevin Aquino', 'phone' => '09170001012'],
-        ['name' => 'Lara Dominguez', 'phone' => '09170001013'],
-        ['name' => 'Miguel Pascual', 'phone' => '09170001014'],
-        ['name' => 'Nicole Salazar', 'phone' => '09170001015'],
-        ['name' => 'Oscar Rivera', 'phone' => '09170001016'],
-        ['name' => 'Patricia Reyes', 'phone' => '09170001017'],
-        ['name' => 'Rafael Soriano', 'phone' => '09170001018'],
-        ['name' => 'Samantha Valdez', 'phone' => '09170001019'],
-        ['name' => 'Tristan Mercado', 'phone' => '09170001020'],
-        ['name' => 'Uma Cabrera', 'phone' => '09170001021'],
-        ['name' => 'Victor Manalo', 'phone' => '09170001022'],
-        ['name' => 'Wendy Padilla', 'phone' => '09170001023'],
-        ['name' => 'Xavier Flores', 'phone' => '09170001024'],
-        ['name' => 'Yvonne Dizon', 'phone' => '09170001025'],
-        ['name' => 'Zachary Alonzo', 'phone' => '09170001026'],
-        ['name' => 'Alyssa Evangelista', 'phone' => '09170001027'],
-        ['name' => 'Brandon Macaraeg', 'phone' => '09170001028'],
-        ['name' => 'Clarissa Domingo', 'phone' => '09170001029'],
-        ['name' => 'Dominic Villanueva', 'phone' => '09170001030'],
+        ['name' => 'Andrea Villareal', 'phone' => '09174628539'],
+        ['name' => 'Paolo Mendoza', 'phone' => '09283746195'],
+        ['name' => 'Bianca Torres', 'phone' => '09562837410'],
+        ['name' => 'Carlo Ramirez', 'phone' => '09076192845'],
+        ['name' => 'Denise Santiago', 'phone' => '09684251730'],
+        ['name' => 'Elijah Fernandez', 'phone' => '09157382649'],
+        ['name' => 'Faith Gonzales', 'phone' => '09912648375'],
+        ['name' => 'Gabriel Lim', 'phone' => '09274831560'],
+        ['name' => 'Hannah Bautista', 'phone' => '09631579284'],
+        ['name' => 'Ivan Castillo', 'phone' => '09186425703'],
+        ['name' => 'Julia Navarro', 'phone' => '09503748126'],
+        ['name' => 'Kevin Aquino', 'phone' => '09218635470'],
+        ['name' => 'Lara Dominguez', 'phone' => '09957264138'],
+        ['name' => 'Miguel Pascual', 'phone' => '09163572840'],
+        ['name' => 'Nicole Salazar', 'phone' => '09687432015'],
+        ['name' => 'Oscar Rivera', 'phone' => '09256481397'],
+        ['name' => 'Patricia Reyes', 'phone' => '09172540638'],
+        ['name' => 'Rafael Soriano', 'phone' => '09518367240'],
+        ['name' => 'Samantha Valdez', 'phone' => '09926473185'],
+        ['name' => 'Tristan Mercado', 'phone' => '09085731642'],
+        ['name' => 'Uma Cabrera', 'phone' => '09632758410'],
+        ['name' => 'Victor Manalo', 'phone' => '09148625379'],
+        ['name' => 'Wendy Padilla', 'phone' => '09284516730'],
+        ['name' => 'Xavier Flores', 'phone' => '09563472819'],
+        ['name' => 'Yvonne Dizon', 'phone' => '09917385264'],
+        ['name' => 'Zachary Alonzo', 'phone' => '09074268315'],
+        ['name' => 'Alyssa Evangelista', 'phone' => '09645281730'],
+        ['name' => 'Brandon Macaraeg', 'phone' => '09183726459'],
+        ['name' => 'Clarissa Domingo', 'phone' => '09251643870'],
+        ['name' => 'Dominic Villanueva', 'phone' => '09527468139'],
     ];
 
     private const LOCATIONS = [
@@ -171,6 +171,12 @@ class RequestedCustomerHistorySeeder extends Seeder
 
     public function run(): void
     {
+        $this->redistributeSeptember18Customers();
+
+        if ($this->requestedHistoryIsComplete()) {
+            return;
+        }
+
         $rooms = DB::table('rooms')
             ->orderBy('room_id')
             ->get(['room_id', 'price_per_night']);
@@ -209,10 +215,15 @@ class RequestedCustomerHistorySeeder extends Seeder
                     ->addMinutes(($index * 17) % 720);
                 $legacyEmail = $this->legacyEmail($legacyName);
                 $email = $this->naturalEmail($name, $phone);
+                $previousAdditionalEmail = $index >= count(self::NAMES)
+                    ? $this->naturalLocalPart($name).str_pad((string) ($index - count(self::NAMES) + 1), 2, '0', STR_PAD_LEFT).'@gmail.com'
+                    : null;
                 [$city, $province] = self::LOCATIONS[$index % count(self::LOCATIONS)];
                 $profileIsComplete = $index % 4 !== 0;
 
-                $legacyCustomerId = DB::table('customers')->where('email', $legacyEmail)->value('customer_id');
+                $legacyCustomerId = DB::table('customers')
+                    ->whereIn('email', array_values(array_filter([$legacyEmail, $previousAdditionalEmail])))
+                    ->value('customer_id');
 
                 if ($legacyCustomerId) {
                     DB::table('customers')->where('customer_id', $legacyCustomerId)->update([
@@ -240,6 +251,9 @@ class RequestedCustomerHistorySeeder extends Seeder
                 $customerId = (int) DB::table('customers')->where('email', $email)->value('customer_id');
 
                 DB::table('customers')->where('customer_id', $customerId)->update([
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => $phone,
                     'email_verified_at' => $joinedAt,
                     'created_at' => $joinedAt,
                     'updated_at' => $joinedAt->copy()->addMinutes(5),
@@ -248,7 +262,7 @@ class RequestedCustomerHistorySeeder extends Seeder
                 $this->seedCustomerActivity($customerId, $name, $email, $joinedAt, $index, $adminId);
 
                 $bookingCount = $index >= count(self::NAMES)
-                    ? 0
+                    ? 1
                     : ($index % 10 === 0 ? 2 : ($index % 3 === 0 ? 0 : 1));
                 for ($bookingIndex = 0; $bookingIndex < $bookingCount; $bookingIndex++) {
                     $this->seedBooking(
@@ -265,6 +279,57 @@ class RequestedCustomerHistorySeeder extends Seeder
                 }
             }
         });
+    }
+
+    private function redistributeSeptember18Customers(): void
+    {
+        $customers = DB::table('customers')
+            ->whereDate('created_at', '2026-09-18')
+            ->orderBy('customer_id')
+            ->get(['customer_id', 'created_at']);
+
+        foreach ($customers as $index => $customer) {
+            $original = Carbon::parse($customer->created_at);
+            $createdAt = Carbon::parse('2026-09-14')
+                ->addDays($index % 4)
+                ->setTime($original->hour, $original->minute, $original->second);
+
+            DB::table('customers')
+                ->where('customer_id', $customer->customer_id)
+                ->update(['created_at' => $createdAt]);
+
+            DB::table('activity_logs')
+                ->where('subject_type', 'Customer')
+                ->where('subject_id', $customer->customer_id)
+                ->whereDate('created_at', '2026-09-18')
+                ->update([
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
+                ]);
+        }
+    }
+
+    private function requestedHistoryIsComplete(): bool
+    {
+        $emails = array_map(
+            fn (array $customer): string => $this->naturalEmail($customer['name'], $customer['phone']),
+            self::ADDITIONAL_CUSTOMERS
+        );
+
+        $customers = DB::table('customers')
+            ->whereIn('email', $emails)
+            ->pluck('customer_id', 'email');
+
+        if ($customers->count() !== count(self::ADDITIONAL_CUSTOMERS)) {
+            return false;
+        }
+
+        $customersWithBookings = DB::table('bookings')
+            ->whereIn('customer_id', $customers->values())
+            ->distinct()
+            ->count('customer_id');
+
+        return $customersWithBookings === count(self::ADDITIONAL_CUSTOMERS);
     }
 
     private function seedCustomerActivity(
@@ -416,13 +481,16 @@ class RequestedCustomerHistorySeeder extends Seeder
 
     private function naturalEmail(string $name, string $phone): string
     {
-        $localPart = Str::of($name)
+        return $this->naturalLocalPart($name).substr($phone, -2).'@gmail.com';
+    }
+
+    private function naturalLocalPart(string $name): string
+    {
+        return Str::of($name)
             ->ascii()
             ->lower()
             ->replaceMatches('/[^a-z0-9]+/', '')
-            ->append(substr($phone, -2));
-
-        return $localPart.'@gmail.com';
+            ->toString();
     }
 
     private function transactionReference(Carbon $createdAt, int $bookingId): string

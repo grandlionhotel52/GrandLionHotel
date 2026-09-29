@@ -80,12 +80,11 @@ php artisan db:seed --class='Database\Seeders\RequestedCustomerHistorySeeder' --
 
 if [ "${SEED_ADMIN_ON_DEPLOY:-false}" = "true" ]; then
   if [ -z "${SEED_ADMIN_USERNAME:-}" ] || [ -z "${SEED_ADMIN_PASSWORD:-}" ]; then
-    echo "[startup] SEED_ADMIN_ON_DEPLOY is enabled, but SEED_ADMIN_USERNAME or SEED_ADMIN_PASSWORD is missing."
-    exit 1
+    echo "[startup] SEED_ADMIN_ON_DEPLOY is enabled, but credentials are incomplete; skipping optional admin seed."
+  else
+    echo "[startup] Creating or updating the configured administrator..."
+    php artisan db:seed --class='Database\Seeders\UserSeeder' --force
   fi
-
-  echo "[startup] Creating or updating the configured administrator..."
-  php artisan db:seed --class='Database\Seeders\UserSeeder' --force
 fi
 
 echo "[startup] Optimizing Laravel for production..."
