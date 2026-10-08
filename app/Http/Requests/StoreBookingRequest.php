@@ -17,10 +17,13 @@ class StoreBookingRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $adults = $this->integer('adults', Room::standardGuestCapacity());
+        $kids = $this->integer('kids', 0);
+
         $this->merge([
-            'guests' => Room::standardGuestCapacity(),
-            'adults' => Room::standardGuestCapacity(),
-            'kids' => 0,
+            'guests' => $adults + $kids,
+            'adults' => $adults,
+            'kids' => $kids,
             'meal_plan' => $this->input('meal_plan', 'room_only'),
         ]);
     }
@@ -38,8 +41,8 @@ class StoreBookingRequest extends FormRequest
             'check_in' => ['required', 'date', 'after_or_equal:today'],
             'check_out' => ['required', 'date', 'after_or_equal:check_in'],
             'guests' => ['required', 'integer', 'min:1'],
-            'adults' => ['nullable', 'integer', 'min:1'],
-            'kids' => ['nullable', 'integer', 'min:0'],
+            'adults' => ['required', 'integer', 'min:1', 'max:'.($this->maximumGuestCount())],
+            'kids' => ['required', 'integer', 'min:0', 'max:'.($this->maximumExtraGuests())],
             'meal_plan' => ['required', Rule::in(['room_only', 'breakfast_included'])],
             'first_name' => ['nullable', 'string', 'max:80'],
             'last_name' => ['nullable', 'string', 'max:80'],
@@ -67,6 +70,7 @@ class StoreBookingRequest extends FormRequest
             'discount_id_photo.image' => 'Discount ID upload must be an image file.',
             'discount_id_photo.max' => 'Discount ID photo must not exceed 5MB.',
             'promo_code.prohibited_if' => 'A promo code cannot be combined with a PWD or Senior discount.',
+            'kids.max' => 'You may add up to '.$this->maximumExtraGuests().' children to one booking.',
         ];
     }
 
@@ -83,8 +87,8 @@ class StoreBookingRequest extends FormRequest
                 $validator->errors()->add('room_id', 'Selected room is currently unavailable.');
             }
 
-            if ($this->filled('guests') && $this->integer('guests') > $room->capacity) {
-                $validator->errors()->add('guests', 'Guest count exceeds room capacity (max '.$room->capacity.').');
+            if ($this->integer('adults') + $this->integer('kids') > $this->maximumGuestCount()) {
+                $validator->errors()->add('kids', 'Adults and children cannot exceed '.$this->maximumGuestCount().' total guests.');
             }
 
             $checkIn = trim((string) $this->input('check_in', ''));
@@ -105,5 +109,15 @@ class StoreBookingRequest extends FormRequest
                 $validator->errors()->add('check_out', 'Nightly bookings require check-out to be at least one day after check-in.');
             }
         });
+    }
+
+    private function maximumExtraGuests(): int
+    {
+        return max(0, (int) config('pricing.max_extra_bedding_per_booking', 5));
+    }
+
+    private function maximumGuestCount(): int
+    {
+        return Room::standardGuestCapacity() + $this->maximumExtraGuests();
     }
 }

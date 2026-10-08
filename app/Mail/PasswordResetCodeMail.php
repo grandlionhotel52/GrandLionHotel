@@ -21,7 +21,7 @@ class PasswordResetCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reset Your Grand Lion Hotel Password',
+            subject: 'Reset your password for '.config('app.name'),
         );
     }
 

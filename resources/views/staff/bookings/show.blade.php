@@ -787,6 +787,14 @@
                         <p class="booking-info-value">{{ $booking->guests }}</p>
                     </div>
                     <div class="booking-info-item">
+                        <p class="booking-info-label">Adults</p>
+                        <p class="booking-info-value">{{ (int) ($booking->guestDetail?->adults ?? $booking->guests) }}</p>
+                    </div>
+                    <div class="booking-info-item">
+                        <p class="booking-info-label">Children</p>
+                        <p class="booking-info-value">{{ (int) ($booking->guestDetail?->kids ?? 0) }}</p>
+                    </div>
+                    <div class="booking-info-item">
                         <p class="booking-info-label">Standard Occupancy</p>
                         <p class="booking-info-value">{{ $standardGuests }} guests</p>
                     </div>

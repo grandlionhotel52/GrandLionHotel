@@ -14,7 +14,7 @@
                 <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="max-width:580px;background:#ffffff;border:1px solid #e8dece;border-radius:14px;overflow:hidden;">
                     <tr>
                         <td style="padding:22px 24px;background:#a37b3f;color:#ffffff;">
-                            <h1 style="margin:0;font-size:21px;line-height:1.2;">The Grand Lion Hotel Booking Update</h1>
+                            <h1 style="margin:0;font-size:21px;line-height:1.2;">{{ config('app.name') }} Booking Update</h1>
                         </td>
                     </tr>
                     <tr>

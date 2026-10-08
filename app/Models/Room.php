@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -76,6 +77,18 @@ class Room extends Model
     public function dateDiscounts(): HasMany
     {
         return $this->hasMany(RoomDateDiscount::class, 'room_id', 'room_id');
+    }
+
+    public function reviews(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            RoomReview::class,
+            Booking::class,
+            'room_id',
+            'booking_id',
+            'room_id',
+            'booking_id'
+        );
     }
 
     public function roomStatus(): BelongsTo

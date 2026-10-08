@@ -17,7 +17,7 @@
 @section('content')
     <div class="admin-report-heading d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
         <div>
-            <p class="hotel-name mb-1">The Grand Lion Hotel</p>
+            <p class="hotel-name mb-1">{{ config('app.name') }}</p>
             <h1 class="h3 mb-1">Occupancy Report</h1>
             <p class="text-secondary mb-0">Confirmed and completed room nights, including both cash and online payments.</p>
         </div>

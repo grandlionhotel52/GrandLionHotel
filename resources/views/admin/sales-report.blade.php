@@ -160,7 +160,7 @@
     <section class="mb-4">
         <div class="admin-report-heading d-flex flex-wrap align-items-end justify-content-between gap-2">
             <div>
-                <p class="hotel-name mb-1">The Grand Lion Hotel</p>
+                <p class="hotel-name mb-1">{{ config('app.name') }}</p>
                 <h1 class="h4 mb-1">Sales Report</h1>
                 <p class="text-secondary mb-0" id="admin_sales_range_label" data-ajax-list-sync>Paid sales for {{ $selectedRangeLabel }}</p>
             </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoomController as AdminRoomController;
 use App\Http\Controllers\Admin\PromoCodeController as AdminPromoCodeController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
+use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RoomReviewController;
 use App\Http\Controllers\Staff\BookingController as StaffBookingController;
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -75,6 +77,7 @@ Route::middleware('auth:customer')->group(function () {
     Route::patch('/bookings/{booking}/request-reschedule', [BookingController::class, 'requestReschedule'])->name('bookings.request-reschedule');
     Route::patch('/bookings/{booking}/request-room-transfer', [BookingController::class, 'requestRoomTransfer'])->name('bookings.request-room-transfer');
     Route::post('/bookings/{booking}/extra-bedding-request', [BookingController::class, 'requestExtraBedding'])->name('bookings.request-extra-bedding');
+    Route::post('/bookings/{booking}/review', [RoomReviewController::class, 'store'])->name('bookings.review.store');
     Route::get('/bookings/{booking}/success', [BookingController::class, 'success'])->name('bookings.success');
 
     Route::get('/payments/{booking}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
@@ -94,6 +97,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'admin'])->gro
     Route::get('/occupancy-report', [DashboardController::class, 'occupancyReport'])->name('occupancy-report');
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('/activity-logs/{activityLog}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
+    Route::get('/settings', [SystemSettingController::class, 'edit'])->name('settings.edit');
+    Route::put('/settings', [SystemSettingController::class, 'update'])->name('settings.update');
 
     Route::resource('rooms', AdminRoomController::class)->except(['show']);
     Route::patch('/rooms/{room}/room-status', [AdminRoomController::class, 'updateRoomStatus'])->name('rooms.update-room-status');

@@ -88,9 +88,9 @@ class BookingController extends Controller
             ]);
         }
 
-        if ($request->integer('guests') > $room->capacity) {
+        if ($request->integer('guests') > $this->maximumGuestCount()) {
             return $this->respondWithBookingError($request, [
-                'guests' => 'Guest count exceeds room capacity (max '.$room->capacity.').',
+                'kids' => 'Adults and children cannot exceed '.$this->maximumGuestCount().' total guests.',
             ]);
         }
 
@@ -150,9 +150,9 @@ class BookingController extends Controller
                     ]);
                 }
 
-                if ($request->integer('guests') > $lockedRoom->capacity) {
+                if ($request->integer('guests') > $this->maximumGuestCount()) {
                     throw ValidationException::withMessages([
-                        'guests' => 'Guest count exceeds room capacity (max '.$lockedRoom->capacity.').',
+                        'kids' => 'Adults and children cannot exceed '.$this->maximumGuestCount().' total guests.',
                     ]);
                 }
 
@@ -270,7 +270,7 @@ class BookingController extends Controller
     public function show(Booking $booking)
     {
         $this->authorizeOwner($booking);
-        $booking->loadMissing(['room', 'payment', 'guestDetail', 'extraBeddingRequest.respondedByStaff']);
+        $booking->loadMissing(['room', 'payment', 'guestDetail', 'extraBeddingRequest.respondedByStaff', 'roomReview']);
         $this->ensurePaidTransactionReference($booking);
 
         return view('bookings.show', compact('booking'));
@@ -459,6 +459,12 @@ class BookingController extends Controller
         if (auth()->id() !== $booking->customer_id) {
             abort(403);
         }
+    }
+
+    private function maximumGuestCount(): int
+    {
+        return Room::standardGuestCapacity()
+            + max(0, (int) config('pricing.max_extra_bedding_per_booking', 5));
     }
 
     private function ensurePaidTransactionReference(Booking $booking): void

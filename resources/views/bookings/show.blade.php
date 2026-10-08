@@ -690,4 +690,43 @@
             </section>
         </div>
     </div>
+
+    @if($isCompleted)
+        <section class="soft-card p-4 p-lg-5 mt-4" id="guest-review">
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-5">
+                    <p class="ta-eyebrow mb-1">Customer Satisfaction</p>
+                    <h2 class="h4 mb-2">{{ $booking->roomReview ? 'Update your room review' : 'Rate your stay' }}</h2>
+                    <p class="text-secondary mb-0">Your rating and comment will appear on the {{ $booking->room?->name }} details page as feedback from a verified stay.</p>
+                </div>
+                <div class="col-lg-7">
+                    @error('review')
+                        <div class="alert alert-danger">{{ $message }}</div>
+                    @enderror
+                    <form method="POST" action="{{ route('bookings.review.store', $booking) }}" class="row g-3">
+                        @csrf
+                        <div class="col-12">
+                            <label class="form-label" for="review_rating">Overall rating</label>
+                            <select id="review_rating" name="rating" class="form-select @error('rating') is-invalid @enderror" required>
+                                <option value="">Choose a rating...</option>
+                                @foreach([5 => '5 stars — Excellent', 4 => '4 stars — Very good', 3 => '3 stars — Good', 2 => '2 stars — Fair', 1 => '1 star — Poor'] as $value => $label)
+                                    <option value="{{ $value }}" @selected((int) old('rating', $booking->roomReview?->rating) === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('rating')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="review_comment">Comments about this room</label>
+                            <textarea id="review_comment" name="comment" class="form-control @error('comment') is-invalid @enderror" rows="5" maxlength="1500" placeholder="Tell future guests what you liked and what could be improved." required>{{ old('comment', $booking->roomReview?->comment) }}</textarea>
+                            <small class="text-secondary">Maximum 1,500 characters. Do not include private contact or payment information.</small>
+                            @error('comment')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-ta">{{ $booking->roomReview ? 'Update review' : 'Submit review' }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    @endif
 @endsection

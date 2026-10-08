@@ -37,7 +37,7 @@
 <body>
     <div class="email-wrapper">
         <div class="email-header">
-            <img src="{{ asset('brand/lion_logo-160.png') }}" width="160" height="134" alt="The Grand Lion Hotel" class="logo" style="display: block;">
+            <img src="{{ asset('brand/lion_logo-160.png') }}" width="160" height="134" alt="{{ config('app.name') }}" class="logo" style="display: block;">
             <h1 class="email-hero-text">Password Reset Request</h1>
             <p class="email-subtext">Securely reset your account access</p>
         </div>
@@ -59,8 +59,8 @@
         
         <div class="email-footer">
             <p class="footer-text">
-                Need help? <a href="{{ route('home') }}" class="hotel-link">Visit The Grand Lion Hotel</a><br>
-                &copy; {{ now()->year }} The Grand Lion Hotel. All rights reserved.
+                Need help? <a href="{{ route('home') }}" class="hotel-link">Visit {{ config('app.name') }}</a><br>
+                &copy; {{ now()->year }} {{ config('app.name') }}. All rights reserved.
             </p>
         </div>
     </div>

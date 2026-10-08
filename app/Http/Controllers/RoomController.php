@@ -73,7 +73,29 @@ class RoomController extends Controller
             ])
             ->values();
 
-        return view('rooms.show', compact('room', 'stay', 'pricingPreview', 'stayAvailability', 'unavailableDateRanges'));
+        $reviewSummary = $room->reviews()
+            ->selectRaw('COUNT(*) as review_count, AVG(rating) as average_rating')
+            ->first();
+        $reviewCount = (int) ($reviewSummary?->review_count ?? 0);
+        $averageRating = $reviewCount > 0
+            ? round((float) $reviewSummary->average_rating, 1)
+            : null;
+        $reviews = $room->reviews()
+            ->with('booking.customer')
+            ->latest('room_reviews.created_at')
+            ->limit(20)
+            ->get();
+
+        return view('rooms.show', compact(
+            'room',
+            'stay',
+            'pricingPreview',
+            'stayAvailability',
+            'unavailableDateRanges',
+            'reviewCount',
+            'averageRating',
+            'reviews'
+        ));
     }
 
     public function redirectLegacySearch(Request $request)

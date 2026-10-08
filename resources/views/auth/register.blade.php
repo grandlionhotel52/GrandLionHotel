@@ -33,11 +33,11 @@
                     <div class="col-lg-6">
                         <div class="auth-premium-form-pane">
                             <div class="auth-brand-signature">
-                                <img src="{{ asset('brand/lion_logo-160.png') }}" width="160" height="134" alt="The Grand Lion Hotel" class="auth-brand-mark" decoding="async">
+                                <img src="{{ asset('brand/lion_logo-160.png') }}" width="160" height="134" alt="{{ config('app.name') }}" class="auth-brand-mark" decoding="async">
                             </div>
                             <div class="mb-4">
                                 <p class="ta-eyebrow mb-1">Create Account</p>
-                                <h2 class="mb-0">Join The Grand Lion Hotel</h2>
+                                <h2 class="mb-0">Join {{ config('app.name') }}</h2>
                             </div>
 
                             <div class="auth-premium-switch mb-3">

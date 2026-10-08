@@ -47,7 +47,7 @@ class SalesReportExcelService
         $number = static fn (float|int $value, int $style = 5): array => compact('value', 'style') + ['type' => 'number'];
         $blankRow = static fn (): array => [];
 
-        $addRow([$text('The Grand Lion Hotel - Sales Report', 1, 8)], 28);
+        $addRow([$text(config('app.name').' - Sales Report', 1, 8)], 28);
         $addRow([$text('Date Range', 2), $text($report['selectedRangeLabel'], 2, 7)]);
         $addRow([$text('Payment Method', 2), $text($report['method'] === 'all' ? 'All methods' : Payment::methodLabel((string) $report['method']), 2, 7)]);
         $addRow([$text('Generated At', 2), $text(now()->format('M d, Y h:i A'), 2, 7)]);
@@ -191,7 +191,7 @@ class SalesReportExcelService
         $number = static fn (float|int $value, int $style = 5): array => compact('value', 'style') + ['type' => 'number'];
         $methodLabel = $report['method'] === 'all' ? 'All methods' : Payment::methodLabel((string) $report['method']);
 
-        $addRow([$text('The Grand Lion Hotel - '.$report['metricLabel'].' Breakdown', 1, 8)], 28);
+        $addRow([$text(config('app.name').' - '.$report['metricLabel'].' Breakdown', 1, 8)], 28);
         $addRow([$text('Date Range', 2), $text($report['selectedRangeLabel'], 2, 7)]);
         $addRow([$text('Payment Method', 2), $text($methodLabel, 2, 7)]);
         $addRow([
@@ -258,7 +258,7 @@ class SalesReportExcelService
         $number = static fn (float|int $value, int $style = 6): array => compact('value', 'style') + ['type' => 'number'];
         $rangeLabel = Carbon::parse($report['from'])->format('M d, Y').' to '.Carbon::parse($report['to'])->format('M d, Y');
 
-        $addRow([$text('The Grand Lion Hotel - Occupancy Report', 1, 8)], 28);
+        $addRow([$text(config('app.name').' - Occupancy Report', 1, 8)], 28);
         $addRow([$text('Date Range', 2), $text($rangeLabel, 2, 7)]);
         $addRow([$text('Generated At', 2), $text(now()->format('M d, Y h:i A'), 2, 7)]);
         $addRow([]);
@@ -434,10 +434,10 @@ class SalesReportExcelService
                 .'</Relationships>',
             'docProps/app.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
                 .'<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">'
-                .'<Application>The Grand Lion Hotel</Application></Properties>',
+                .'<Application>'.$this->escape(config('app.name')).'</Application></Properties>',
             'docProps/core.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
                 .'<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-                .'<dc:creator>The Grand Lion Hotel</dc:creator><dc:title>'.$this->escape($title).'</dc:title>'
+                .'<dc:creator>'.$this->escape(config('app.name')).'</dc:creator><dc:title>'.$this->escape($title).'</dc:title>'
                 .'<dcterms:created xsi:type="dcterms:W3CDTF">'.$timestamp.'</dcterms:created></cp:coreProperties>',
             'xl/workbook.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
                 .'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'

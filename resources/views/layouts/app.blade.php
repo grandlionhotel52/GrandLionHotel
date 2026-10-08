@@ -548,8 +548,8 @@
         <nav class="navbar navbar-expand-lg navbar-light border-bottom sticky-top {{ $isHomePage ? 'home-nav-overlay' : '' }}">
             <div class="container-xl py-1">
                 <a class="navbar-brand text-dark" href="{{ route('home') }}">
-                    <img src="{{ asset('brand/lion_logo-160.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="46px" width="160" height="134" alt="The Grand Lion Hotel" class="brand-logo" decoding="async">
-                    <span class="brand-wordmark">THE GRAND LION HOTEL</span>
+                    <img src="{{ asset('brand/lion_logo-160.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="46px" width="160" height="134" alt="{{ config('app.name') }}" class="brand-logo" decoding="async">
+                    <span class="brand-wordmark">{{ Str::upper(config('app.name')) }}</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -704,7 +704,7 @@
                 <div class="row align-items-center">
                     <div class="col-12 col-md-4 text-center text-md-start mb-2 mb-md-0">
                         <div class="small text-white-50">
-                            <strong class="text-white">The Grand Lion Hotel</strong> <span class="ms-1">Premium digital hotel reservation platform.</span>
+                            <strong class="text-white">{{ config('app.name') }}</strong> <span class="ms-1">Premium digital hotel reservation platform.</span>
                         </div>
                     </div>
                     <div class="col-12 col-md-4 text-center mb-2 mb-md-0">
@@ -716,7 +716,7 @@
                     </div>
                     <div class="col-12 col-md-4 text-center text-md-end">
                         <div class="small text-white-50">
-                            &copy; {{ now()->year }} The Grand Lion Hotel
+                            &copy; {{ now()->year }} {{ config('app.name') }}
                         </div>
                     </div>
                 </div>

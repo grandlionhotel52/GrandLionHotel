@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Room;
 use App\Models\Payment;
 use App\Models\Staff;
+use App\Models\SystemSetting;
 use App\Observers\OperationalAuditObserver;
 use App\Services\AuditLogger;
 use Illuminate\Auth\Events\Login;
@@ -15,6 +16,7 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -34,6 +36,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        try {
+            if (Schema::hasTable('system_settings')) {
+                $hotelName = SystemSetting::hotelName();
+
+                if ($hotelName !== '') {
+                    config(['app.name' => $hotelName]);
+                }
+            }
+        } catch (\Throwable) {
+            // Keep the environment-configured name while the database is unavailable.
+        }
 
         Booking::observe(OperationalAuditObserver::class);
         Payment::observe(OperationalAuditObserver::class);

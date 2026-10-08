@@ -903,8 +903,8 @@
     <nav class="navbar navbar-expand-xl navbar-light bg-white border-bottom sticky-top">
         <div class="container-xl py-2">
             <a class="navbar-brand text-dark" href="{{ route('admin.dashboard') }}">
-                <img src="{{ asset('brand/lion_logo-160.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="46px" width="160" height="134" alt="The Grand Lion Hotel" class="brand-logo" decoding="async">
-                <span class="brand-wordmark">THE GRAND LION HOTEL</span>
+                <img src="{{ asset('brand/lion_logo-160.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="46px" width="160" height="134" alt="{{ config('app.name', 'The Grand Lion Hotel') }}" class="brand-logo" decoding="async">
+                <span class="brand-wordmark">{{ Str::upper(config('app.name', 'The Grand Lion Hotel')) }}</span>
                 <span class="admin-brand-suffix">Admin</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav" aria-controls="adminNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -927,7 +927,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown admin-nav-dropdown">
-                        <button class="nav-link dropdown-toggle border-0 bg-transparent {{ request()->routeIs('admin.users.*', 'admin.staff.*', 'admin.activity-logs.*') ? 'active fw-semibold' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="nav-link dropdown-toggle border-0 bg-transparent {{ request()->routeIs('admin.users.*', 'admin.staff.*', 'admin.activity-logs.*', 'admin.settings.*') ? 'active fw-semibold' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Management
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
@@ -936,6 +936,7 @@
                             <li><a class="dropdown-item {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}" href="{{ route('admin.staff.index') }}"><i class="bi bi-person-badge me-2"></i>Staff</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item {{ request()->routeIs('admin.activity-logs.*') ? 'active' : '' }}" href="{{ route('admin.activity-logs.index') }}"><i class="bi bi-clock-history me-2"></i>Activity log</a></li>
+                            <li><a class="dropdown-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.edit') }}"><i class="bi bi-gear me-2"></i>System settings</a></li>
                         </ul>
                     </li>
                     <li class="nav-item admin-cta-wrap">

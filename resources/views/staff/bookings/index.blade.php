@@ -420,6 +420,11 @@
                                 <div class="ops-guest-meta">{{ $booking->room->name ?? '-' }}</div>
                                 <div class="ops-guest-meta"><strong>Booked:</strong> {{ $booking->created_at?->format('M d, Y h:i A') ?? '-' }}</div>
                                 <div class="ops-guest-meta">{{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}</div>
+                                @php
+                                    $adultCount = (int) ($booking->guestDetail?->adults ?? $booking->guests);
+                                    $childCount = (int) ($booking->guestDetail?->kids ?? 0);
+                                @endphp
+                                <div class="ops-guest-meta"><strong>Guests:</strong> {{ $adultCount }} {{ Str::plural('adult', $adultCount) }}, {{ $childCount }} {{ Str::plural('child', $childCount) }}</div>
                                 @if($hasPendingRescheduleRequest)
                                     <div class="ops-guest-meta text-info">
                                         Requested: {{ $booking->requested_check_in?->format('M d, Y') }} - {{ $booking->requested_check_out?->format('M d, Y') }}

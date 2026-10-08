@@ -21,7 +21,7 @@ class RegistrationVerificationCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Grand Lion Hotel confirmation code',
+            subject: config('app.name').' confirmation code',
         );
     }
 

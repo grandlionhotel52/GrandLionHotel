@@ -516,7 +516,7 @@
             <div class="hero-overlay"></div>
             <div class="hero-fixed-content">
                 <div class="hero-fixed-copy">
-                    <p class="ta-eyebrow text-light mb-2">Welcome to The Grand Lion Hotel</p>
+                    <p class="ta-eyebrow text-light mb-2">Welcome to {{ config('app.name') }}</p>
                     <h1 class="display-5 text-white mb-2">{{ $hasSignedInAccess ? 'Find your perfect stay' : 'A first look at your next stay' }}</h1>
                     <p class="text-light mb-0">{{ $hasSignedInAccess ? 'Choose your dates and check available rooms.' : 'Preview our rooms, compare rates, and check your preferred dates.' }}</p>
 

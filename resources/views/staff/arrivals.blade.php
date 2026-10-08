@@ -259,9 +259,14 @@
                             @endphp
                             <tr>
                                 <td>
+                                    @php
+                                        $adultCount = (int) ($booking->guestDetail?->adults ?? $booking->guests);
+                                        $childCount = (int) ($booking->guestDetail?->kids ?? 0);
+                                    @endphp
                                     <div class="d-flex flex-column">
                                         <span>{{ $booking->guestName() }}</span>
                                         <small class="text-secondary">{{ $booking->guestEmail() !== '-' ? $booking->guestEmail() : '' }}</small>
+                                        <small class="text-secondary">{{ $adultCount }} {{ Str::plural('adult', $adultCount) }}, {{ $childCount }} {{ Str::plural('child', $childCount) }}</small>
                                     </div>
                                 </td>
                                 <td>{{ $booking->room->name ?? '-' }}</td>

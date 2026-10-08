@@ -25,7 +25,7 @@
                             @if($booking->customer)
                                 <a href="{{ route('bookings.show', $booking) }}" style="display:inline-block;padding:10px 16px;background:#b89254;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;">View booking</a>
                             @endif
-                            <p style="margin:18px 0 0;line-height:1.6;color:#6b7280;">We look forward to welcoming you to The Grand Lion Hotel.</p>
+                            <p style="margin:18px 0 0;line-height:1.6;color:#6b7280;">We look forward to welcoming you to {{ config('app.name') }}.</p>
                         </td>
                     </tr>
                 </table>

@@ -101,7 +101,7 @@
     @endphp
 
     <div class="header">
-        <div class="brand">The Grand Lion Hotel</div>
+        <div class="brand">{{ config('app.name') }}</div>
         <div class="muted">Official Booking Receipt</div>
     </div>
 
@@ -228,7 +228,7 @@
     </table>
 
     <p class="muted" style="margin-top:18px;">
-        Thank you for choosing The Grand Lion Hotel.
+        Thank you for choosing {{ config('app.name') }}.
     </p>
 </body>
 </html>

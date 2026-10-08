@@ -16,10 +16,10 @@
     <section class="soft-card overflow-hidden mb-4">
         <div class="row g-0">
             <div class="col-lg-6 p-4 p-lg-5 d-flex flex-column justify-content-center">
-                <p class="ta-eyebrow mb-2">About The Grand Lion Hotel</p>
+                <p class="ta-eyebrow mb-2">About {{ config('app.name') }}</p>
                 <h1 class="display-5 mb-3">A comfortable local stay built for restful nights, family trips, and practical business travel.</h1>
                 <p class="text-secondary mb-4">
-                    The Grand Lion Hotel focuses on what matters most to guests: clean rooms, clear rates, responsive support, and a reservation process that feels simple from inquiry to check-in.
+                    {{ config('app.name') }} focuses on what matters most to guests: clean rooms, clear rates, responsive support, and a reservation process that feels simple from inquiry to check-in.
                 </p>
                 <div class="d-flex flex-wrap gap-2 mb-4">
                     <span class="chip">Check-in from 2:00 PM</span>
@@ -33,7 +33,7 @@
                 </div>
             </div>
             <div class="col-lg-6">
-                <img src="https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1600&q=80" alt="Grand Lion Hotel lounge interior" class="w-100 h-100 object-cover" style="min-height: 320px;">
+                <img src="https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1600&q=80" alt="{{ config('app.name') }} lounge interior" class="w-100 h-100 object-cover" style="min-height: 320px;">
             </div>
         </div>
     </section>
@@ -43,7 +43,7 @@
             <article class="soft-card h-100 p-3 p-lg-4">
                 <p class="ta-eyebrow mb-1">Rooms</p>
                 <h3 class="mb-1">{{ $aboutStats['total_rooms'] }}</h3>
-                <p class="text-secondary small mb-0">Current rooms managed under The Grand Lion Hotel.</p>
+                <p class="text-secondary small mb-0">Current rooms managed under {{ config('app.name') }}.</p>
             </article>
         </div>
         <div class="col-6 col-lg-3">
@@ -79,7 +79,7 @@
         <p class="ta-eyebrow mb-2">Our Story</p>
         <h2 class="mb-3">A hotel experience centered on comfort, clarity, and dependable service.</h2>
         <p class="text-secondary mb-4">
-            The Grand Lion Hotel is designed for guests who want a stay that feels organized and welcoming from the start. Instead of trying to be oversized or complicated, we focus on well-prepared rooms, honest room details, and guest support that stays responsive before arrival, during the stay, and after booking changes.
+            {{ config('app.name') }} is designed for guests who want a stay that feels organized and welcoming from the start. Instead of trying to be oversized or complicated, we focus on well-prepared rooms, honest room details, and guest support that stays responsive before arrival, during the stay, and after booking changes.
         </p>
         <div class="row g-3">
             <div class="col-md-4">

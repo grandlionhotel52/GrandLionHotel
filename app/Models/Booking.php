@@ -139,6 +139,11 @@ class Booking extends Model
         return $this->hasOne(BookingExtraBeddingRequest::class, 'booking_id', 'booking_id');
     }
 
+    public function roomReview(): HasOne
+    {
+        return $this->hasOne(RoomReview::class, 'booking_id', 'booking_id');
+    }
+
     public function assignedStaff(): BelongsTo
     {
         return $this->belongsTo(Staff::class, 'staff_id', 'staff_id');

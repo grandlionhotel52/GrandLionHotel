@@ -25,11 +25,11 @@
                     <div class="col-lg-6">
                         <div class="auth-premium-form-pane">
                             <div class="auth-brand-signature">
-                                <img src="{{ asset('brand/lion_logo-160.png') }}" width="160" height="134" alt="The Grand Lion Hotel" class="auth-brand-mark" decoding="async">
+                                <img src="{{ asset('brand/lion_logo-160.png') }}" width="160" height="134" alt="{{ config('app.name') }}" class="auth-brand-mark" decoding="async">
                             </div>
                             <div class="mb-4">
                                 <p class="ta-eyebrow mb-1">Welcome Back</p>
-                                <h2 class="mb-0">Sign in to The Grand Lion Hotel</h2>
+                                <h2 class="mb-0">Sign in to {{ config('app.name') }}</h2>
                             </div>
 
                             @if($registrationCompletedEmail)

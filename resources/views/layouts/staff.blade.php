@@ -540,8 +540,8 @@
     <nav class="navbar navbar-expand-xl navbar-light bg-white border-bottom sticky-top">
         <div class="container-xl py-2">
             <a class="navbar-brand text-dark" href="{{ route('staff.dashboard') }}">
-                <img src="{{ asset('brand/lion_logo-160.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="46px" width="160" height="134" alt="The Grand Lion Hotel" class="brand-logo" decoding="async">
-                <span class="brand-wordmark">THE GRAND LION HOTEL</span>
+                <img src="{{ asset('brand/lion_logo-160.png') }}" srcset="{{ asset('brand/lion_logo-160.png') }} 160w, {{ asset('brand/lion_logo-600.png') }} 600w" sizes="46px" width="160" height="134" alt="{{ config('app.name') }}" class="brand-logo" decoding="async">
+                <span class="brand-wordmark">{{ Str::upper(config('app.name')) }}</span>
                 <span class="staff-brand-suffix">Staff</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#staffNav" aria-controls="staffNav" aria-expanded="false" aria-label="Toggle navigation">

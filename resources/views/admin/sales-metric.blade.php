@@ -72,7 +72,7 @@
     <section class="mb-4">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
             <div>
-                <p class="small text-secondary mb-1">The Grand Lion Hotel · {{ $selectedRangeLabel }}</p>
+                <p class="small text-secondary mb-1">{{ config('app.name') }} · {{ $selectedRangeLabel }}</p>
                 <h1 class="h4 mb-1">{{ $metricLabel }} Breakdown</h1>
                 <p class="sales-metric-total mb-0">
                     @if($metricIsCount)

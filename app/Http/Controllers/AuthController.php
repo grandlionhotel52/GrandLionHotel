@@ -246,7 +246,7 @@ class AuthController extends Controller
         $this->loginAccount($request, $user);
 
         return $this->redirectAfterAuthentication($request)
-            ->with('status', 'Account created successfully. Welcome to The Grand Lion Hotel!')
+            ->with('status', 'Account created successfully. Welcome to '.config('app.name').'!')
             ->with('account_created_name', $user->name);
     }
 

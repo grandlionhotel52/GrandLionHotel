@@ -179,6 +179,28 @@
             border: 1px solid #e6a2a2;
             background: #fff0f0;
         }
+        .room-rating-summary {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            color: #664b20;
+            font-weight: 800;
+        }
+        .room-rating-stars {
+            color: #b7791f;
+            letter-spacing: .08em;
+            white-space: nowrap;
+        }
+        .room-review-card {
+            height: 100%;
+            border: 1px solid #eadfce;
+            border-radius: 16px;
+            background: #fffdf9;
+            padding: 1rem;
+        }
+        .room-review-comment {
+            white-space: pre-line;
+        }
         @media (min-width: 992px) {
             .room-booking-panel {
                 position: sticky;
@@ -240,6 +262,18 @@
                                 @endif
                                 &middot; Standard occupancy: {{ $standardGuests }} guests
                             </p>
+                            <div class="room-rating-summary mt-2" aria-label="{{ $reviewCount > 0 ? $averageRating.' out of 5 stars from '.$reviewCount.' reviews' : 'No customer reviews yet' }}">
+                                <span class="room-rating-stars" aria-hidden="true">
+                                    @for($star = 1; $star <= 5; $star++)
+                                        <i class="bi {{ $averageRating !== null && $star <= round($averageRating) ? 'bi-star-fill' : 'bi-star' }}"></i>
+                                    @endfor
+                                </span>
+                                @if($reviewCount > 0)
+                                    <span>{{ number_format($averageRating, 1) }} ({{ $reviewCount }} {{ Str::plural('review', $reviewCount) }})</span>
+                                @else
+                                    <span class="text-secondary">No reviews yet</span>
+                                @endif
+                            </div>
                         </div>
                         <span class="badge-status {{ $room->is_available ? 'available' : 'unavailable' }}">
                             {{ $room->is_available ? 'Available now' : 'Currently unavailable' }}
@@ -415,6 +449,64 @@
             </aside>
         </div>
     </div>
+
+    <section class="soft-card p-4 p-lg-5 mt-4" id="guest-reviews" aria-labelledby="guest_reviews_title">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+            <div>
+                <p class="ta-eyebrow mb-1">Customer Satisfaction</p>
+                <h2 class="h3 mb-1" id="guest_reviews_title">Guest ratings and comments</h2>
+                <p class="text-secondary mb-0">Feedback from customers who completed a stay in this room.</p>
+            </div>
+            @if($reviewCount > 0)
+                <div class="text-md-end">
+                    <div class="h3 mb-0">{{ number_format($averageRating, 1) }} / 5</div>
+                    <div class="room-rating-stars" aria-hidden="true">
+                        @for($star = 1; $star <= 5; $star++)
+                            <i class="bi {{ $star <= round($averageRating) ? 'bi-star-fill' : 'bi-star' }}"></i>
+                        @endfor
+                    </div>
+                    <small class="text-secondary">Based on {{ $reviewCount }} {{ Str::plural('review', $reviewCount) }}</small>
+                </div>
+            @endif
+        </div>
+
+        @if($reviews->isEmpty())
+            <div class="text-center py-4">
+                <i class="bi bi-chat-square-heart fs-2 text-secondary" aria-hidden="true"></i>
+                <p class="text-secondary mt-2 mb-0">No customer comments yet. Completed guests can leave the first review.</p>
+            </div>
+        @else
+            <div class="row g-3">
+                @foreach($reviews as $review)
+                    @php
+                        $reviewerName = trim((string) ($review->booking?->customer?->name ?? 'Verified guest'));
+                        $reviewerParts = preg_split('/\s+/', $reviewerName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                        $reviewerDisplay = $reviewerParts[0] ?? 'Verified guest';
+                        if (count($reviewerParts) > 1) {
+                            $reviewerDisplay .= ' '.mb_strtoupper(mb_substr(end($reviewerParts), 0, 1)).'.';
+                        }
+                    @endphp
+                    <div class="col-md-6">
+                        <article class="room-review-card">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div>
+                                    <strong>{{ $reviewerDisplay }}</strong>
+                                    <small class="d-block text-success"><i class="bi bi-patch-check-fill me-1"></i>Verified stay</small>
+                                </div>
+                                <div class="room-rating-stars" aria-label="{{ $review->rating }} out of 5 stars">
+                                    @for($star = 1; $star <= 5; $star++)
+                                        <i class="bi {{ $star <= $review->rating ? 'bi-star-fill' : 'bi-star' }}" aria-hidden="true"></i>
+                                    @endfor
+                                </div>
+                            </div>
+                            <p class="room-review-comment mb-2">{{ $review->comment }}</p>
+                            <small class="text-secondary">Reviewed {{ $review->updated_at->format('M d, Y') }}</small>
+                        </article>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </section>
 @endsection
 
 @push('scripts')

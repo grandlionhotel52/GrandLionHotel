@@ -230,6 +230,8 @@
         $defaultLastName = $nameParts[1] ?? '';
         $provinces = config('philippines.provinces', []);
         $standardGuests = \App\Models\Room::standardGuestCapacity();
+        $maximumExtraGuests = max(0, (int) config('pricing.max_extra_bedding_per_booking', 5));
+        $maximumGuests = $standardGuests + $maximumExtraGuests;
 
         $prefill = $prefill ?? [
             'check_in' => now()->toDateString(),
@@ -248,9 +250,9 @@
 
         $initialCheckIn = old('check_in', $prefill['check_in']);
         $initialCheckOut = old('check_out', $prefill['check_out']);
-        $initialGuests = $standardGuests;
-        $initialAdults = $standardGuests;
-        $initialKids = 0;
+        $initialAdults = max(1, (int) old('adults', $prefill['adults']));
+        $initialKids = max(0, (int) old('kids', $prefill['kids']));
+        $initialGuests = $initialAdults + $initialKids;
 
         $minimumCheckIn = $prefill['minimum_check_in'];
         $minimumCheckOut = $prefill['minimum_check_out'];
@@ -318,7 +320,7 @@
                         <div class="booking-estimate-row"><span>Stay</span><strong id="summary_stay">{{ $initialSummaryStay }}</strong></div>
                         <div class="booking-estimate-row"><span id="summary_units_label">Nights</span><strong id="summary_units">{{ $initialSummaryUnits }}</strong></div>
                         <div class="booking-estimate-row"><span>Rate</span><strong id="summary_rate">{{ $initialSummaryRate }}</strong></div>
-                        <div class="booking-estimate-row"><span>Standard occupancy</span><strong id="summary_guests">{{ $initialGuests }} guests</strong></div>
+                        <div class="booking-estimate-row"><span>Guests</span><strong id="summary_guests">{{ $initialGuests }} guests ({{ $initialAdults }} adults, {{ $initialKids }} children)</strong></div>
                         <div class="booking-estimate-row"><span>Accommodation subtotal</span><strong id="summary_chargeable_subtotal">&#8369;{{ number_format((float) ($pricingPreview['chargeable_subtotal'] ?? $room->price_per_night), 2) }}</strong></div>
                         <div class="booking-estimate-row"><span>Service charge (8%)</span><strong id="summary_service_fee">&#8369;{{ number_format((float) ($pricingPreview['service_fee'] ?? 0), 2) }}</strong></div>
                         <div class="booking-estimate-row"><span>Breakfast</span><strong id="summary_breakfast">&#8369;{{ number_format((float) ($pricingPreview['breakfast_fee'] ?? 0), 2) }}</strong></div>
@@ -375,8 +377,6 @@
                     @csrf
                     <input type="hidden" name="room_id" value="{{ $room->id }}">
                     <input type="hidden" id="guests_input" name="guests" value="{{ $initialGuests }}">
-                    <input type="hidden" id="adults_input" name="adults" value="{{ $initialAdults }}">
-                    <input type="hidden" id="kids_input" name="kids" value="{{ $initialKids }}">
 
                     <div class="col-12 pt-1">
                         <h2 class="h5 mb-1">Guest Information</h2>
@@ -445,6 +445,21 @@
                     <div class="col-md-6">
                         <label class="form-label">Departure date</label>
                         <input type="date" class="form-control" id="check_out_input" name="check_out" required min="{{ $minimumCheckOut }}" value="{{ $initialCheckOut }}">
+                    </div>
+                    <div class="col-12 pt-2">
+                        <h2 class="h5 mb-1">Guests</h2>
+                        <p class="small text-secondary mb-0">The standard room setup is for {{ $standardGuests }} guests. Extra bedding is included in the estimate for additional guests.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="adults_input">Adults</label>
+                        <input type="number" class="form-control @error('adults') is-invalid @enderror" id="adults_input" name="adults" min="1" max="{{ $maximumGuests }}" value="{{ $initialAdults }}" required>
+                        @error('adults')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="kids_input">Children</label>
+                        <input type="number" class="form-control @error('kids') is-invalid @enderror" id="kids_input" name="kids" min="0" max="{{ $maximumExtraGuests }}" value="{{ $initialKids }}" aria-describedby="kids_help" required>
+                        <small class="text-secondary" id="kids_help">Enter 0 if no children are staying. Maximum {{ $maximumExtraGuests }} children.</small>
+                        @error('kids')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-12">
                         <div id="date_availability_feedback" class="date-availability is-checking" role="status" aria-live="polite">
@@ -549,6 +564,7 @@
             const promoCodes = @json($activePromoCodes->mapWithKeys(fn ($promo) => [$promo->code => (float) $promo->discount_percent]));
             let appliedPromoCode = '';
             const standardGuests = {{ $standardGuests }};
+            const maximumGuests = {{ $maximumGuests }};
             const baseNightlyRate = Number.parseFloat(form?.dataset.baseNightlyRate || '0') || 0;
             const submitButton = form?.querySelector('button[type="submit"]');
             const submitOverlay = document.getElementById('booking_submit_overlay');
@@ -701,13 +717,18 @@
                 }
             };
 
-            const syncStandardGuests = () => {
-                adultsInput.value = String(standardGuests);
-                kidsInput.value = '0';
-                guestsInput.value = String(standardGuests);
+            const syncGuestCounts = () => {
+                const adults = Math.max(1, Number.parseInt(adultsInput.value || '1', 10));
+                const kids = Math.max(0, Number.parseInt(kidsInput.value || '0', 10));
+                const totalGuests = adults + kids;
+                guestsInput.value = String(totalGuests);
+
+                kidsInput.setCustomValidity(totalGuests > maximumGuests
+                    ? `Adults and children cannot exceed ${maximumGuests} total guests.`
+                    : '');
 
                 if (summaryGuests) {
-                    summaryGuests.textContent = `${standardGuests} guests`;
+                    summaryGuests.textContent = `${totalGuests} guest${totalGuests === 1 ? '' : 's'} (${adults} adult${adults === 1 ? '' : 's'}, ${kids} ${kids === 1 ? 'child' : 'children'})`;
                 }
             };
 
@@ -922,6 +943,7 @@
                     const previewUrl = new URL(form.dataset.previewUrl, window.location.origin);
                     previewUrl.searchParams.set('check_in', checkInInput.value);
                     previewUrl.searchParams.set('check_out', checkOutInput.value);
+                    previewUrl.searchParams.set('guests', guestsInput.value);
                     previewUrl.searchParams.set('meal_plan', mealPlanSelect?.value || 'room_only');
 
                     const response = await fetch(previewUrl, {
@@ -1078,7 +1100,7 @@
 
             const syncAll = () => {
                 updateDateRules();
-                syncStandardGuests();
+                syncGuestCounts();
                 renderPricingSummary(currentPricing, currentAvailability);
                 updateDiscountState();
             };
@@ -1089,6 +1111,13 @@
             });
             checkOutInput.addEventListener('change', refreshPricingPreview);
             mealPlanSelect?.addEventListener('change', refreshPricingPreview);
+            [adultsInput, kidsInput].forEach((input) => {
+                input.addEventListener('input', syncGuestCounts);
+                input.addEventListener('change', () => {
+                    syncGuestCounts();
+                    refreshPricingPreview();
+                });
+            });
             contactPhoneInput?.addEventListener('input', validateContactPhone);
             contactPhoneInput?.addEventListener('blur', () => {
                 validateContactPhone();
