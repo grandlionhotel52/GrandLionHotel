@@ -5,10 +5,12 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
+use App\Models\Room;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\ResolveActiveGuard;
 use App\Http\Middleware\StaffMiddleware;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 $bootstrapCachePath = __DIR__.'/cache';
 
@@ -45,6 +47,26 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (\Throwable $exception, Request $request) {
+            if (! $request->isMethod('GET') || ! $request->routeIs('rooms.show')) {
+                return null;
+            }
+
+            if ($exception instanceof HttpExceptionInterface && $exception->getStatusCode() < 500) {
+                return null;
+            }
+
+            $room = $request->route('room');
+
+            if (! $room instanceof Room) {
+                return redirect()->route('rooms.index');
+            }
+
+            return response()->view('rooms.show-fallback', [
+                'room' => $room,
+            ]);
+        });
+
         $exceptions->render(function (TokenMismatchException $exception, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
