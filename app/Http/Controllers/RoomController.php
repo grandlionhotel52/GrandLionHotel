@@ -45,6 +45,11 @@ class RoomController extends Controller
     public function show(Request $request, Room $room)
     {
         abort_unless($room->is_available, 404);
+
+        $emptyReviews = collect();
+        $reviewCount = 0;
+        $averageRating = null;
+
         try {
             if (Schema::hasTable('room_images')) {
                 $room->loadMissing('detailImages');
@@ -68,39 +73,58 @@ class RoomController extends Controller
         }
 
         $stay = $this->resolveStayFilters($request);
-        $pricingPreview = $stay['is_valid']
-            ? $this->pricingService->quoteStay($room, $stay['check_in'], $stay['check_out'])
-            : null;
-        $stayAvailability = $stay['is_valid']
-            ? ($room->is_available && $this->availabilityService->isRoomAvailable($room, $stay['check_in'], $stay['check_out']))
-            : $room->is_available;
+        $pricingPreview = null;
+        $stayAvailability = $room->is_available;
 
-        $unavailableDateRanges = $room->bookings()
-            ->visibleToOperations()
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->whereDate('check_out', '>', today()->toDateString())
-            ->orderBy('check_in')
-            ->get(['check_in', 'check_out'])
-            ->map(static fn ($booking): array => [
-                'check_in' => $booking->check_in->toDateString(),
-                'check_out' => $booking->check_out->toDateString(),
-            ])
-            ->values();
+        if ($stay['is_valid']) {
+            try {
+                $pricingPreview = $this->pricingService->quoteStay($room, $stay['check_in'], $stay['check_out']);
+                $stayAvailability = $room->is_available
+                    && $this->availabilityService->isRoomAvailable($room, $stay['check_in'], $stay['check_out']);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
 
-        $reviewSummary = $room->reviews()
-            ->selectRaw('COUNT(*) as review_count, AVG(rating) as average_rating')
-            ->first();
-        $reviewCount = (int) ($reviewSummary?->review_count ?? 0);
-        $averageRating = $reviewCount > 0
-            ? round((float) $reviewSummary->average_rating, 1)
-            : null;
-        $reviews = $room->reviews()
-            ->with('booking.customer')
-            ->latest('room_reviews.created_at')
-            ->limit(20)
-            ->get();
+        try {
+            $unavailableDateRanges = $room->bookings()
+                ->visibleToOperations()
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->whereDate('check_out', '>', today()->toDateString())
+                ->orderBy('check_in')
+                ->get(['check_in', 'check_out'])
+                ->map(static fn ($booking): array => [
+                    'check_in' => $booking->check_in->toDateString(),
+                    'check_out' => $booking->check_out->toDateString(),
+                ])
+                ->values();
+        } catch (Throwable $exception) {
+            report($exception);
+            $unavailableDateRanges = collect();
+        }
 
-        return view('rooms.show', compact(
+        $reviews = $emptyReviews;
+
+        try {
+            if (Schema::hasTable('room_reviews')) {
+                $reviewSummary = $room->reviews()
+                    ->selectRaw('COUNT(*) as review_count, AVG(rating) as average_rating')
+                    ->first();
+                $reviewCount = (int) ($reviewSummary?->review_count ?? 0);
+                $averageRating = $reviewCount > 0
+                    ? round((float) $reviewSummary->average_rating, 1)
+                    : null;
+                $reviews = $room->reviews()
+                    ->with('booking.customer')
+                    ->latest('room_reviews.created_at')
+                    ->limit(20)
+                    ->get();
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        $viewData = compact(
             'room',
             'stay',
             'pricingPreview',
@@ -109,7 +133,17 @@ class RoomController extends Controller
             'reviewCount',
             'averageRating',
             'reviews'
-        ));
+        );
+
+        try {
+            // Render inside this boundary so a deployment-specific optional
+            // feature cannot turn the public room page into a 500 response.
+            return response()->view('rooms.show', $viewData);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return response()->view('rooms.show-fallback', $viewData);
+        }
     }
 
     public function redirectLegacySearch(Request $request)
