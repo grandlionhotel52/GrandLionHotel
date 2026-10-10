@@ -358,6 +358,9 @@ class BookingWorkflowImprovementsTest extends TestCase
             'name' => 'Auto Login User',
             'email' => 'autologin@example.com',
             'phone' => '+639000000011',
+            'address_line' => '123 Registration Street',
+            'city' => 'Manila',
+            'province' => 'Metro Manila (NCR)',
             'otp_channel' => RegistrationVerification::OTP_CHANNEL_EMAIL,
             'password_encrypted' => Crypt::encryptString('password1234'),
             'code_hash' => Hash::make('123456'),
@@ -376,7 +379,72 @@ class BookingWorkflowImprovementsTest extends TestCase
         $response->assertRedirect(route('home'));
         $this->assertAuthenticatedAs($user);
         $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->assertSame('123 Registration Street', $user->address_line);
+        $this->assertSame('Manila', $user->city);
+        $this->assertSame('Metro Manila (NCR)', $user->province);
         $this->assertDatabaseMissing('registration_verifications', ['email' => $verification->email]);
+    }
+
+    public function test_registration_collects_booking_profile_details_once(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register.perform'), [
+            'first_name' => 'Maria',
+            'last_name' => 'Santos',
+            'email' => 'maria.santos@example.com',
+            'phone' => '09171234567',
+            'address_line' => '25 Mabini Street',
+            'city' => 'Manila',
+            'province' => 'Metro Manila (NCR)',
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
+        ])->assertRedirect(route('register.verify'));
+
+        $this->assertDatabaseHas('registration_verifications', [
+            'email' => 'maria.santos@example.com',
+            'address_line' => '25 Mabini Street',
+            'city' => 'Manila',
+            'province' => 'Metro Manila (NCR)',
+        ]);
+    }
+
+    public function test_customer_booking_uses_profile_details_instead_of_submitted_guest_details(): void
+    {
+        $customer = Customer::factory()->create([
+            'name' => 'Profile Guest',
+            'email' => 'profile.guest@example.com',
+            'phone' => '09171234567',
+            'address_line' => '10 Profile Avenue',
+            'city' => 'Manila',
+            'province' => 'Metro Manila (NCR)',
+        ]);
+        $room = Room::factory()->create(['is_available' => true]);
+
+        $this->actingAs($customer, 'customer')->post(route('bookings.store'), [
+            'room_id' => $room->id,
+            'check_in' => now()->addDay()->toDateString(),
+            'check_out' => now()->addDays(2)->toDateString(),
+            'adults' => 2,
+            'kids' => 0,
+            'first_name' => 'Changed',
+            'last_name' => 'At Booking',
+            'street_address' => 'Wrong Address',
+            'guest_city' => 'Wrong City',
+            'state_province' => 'Abra',
+            'contact_phone' => '09999999999',
+            'contact_email' => 'wrong@example.com',
+        ])->assertSessionHasNoErrors();
+
+        $detail = Booking::query()->firstOrFail()->guestDetail;
+
+        $this->assertSame('Profile', $detail->first_name);
+        $this->assertSame('Guest', $detail->last_name);
+        $this->assertSame('profile.guest@example.com', $detail->email);
+        $this->assertSame('09171234567', $detail->phone);
+        $this->assertSame('10 Profile Avenue', $detail->address_line);
+        $this->assertSame('Manila', $detail->city);
+        $this->assertSame('Metro Manila (NCR)', $detail->province);
     }
 
     public function test_customer_booking_rejects_invalid_state_province_value(): void

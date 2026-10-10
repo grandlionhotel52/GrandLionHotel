@@ -124,6 +124,60 @@
                                         @enderror
                                     </div>
                                     <div class="col-12">
+                                        <label class="auth-premium-label">Street address</label>
+                                        <input
+                                            type="text"
+                                            class="form-control auth-premium-input @error('address_line') is-invalid @enderror"
+                                            name="address_line"
+                                            value="{{ old('address_line') }}"
+                                            placeholder="House number, street, barangay"
+                                            autocomplete="street-address"
+                                            maxlength="255"
+                                            required
+                                        >
+                                        @error('address_line')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="auth-premium-label">City / Municipality</label>
+                                        <input
+                                            type="text"
+                                            class="form-control auth-premium-input @error('city') is-invalid @enderror"
+                                            name="city"
+                                            value="{{ old('city') }}"
+                                            placeholder="Your city"
+                                            autocomplete="address-level2"
+                                            maxlength="120"
+                                            required
+                                        >
+                                        @error('city')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="auth-premium-label">Province</label>
+                                        <input
+                                            type="text"
+                                            class="form-control auth-premium-input @error('province') is-invalid @enderror"
+                                            name="province"
+                                            list="register_province_list"
+                                            value="{{ old('province') }}"
+                                            placeholder="Select a province"
+                                            autocomplete="address-level1"
+                                            maxlength="120"
+                                            required
+                                        >
+                                        <datalist id="register_province_list">
+                                            @foreach($provinces as $province)
+                                                <option value="{{ $province }}"></option>
+                                            @endforeach
+                                        </datalist>
+                                        @error('province')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-12">
                                         <label class="auth-premium-label">Password</label>
                                         <div class="auth-password-wrap">
                                             <input

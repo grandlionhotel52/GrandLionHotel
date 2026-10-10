@@ -10,6 +10,7 @@ use App\Models\PromoCode;
 use App\Models\Room;
 use App\Services\AvailabilityService;
 use App\Services\PricingService;
+use App\Support\PersonName;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -110,16 +111,16 @@ class BookingController extends Controller
             $discountIdPhotoPath = $request->file('discount_id_photo')->store('discount-ids', 'public');
         }
 
+        $customer = $request->user();
+        $customerName = PersonName::split($customer->name);
         $reservationMeta = array_filter([
-            'first_name' => $request->input('first_name'),
-            'last_name' => $request->input('last_name'),
-            'street_address' => $request->input('street_address'),
-            'street_address_line_2' => $request->input('street_address_line_2'),
-            'guest_city' => $request->input('guest_city'),
-            'state_province' => $request->input('state_province'),
-            'postal_code' => $request->input('postal_code'),
-            'contact_phone' => $request->input('contact_phone'),
-            'contact_email' => $request->input('contact_email'),
+            'first_name' => $customerName['first_name'],
+            'last_name' => $customerName['last_name'],
+            'street_address' => $customer->address_line,
+            'guest_city' => $customer->city,
+            'state_province' => $customer->province,
+            'contact_phone' => $customer->phone,
+            'contact_email' => $customer->email,
             'adults' => $request->filled('adults') ? $request->integer('adults') : null,
             'kids' => $request->filled('kids') ? $request->integer('kids') : null,
             'meal_plan' => $request->input('meal_plan', 'room_only'),

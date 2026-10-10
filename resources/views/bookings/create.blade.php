@@ -225,10 +225,6 @@
 @section('content')
     @php
         $user = auth()->user();
-        $nameParts = preg_split('/\s+/', trim($user->name ?? ''), 2);
-        $defaultFirstName = $nameParts[0] ?? '';
-        $defaultLastName = $nameParts[1] ?? '';
-        $provinces = config('philippines.provinces', []);
         $standardGuests = \App\Models\Room::standardGuestCapacity();
         $maximumExtraGuests = max(0, (int) config('pricing.max_extra_bedding_per_booking', 5));
         $maximumGuests = $standardGuests + $maximumExtraGuests;
@@ -346,7 +342,7 @@
                     <ol class="booking-stepper">
                         <li class="booking-step">
                             <span class="booking-step-number">1</span>
-                            <span class="booking-step-title">Guest details</span>
+                            <span class="booking-step-title">Profile confirmed</span>
                         </li>
                         <li class="booking-step">
                             <span class="booking-step-number">2</span>
@@ -379,58 +375,16 @@
                     <input type="hidden" id="guests_input" name="guests" value="{{ $initialGuests }}">
 
                     <div class="col-12 pt-1">
-                        <h2 class="h5 mb-1">Guest Information</h2>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">First name</label>
-                        <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $defaultFirstName) }}" maxlength="80">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Last name</label>
-                        <input type="text" class="form-control" name="last_name" value="{{ old('last_name', $defaultLastName) }}" maxlength="80">
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label">Street address</label>
-                        <input type="text" class="form-control" name="street_address" value="{{ old('street_address', $user->address_line) }}" maxlength="255">
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label">Street address line 2</label>
-                        <input type="text" class="form-control" name="street_address_line_2" value="{{ old('street_address_line_2') }}" maxlength="255" placeholder="Optional">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">City</label>
-                        <input type="text" class="form-control" name="guest_city" value="{{ old('guest_city', $user->city) }}" maxlength="120">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">State / Province</label>
-                        <input type="text" list="province-list" class="form-control" name="state_province" value="{{ old('state_province', $user->province) }}" maxlength="120" autocomplete="off" placeholder="Start typing to search province">
-                        <datalist id="province-list">
-                            @foreach($provinces as $province)
-                                <option value="{{ $province }}"></option>
-                            @endforeach
-                        </datalist>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Postal / Zip code</label>
-                        <input type="text" class="form-control" name="postal_code" value="{{ old('postal_code') }}" maxlength="40">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label" for="contact_phone_input">Phone number</label>
-                        <input type="tel" class="form-control" id="contact_phone_input" name="contact_phone" value="{{ old('contact_phone', $user->phone) }}" maxlength="20" inputmode="tel" pattern="(?:09[0-9]{9}|\+639[0-9]{9})" placeholder="09XXXXXXXXX" aria-describedby="contact_phone_feedback">
-                        <small class="text-secondary" id="contact_phone_feedback" aria-live="polite">11 digits starting with 09, or +639 followed by 9 digits.</small>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">E-mail</label>
-                        <input type="email" class="form-control" name="contact_email" value="{{ old('contact_email', $user->email) }}" maxlength="255">
+                        <div class="alert alert-light border d-flex flex-wrap justify-content-between align-items-center gap-3 mb-0">
+                            <div>
+                                <h2 class="h6 mb-1">Guest details loaded from your profile</h2>
+                                <p class="small text-secondary mb-0">
+                                    {{ $user->name }} · {{ $user->email }} · {{ $user->phone }}<br>
+                                    {{ $user->address_line }}, {{ $user->city }}, {{ $user->province }}
+                                </p>
+                            </div>
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ route('profile.edit') }}">Update profile</a>
+                        </div>
                     </div>
 
                     <div class="col-12 pt-2">

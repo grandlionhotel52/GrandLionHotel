@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
@@ -102,6 +103,7 @@ class AuthController extends Controller
     {
         return view('auth.register', [
             'pendingVerification' => $this->currentRegistrationVerification($request),
+            'provinces' => config('philippines.provinces', []),
         ]);
     }
 
@@ -121,6 +123,9 @@ class AuthController extends Controller
                 },
             ],
             'phone' => ['required', 'string', 'regex:/^(?:09\d{9}|\+639\d{9})$/'],
+            'address_line' => ['required', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:120'],
+            'province' => ['required', 'string', 'max:120', Rule::in(config('philippines.provinces', []))],
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ], [
             'first_name.required' => 'Please enter your first name.',
@@ -131,6 +136,10 @@ class AuthController extends Controller
             'email.email' => 'Enter a valid email address (example: name@gmail.com).',
             'phone.required' => 'Please enter your phone number.',
             'phone.regex' => 'Enter exactly 11 digits starting with 09, or use +639 followed by 9 digits.',
+            'address_line.required' => 'Please enter your street address.',
+            'city.required' => 'Please enter your city or municipality.',
+            'province.required' => 'Please select your province.',
+            'province.in' => 'Please select a valid province from the suggested list.',
             'password.required' => 'Please create a password.',
             'password.confirmed' => 'Password confirmation does not match.',
             'password.min' => 'Password must be at least 8 characters with uppercase and numbers.',
@@ -234,6 +243,9 @@ class AuthController extends Controller
             'name' => $verification->name,
             'email' => $verification->email,
             'phone' => $verification->phone ?: null,
+            'address_line' => $verification->address_line,
+            'city' => $verification->city,
+            'province' => $verification->province,
             'password' => Hash::make($rawPassword),
             'google_id' => $verification->google_id,
             'country' => 'Philippines',
@@ -657,6 +669,9 @@ class AuthController extends Controller
                 'name' => $validated['name'],
                 'google_id' => $validated['google_id'] ?? null,
                 'phone' => $validated['phone'],
+                'address_line' => $validated['address_line'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'province' => $validated['province'] ?? null,
                 'otp_channel' => RegistrationVerification::OTP_CHANNEL_EMAIL,
                 'password_encrypted' => Crypt::encryptString($validated['password']),
                 'code_hash' => Hash::make($code),
