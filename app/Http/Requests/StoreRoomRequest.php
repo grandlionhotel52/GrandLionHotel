@@ -35,7 +35,9 @@ class StoreRoomRequest extends FormRequest
                 },
             ],
             'image_upload' => ['nullable', 'image', 'max:5120'],
-            'gallery_images' => ['nullable', 'array', 'max:8'],
+            // A room may keep any number of gallery images. The web server may
+            // limit one upload batch, but administrators can add more later.
+            'gallery_images' => ['nullable', 'array'],
             'gallery_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'remove_gallery_images' => ['nullable', 'array'],
             'remove_gallery_images.*' => ['integer'],

@@ -369,7 +369,7 @@
                             <div class="col-12">
                                 <label class="form-label">Additional room photos <span class="text-secondary">(optional)</span></label>
                                 <input type="file" class="form-control {{ $hasCreateRoomErrors && $errors->has('gallery_images.*') ? 'is-invalid' : '' }}" name="gallery_images[]" accept="image/jpeg,image/png,image/webp" multiple>
-                                <small class="text-secondary">Choose up to 8 detail photos, such as the bathroom, bedroom, balcony, or view. Clear filenames become slide labels.</small>
+                                <small class="text-secondary">Choose multiple detail photos, such as the bathroom, bedroom, balcony, or view. There is no total gallery limit, and you can add another batch later.</small>
                                 @if($hasCreateRoomErrors) @error('gallery_images') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror @error('gallery_images.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror @endif
                             </div>
                         </div>
@@ -428,15 +428,20 @@
                                 <label class="form-label">Image URL</label>
                                 <input type="url" class="form-control" name="image" id="edit_room_image" placeholder="https://...">
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Replace cover image</label>
+                                <input type="file" class="form-control" name="image_upload" accept="image/jpeg,image/png,image/webp">
+                                <small class="text-secondary">Optional JPG, PNG, or WebP up to 5 MB.</small>
+                            </div>
                             <div class="col-12">
                                 <label class="form-label">Add detail photos</label>
                                 <input type="file" class="form-control" name="gallery_images[]" accept="image/jpeg,image/png,image/webp" multiple>
-                                <small class="text-secondary">Upload bathroom, bedroom, balcony, or view photos (up to 8 at a time).</small>
+                                <small class="text-secondary">Select many photos in one batch. The room gallery has no total image limit, and you can return to add more anytime.</small>
                             </div>
                             <div class="col-12 d-none" id="edit_room_gallery_group">
                                 <label class="form-label">Current detail photos</label>
                                 <div class="row g-2" id="edit_room_gallery"></div>
-                                <small class="text-secondary">Select photos to remove when you save.</small>
+                                <small class="text-secondary">Select any photos you want to remove, then save. Unselected photos stay in the gallery.</small>
                             </div>
                         </div>
                     </div>

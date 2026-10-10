@@ -85,6 +85,42 @@ class OperationalFeaturesTest extends TestCase
         $this->assertCount(1, $room->fresh()->detailImages);
     }
 
+    public function test_admin_can_store_more_than_eight_detail_photos_and_add_more_later(): void
+    {
+        Storage::fake('public');
+        $admin = Admin::factory()->create();
+        $status = RoomStatus::query()->where('slug', 'clean')->firstOrFail();
+        $firstBatch = collect(range(1, 12))
+            ->map(fn (int $number) => UploadedFile::fake()->create("room-detail-{$number}.webp", 25, 'image/webp'))
+            ->all();
+
+        $this->actingAs($admin, 'admin')->post(route('admin.rooms.store'), [
+            'name' => 'Large Gallery Suite',
+            'type' => 'Suite',
+            'description' => 'Suite with an expandable gallery.',
+            'price_per_night' => 6500,
+            'room_status_id' => $status->id,
+            'gallery_images' => $firstBatch,
+        ])->assertRedirect(route('admin.rooms.index'));
+
+        $room = Room::query()->where('name', 'Large Gallery Suite')->firstOrFail();
+        $this->assertCount(12, $room->detailImages);
+
+        $this->actingAs($admin, 'admin')->put(route('admin.rooms.update', $room), [
+            'name' => $room->name,
+            'type' => $room->type,
+            'description' => $room->description,
+            'price_per_night' => $room->price_per_night,
+            'room_status_id' => $status->id,
+            'gallery_images' => [
+                UploadedFile::fake()->create('extra-bathroom.webp', 25, 'image/webp'),
+                UploadedFile::fake()->create('extra-balcony.webp', 25, 'image/webp'),
+            ],
+        ])->assertRedirect(route('admin.rooms.index'));
+
+        $this->assertCount(14, $room->fresh()->detailImages);
+    }
+
     public function test_room_with_a_missing_managed_image_uses_the_local_placeholder(): void
     {
         Storage::fake('public');

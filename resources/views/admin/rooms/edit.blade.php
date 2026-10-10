@@ -65,7 +65,7 @@
             <div class="col-12">
                 <label class="form-label">Add detail photos</label>
                 <input type="file" class="form-control" name="gallery_images[]" accept="image/jpeg,image/png,image/webp" multiple>
-                <small class="text-secondary">Choose up to 8 photos of the bathroom, bedroom, balcony, amenities, or view.</small>
+                <small class="text-secondary">Select many photos at once. There is no total gallery limit, and you can save and add another batch anytime.</small>
             </div>
             @if($room->detailImages->isNotEmpty())
                 <div class="col-12">
