@@ -45,11 +45,17 @@ class RoomController extends Controller
     public function show(Request $request, Room $room)
     {
         abort_unless($room->is_available, 404);
-        if (Schema::hasTable('room_images')) {
-            $room->loadMissing('detailImages');
-        } else {
+        try {
+            if (Schema::hasTable('room_images')) {
+                $room->loadMissing('detailImages');
+            } else {
+                $room->setRelation('detailImages', collect());
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+
             // Keep public room pages available during rolling deployments
-            // before the optional gallery migration has completed.
+            // or if the optional gallery storage is temporarily unavailable.
             $room->setRelation('detailImages', collect());
         }
 
