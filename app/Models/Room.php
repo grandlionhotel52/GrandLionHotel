@@ -34,6 +34,21 @@ class Room extends Model
         'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=1400&q=80',
     ];
 
+    private const DEFAULT_DETAIL_IMAGES = [
+        [
+            'url' => 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1600&q=85',
+            'caption' => 'Bedroom and relaxation area',
+        ],
+        [
+            'url' => 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1600&q=85',
+            'caption' => 'Private bathroom',
+        ],
+        [
+            'url' => 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1600&q=85',
+            'caption' => 'Room lounge and amenities',
+        ],
+    ];
+
     protected $primaryKey = 'room_id';
 
     protected $fillable = [
@@ -126,6 +141,11 @@ class Room extends Model
         $index = abs((int) $seed) % count(self::DEFAULT_ROOM_IMAGES);
 
         return self::DEFAULT_ROOM_IMAGES[$index];
+    }
+
+    public function defaultDetailImages(): array
+    {
+        return self::DEFAULT_DETAIL_IMAGES;
     }
 
     public function getPricePerHourAttribute(): float

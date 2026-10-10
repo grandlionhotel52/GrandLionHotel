@@ -3,15 +3,38 @@
 @section('title', $room->name.' | Room Details')
 
 @section('content')
+    @php
+        $fallbackGallery = collect([[
+            'url' => $room->image_url,
+            'caption' => $room->name.' main room view',
+        ]])->concat($room->defaultDetailImages())->unique('url')->values();
+    @endphp
+
     <div class="row justify-content-center">
         <div class="col-xl-10">
             <article class="soft-card overflow-hidden">
-                <img
-                    src="{{ $room->image_url }}"
-                    alt="{{ $room->name }}"
-                    class="w-100 d-block"
-                    style="height: min(56vw, 520px); object-fit: cover;"
-                >
+                <div id="roomFallbackCarousel" class="carousel slide" data-bs-ride="false" data-bs-interval="false" aria-label="{{ $room->name }} photo gallery">
+                    <div class="carousel-inner">
+                        @foreach($fallbackGallery as $index => $photo)
+                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                <img
+                                    src="{{ $photo['url'] }}"
+                                    alt="{{ $photo['caption'] }}"
+                                    class="w-100 d-block"
+                                    style="height: min(56vw, 520px); object-fit: cover;"
+                                    @if($index > 0) loading="lazy" @endif
+                                >
+                                <div class="carousel-caption"><span class="bg-dark bg-opacity-75 rounded px-3 py-2">{{ $photo['caption'] }}</span></div>
+                            </div>
+                        @endforeach
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#roomFallbackCarousel" data-bs-slide="prev" aria-label="Previous room photo">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#roomFallbackCarousel" data-bs-slide="next" aria-label="Next room photo">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    </button>
+                </div>
 
                 <div class="p-4 p-lg-5">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">

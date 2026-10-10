@@ -295,19 +295,23 @@
         $showDetailedPricing = (bool) $viewer;
         $canStartCustomerBooking = !$viewer || $viewer->isCustomer();
         $bookingButtonLabel = $viewer ? 'Continue' : 'Sign in and continue';
+        $uploadedGallery = $room->detailImages->map(fn ($image) => [
+            'url' => $image->image_url,
+            'caption' => $image->caption ?: $room->name.' detail photo',
+        ]);
+        $detailGallery = $uploadedGallery->isNotEmpty()
+            ? $uploadedGallery
+            : collect($room->defaultDetailImages());
         $roomGallery = collect([[
             'url' => $room->image_url,
             'caption' => $room->name.' main room view',
-        ]])->concat($room->detailImages->map(fn ($image) => [
-            'url' => $image->image_url,
-            'caption' => $image->caption ?: $room->name.' detail photo',
-        ]))->values();
+        ]])->concat($detailGallery)->unique('url')->values();
     @endphp
 
     <div class="row g-4">
         <div class="col-lg-8">
             <article class="soft-card overflow-hidden">
-                <div id="roomGalleryCarousel" class="carousel slide room-gallery" data-bs-ride="false" aria-label="{{ $room->name }} photo gallery">
+                <div id="roomGalleryCarousel" class="carousel slide room-gallery" data-bs-ride="false" data-bs-interval="false" aria-label="{{ $room->name }} photo gallery">
                     <div class="carousel-inner">
                         @foreach($roomGallery as $index => $photo)
                             <div class="carousel-item @if($index === 0) active @endif">

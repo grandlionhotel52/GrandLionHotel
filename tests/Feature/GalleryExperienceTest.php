@@ -101,6 +101,10 @@ class GalleryExperienceTest extends TestCase
             ->assertOk()
             ->assertSee('Public Guest Room')
             ->assertSee('roomGalleryCarousel')
+            ->assertSee('data-bs-ride="false"', false)
+            ->assertSee('data-bs-interval="false"', false)
+            ->assertSee('Private bathroom')
+            ->assertSee('Room lounge and amenities')
             ->assertSee('Sign in and continue');
     }
 }
