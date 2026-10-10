@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Room;
 use App\Models\RoomStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class GalleryExperienceTest extends TestCase
@@ -81,5 +82,25 @@ class GalleryExperienceTest extends TestCase
 
         $this->get(route('rooms.show', $dirtyRoom))->assertNotFound();
         $this->get(route('rooms.show', $makeupRoom))->assertNotFound();
+    }
+
+    public function test_guest_can_view_room_while_gallery_migration_is_pending(): void
+    {
+        $cleanStatus = RoomStatus::query()->where('slug', 'clean')->firstOrFail();
+        $room = Room::factory()->create([
+            'name' => 'Public Guest Room',
+            'room_status_id' => $cleanStatus->room_status_id,
+        ]);
+
+        Schema::shouldReceive('hasTable')
+            ->once()
+            ->with('room_images')
+            ->andReturnFalse();
+
+        $this->get(route('rooms.show', $room))
+            ->assertOk()
+            ->assertSee('Public Guest Room')
+            ->assertSee('roomGalleryCarousel')
+            ->assertSee('Sign in and continue');
     }
 }

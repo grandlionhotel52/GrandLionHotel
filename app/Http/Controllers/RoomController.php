@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class RoomController extends Controller
@@ -44,7 +45,13 @@ class RoomController extends Controller
     public function show(Request $request, Room $room)
     {
         abort_unless($room->is_available, 404);
-        $room->loadMissing('detailImages');
+        if (Schema::hasTable('room_images')) {
+            $room->loadMissing('detailImages');
+        } else {
+            // Keep public room pages available during rolling deployments
+            // before the optional gallery migration has completed.
+            $room->setRelation('detailImages', collect());
+        }
 
         if ($normalizedStay = $this->normalizeStayDates($request)) {
             return redirect()->route('rooms.show', array_merge(

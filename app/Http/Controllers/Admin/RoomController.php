@@ -11,6 +11,7 @@ use App\Models\RoomStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -35,8 +36,12 @@ class RoomController extends Controller
 
         $keyword = trim($request->string('q')->toString());
 
-        $roomsQuery = Room::query()
-            ->with(['roomStatus', 'statusUpdatedByAdmin', 'detailImages']);
+        $roomRelations = ['roomStatus', 'statusUpdatedByAdmin'];
+        if (Schema::hasTable('room_images')) {
+            $roomRelations[] = 'detailImages';
+        }
+
+        $roomsQuery = Room::query()->with($roomRelations);
 
         if ($keyword !== '') {
             $roomsQuery->where(function ($query) use ($keyword): void {
@@ -60,6 +65,12 @@ class RoomController extends Controller
             ->latest()
             ->paginate(15)
             ->withQueryString();
+
+        if (! Schema::hasTable('room_images')) {
+            $rooms->getCollection()->each(
+                static fn (Room $room): Room => $room->setRelation('detailImages', collect())
+            );
+        }
 
         $stats = [
             'total' => Room::query()->count(),
