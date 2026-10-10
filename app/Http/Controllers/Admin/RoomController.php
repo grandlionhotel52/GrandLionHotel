@@ -36,7 +36,7 @@ class RoomController extends Controller
         $keyword = trim($request->string('q')->toString());
 
         $roomsQuery = Room::query()
-            ->with(['roomStatus', 'statusUpdatedByAdmin']);
+            ->with(['roomStatus', 'statusUpdatedByAdmin', 'detailImages']);
 
         if ($keyword !== '') {
             $roomsQuery->where(function ($query) use ($keyword): void {
@@ -380,7 +380,7 @@ class RoomController extends Controller
     public function store(StoreRoomRequest $request)
     {
         $data = $request->validated();
-        unset($data['image_upload']);
+        unset($data['image_upload'], $data['gallery_images'], $data['remove_gallery_images']);
         if ($request->hasFile('image_upload')) {
             $data['image'] = $request->file('image_upload')->store('room-images', 'public');
         }
@@ -399,7 +399,8 @@ class RoomController extends Controller
             $data['status_updated_at'] = now();
         }
 
-        Room::create($data);
+        $room = Room::create($data);
+        $this->storeDetailImages($room, $request);
 
         return redirect()->route('admin.rooms.index')->with('status', 'Room created successfully.');
     }
@@ -410,13 +411,15 @@ class RoomController extends Controller
             ->orderBy('name')
             ->get();
 
+        $room->load('detailImages');
+
         return view('admin.rooms.edit', compact('room', 'roomStatuses'));
     }
 
     public function update(UpdateRoomRequest $request, Room $room)
     {
         $data = $request->validated();
-        unset($data['image_upload']);
+        unset($data['image_upload'], $data['gallery_images'], $data['remove_gallery_images']);
         if ($request->hasFile('image_upload')) {
             $oldImage = $room->image;
             $data['image'] = $request->file('image_upload')->store('room-images', 'public');
@@ -430,12 +433,18 @@ class RoomController extends Controller
         }
 
         $room->update($data);
+        $this->removeSelectedDetailImages($room, $request);
+        $this->storeDetailImages($room, $request);
 
         return redirect()->route('admin.rooms.index')->with('status', 'Room updated successfully.');
     }
 
     public function destroy(Room $room)
     {
+        $room->load('detailImages');
+        foreach ($room->detailImages as $detailImage) {
+            $this->deleteManagedRoomImage($detailImage->path);
+        }
         $this->deleteManagedRoomImage($room->image);
         $room->delete();
 
@@ -447,6 +456,41 @@ class RoomController extends Controller
         $path = trim((string) $path);
         if ($path !== '' && Str::startsWith($path, 'room-images/')) {
             Storage::disk('public')->delete($path);
+        }
+    }
+
+    private function storeDetailImages(Room $room, Request $request): void
+    {
+        $nextSortOrder = (int) $room->detailImages()->max('sort_order') + 1;
+
+        foreach ($request->file('gallery_images', []) as $image) {
+            $room->detailImages()->create([
+                'path' => $image->store('room-images/details', 'public'),
+                'caption' => Str::limit(
+                    Str::headline(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME)),
+                    120,
+                    ''
+                ),
+                'sort_order' => $nextSortOrder++,
+            ]);
+        }
+    }
+
+    private function removeSelectedDetailImages(Room $room, Request $request): void
+    {
+        $imageIds = collect($request->input('remove_gallery_images', []))
+            ->map(static fn ($id): int => (int) $id)
+            ->filter()
+            ->unique();
+
+        if ($imageIds->isEmpty()) {
+            return;
+        }
+
+        $images = $room->detailImages()->whereKey($imageIds)->get();
+        foreach ($images as $image) {
+            $this->deleteManagedRoomImage($image->path);
+            $image->delete();
         }
     }
 

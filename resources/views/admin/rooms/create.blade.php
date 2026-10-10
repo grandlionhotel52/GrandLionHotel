@@ -69,6 +69,11 @@
                 <input type="file" class="form-control" name="image_upload" accept="image/jpeg,image/png,image/webp">
                 <small class="text-secondary">JPG, PNG, or WebP up to 5 MB. Upload takes priority over URL.</small>
             </div>
+            <div class="col-12">
+                <label class="form-label">Additional room photos (optional)</label>
+                <input type="file" class="form-control" name="gallery_images[]" accept="image/jpeg,image/png,image/webp" multiple>
+                <small class="text-secondary">Choose up to 8 photos of the bathroom, bedroom, balcony, amenities, or view.</small>
+            </div>
             <div class="col-12 d-flex justify-content-end gap-2">
                 <a href="{{ route('admin.rooms.index') }}" class="btn btn-ta-outline">Cancel</a>
                 <button type="submit" class="btn btn-ta">Create room</button>

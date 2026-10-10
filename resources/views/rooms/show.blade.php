@@ -9,6 +9,57 @@
             height: clamp(280px, 46vw, 500px);
             object-fit: cover;
         }
+        .room-gallery {
+            position: relative;
+            background: #111827;
+        }
+        .room-gallery .carousel-item {
+            position: relative;
+        }
+        .room-gallery-caption {
+            position: absolute;
+            right: 1rem;
+            bottom: 1rem;
+            left: 1rem;
+            width: fit-content;
+            max-width: calc(100% - 2rem);
+            margin: 0;
+            padding: .45rem .75rem;
+            border-radius: 999px;
+            background: rgba(17, 24, 39, .78);
+            color: #fff;
+            font-size: .82rem;
+            font-weight: 700;
+            backdrop-filter: blur(6px);
+        }
+        .room-gallery-thumbnails {
+            display: flex;
+            gap: .55rem;
+            overflow-x: auto;
+            padding: .75rem;
+            background: #fff;
+            scrollbar-width: thin;
+        }
+        .room-gallery-thumbnail {
+            flex: 0 0 86px;
+            height: 58px;
+            padding: 0;
+            overflow: hidden;
+            border: 2px solid transparent;
+            border-radius: 9px;
+            background: #e5e7eb;
+        }
+        .room-gallery-thumbnail.active,
+        .room-gallery-thumbnail:hover,
+        .room-gallery-thumbnail:focus-visible {
+            border-color: var(--theme-primary);
+            outline: 0;
+        }
+        .room-gallery-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
         .room-type-chip {
             display: inline-flex;
             align-items: center;
@@ -244,12 +295,57 @@
         $showDetailedPricing = (bool) $viewer;
         $canStartCustomerBooking = !$viewer || $viewer->isCustomer();
         $bookingButtonLabel = $viewer ? 'Continue' : 'Sign in and continue';
+        $roomGallery = collect([[
+            'url' => $room->image_url,
+            'caption' => $room->name.' main room view',
+        ]])->concat($room->detailImages->map(fn ($image) => [
+            'url' => $image->image_url,
+            'caption' => $image->caption ?: $room->name.' detail photo',
+        ]))->values();
     @endphp
 
     <div class="row g-4">
         <div class="col-lg-8">
             <article class="soft-card overflow-hidden">
-                <img src="{{ $room->image_url }}" alt="{{ $room->name }}" class="room-hero-image">
+                <div id="roomGalleryCarousel" class="carousel slide room-gallery" data-bs-ride="false" aria-label="{{ $room->name }} photo gallery">
+                    <div class="carousel-inner">
+                        @foreach($roomGallery as $index => $photo)
+                            <div class="carousel-item @if($index === 0) active @endif">
+                                <img
+                                    src="{{ $photo['url'] }}"
+                                    alt="{{ $photo['caption'] }}"
+                                    class="room-hero-image d-block"
+                                    @if($index > 0) loading="lazy" @else fetchpriority="high" @endif
+                                    decoding="async"
+                                >
+                                <p class="room-gallery-caption">{{ $photo['caption'] }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if($roomGallery->count() > 1)
+                        <button class="carousel-control-prev" type="button" data-bs-target="#roomGalleryCarousel" data-bs-slide="prev" aria-label="Previous room photo">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#roomGalleryCarousel" data-bs-slide="next" aria-label="Next room photo">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="room-gallery-thumbnails" aria-label="Choose a room photo">
+                            @foreach($roomGallery as $index => $photo)
+                                <button
+                                    type="button"
+                                    class="room-gallery-thumbnail @if($index === 0) active @endif"
+                                    data-bs-target="#roomGalleryCarousel"
+                                    data-bs-slide-to="{{ $index }}"
+                                    aria-label="Show {{ $photo['caption'] }}"
+                                    @if($index === 0) aria-current="true" @endif
+                                >
+                                    <img src="{{ $photo['url'] }}" alt="" loading="lazy" decoding="async">
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
                 <div class="p-4 p-lg-5">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
                         <div>
@@ -512,6 +608,21 @@
 @push('scripts')
     <script>
         (() => {
+            const gallery = document.getElementById('roomGalleryCarousel');
+            const galleryThumbnails = [...document.querySelectorAll('.room-gallery-thumbnail')];
+            gallery?.addEventListener('slid.bs.carousel', (event) => {
+                galleryThumbnails.forEach((thumbnail, index) => {
+                    const isActive = index === event.to;
+                    thumbnail.classList.toggle('active', isActive);
+                    if (isActive) {
+                        thumbnail.setAttribute('aria-current', 'true');
+                        thumbnail.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    } else {
+                        thumbnail.removeAttribute('aria-current');
+                    }
+                });
+            });
+
             const form = document.getElementById('room_quick_booking_form');
             const checkInInput = document.getElementById('room_check_in_input');
             const checkOutInput = document.getElementById('room_check_out_input');

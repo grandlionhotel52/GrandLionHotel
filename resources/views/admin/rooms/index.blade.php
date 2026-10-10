@@ -99,7 +99,7 @@
         ]);
         $hasCreateRoomErrors = old('_form_context') === 'create_room' && $errors->hasAny([
             'name', 'type', 'view_type', 'description', 'price_per_night',
-            'room_status_id', 'image', 'image_upload',
+            'room_status_id', 'image', 'image_upload', 'gallery_images', 'gallery_images.*',
         ]);
     @endphp
 
@@ -255,6 +255,7 @@
                                         data-room-description="{{ $room->description ?? '' }}"
                                         data-room-price-night="{{ number_format((float) $room->price_per_night, 2, '.', '') }}"
                                         data-room-image="{{ $room->image ?? '' }}"
+                                        data-room-gallery="{{ $room->detailImages->map(fn ($image) => ['id' => $image->id, 'url' => $image->image_url, 'caption' => $image->caption])->values()->toJson() }}"
                                     >
                                         <i class="bi bi-pencil-square"></i>
                                         <span>Edit</span>
@@ -365,6 +366,12 @@
                                 <small class="text-secondary">JPG, PNG, or WebP up to 5 MB. Upload takes priority over URL.</small>
                                 @if($hasCreateRoomErrors) @error('image_upload') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
                             </div>
+                            <div class="col-12">
+                                <label class="form-label">Additional room photos <span class="text-secondary">(optional)</span></label>
+                                <input type="file" class="form-control {{ $hasCreateRoomErrors && $errors->has('gallery_images.*') ? 'is-invalid' : '' }}" name="gallery_images[]" accept="image/jpeg,image/png,image/webp" multiple>
+                                <small class="text-secondary">Choose up to 8 detail photos, such as the bathroom, bedroom, balcony, or view. Clear filenames become slide labels.</small>
+                                @if($hasCreateRoomErrors) @error('gallery_images') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror @error('gallery_images.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror @endif
+                            </div>
                         </div>
                     </div>
 
@@ -380,7 +387,7 @@
     <div class="modal fade" id="editRoomModal" tabindex="-1" aria-labelledby="editRoomModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <form id="editRoomForm" method="POST" action="{{ route('admin.rooms.update', ['room' => '__ROOM__']) }}" class="row g-0">
+                <form id="editRoomForm" method="POST" action="{{ route('admin.rooms.update', ['room' => '__ROOM__']) }}" enctype="multipart/form-data" class="row g-0">
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="_room_modal_id" id="edit_room_modal_id">
@@ -420,6 +427,16 @@
                             <div class="col-md-3">
                                 <label class="form-label">Image URL</label>
                                 <input type="url" class="form-control" name="image" id="edit_room_image" placeholder="https://...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Add detail photos</label>
+                                <input type="file" class="form-control" name="gallery_images[]" accept="image/jpeg,image/png,image/webp" multiple>
+                                <small class="text-secondary">Upload bathroom, bedroom, balcony, or view photos (up to 8 at a time).</small>
+                            </div>
+                            <div class="col-12 d-none" id="edit_room_gallery_group">
+                                <label class="form-label">Current detail photos</label>
+                                <div class="row g-2" id="edit_room_gallery"></div>
+                                <small class="text-secondary">Select photos to remove when you save.</small>
                             </div>
                         </div>
                     </div>
@@ -789,6 +806,39 @@
             const fieldDescription = document.getElementById('edit_room_description');
             const fieldPriceNight = document.getElementById('edit_room_price_night');
             const fieldImage = document.getElementById('edit_room_image');
+            const galleryGroup = document.getElementById('edit_room_gallery_group');
+            const galleryContainer = document.getElementById('edit_room_gallery');
+
+            const renderGallery = (images) => {
+                galleryContainer.replaceChildren();
+                galleryGroup.classList.toggle('d-none', images.length === 0);
+
+                images.forEach((image) => {
+                    const column = document.createElement('div');
+                    column.className = 'col-6 col-md-4';
+
+                    const label = document.createElement('label');
+                    label.className = 'border rounded p-2 d-block h-100';
+
+                    const preview = document.createElement('img');
+                    preview.src = image.url;
+                    preview.alt = image.caption || 'Room detail photo';
+                    preview.className = 'rounded w-100 mb-2';
+                    preview.style.height = '90px';
+                    preview.style.objectFit = 'cover';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'remove_gallery_images[]';
+                    checkbox.value = image.id;
+                    checkbox.className = 'form-check-input me-1';
+
+                    const text = document.createTextNode(` Remove ${image.caption || 'photo'}`);
+                    label.append(preview, checkbox, text);
+                    column.append(label);
+                    galleryContainer.append(column);
+                });
+            };
 
             editRoomModalEl.addEventListener('show.bs.modal', function (event) {
                 const trigger = event.relatedTarget;
@@ -804,6 +854,12 @@
                 const description = trigger.getAttribute('data-room-description') || '';
                 const priceNight = trigger.getAttribute('data-room-price-night') || '0';
                 const image = trigger.getAttribute('data-room-image') || '';
+                let gallery = [];
+                try {
+                    gallery = JSON.parse(trigger.getAttribute('data-room-gallery') || '[]');
+                } catch (error) {
+                    gallery = [];
+                }
 
                 if (!roomUpdateUrl) {
                     return;
@@ -817,6 +873,7 @@
                 fieldDescription.value = description;
                 fieldPriceNight.value = priceNight;
                 fieldImage.value = image;
+                renderGallery(gallery);
             });
 
             const oldModalRoomId = @json(old('_room_modal_id'));

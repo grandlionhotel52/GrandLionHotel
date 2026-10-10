@@ -44,6 +44,7 @@ class RoomController extends Controller
     public function show(Request $request, Room $room)
     {
         abort_unless($room->is_available, 404);
+        $room->loadMissing('detailImages');
 
         if ($normalizedStay = $this->normalizeStayDates($request)) {
             return redirect()->route('rooms.show', array_merge(

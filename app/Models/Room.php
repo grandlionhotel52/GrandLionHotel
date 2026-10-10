@@ -79,6 +79,13 @@ class Room extends Model
         return $this->hasMany(RoomDateDiscount::class, 'room_id', 'room_id');
     }
 
+    public function detailImages(): HasMany
+    {
+        return $this->hasMany(RoomImage::class, 'room_id', 'room_id')
+            ->orderBy('sort_order')
+            ->orderBy('room_image_id');
+    }
+
     public function reviews(): HasManyThrough
     {
         return $this->hasManyThrough(

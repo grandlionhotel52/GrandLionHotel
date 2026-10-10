@@ -62,6 +62,27 @@
             <div class="col-12">
                 <img src="{{ $room->image_url }}" alt="Current image for {{ $room->name }}" class="rounded border" style="width: 180px; height: 110px; object-fit: cover;">
             </div>
+            <div class="col-12">
+                <label class="form-label">Add detail photos</label>
+                <input type="file" class="form-control" name="gallery_images[]" accept="image/jpeg,image/png,image/webp" multiple>
+                <small class="text-secondary">Choose up to 8 photos of the bathroom, bedroom, balcony, amenities, or view.</small>
+            </div>
+            @if($room->detailImages->isNotEmpty())
+                <div class="col-12">
+                    <label class="form-label">Current detail photos</label>
+                    <div class="row g-2">
+                        @foreach($room->detailImages as $detailImage)
+                            <div class="col-6 col-md-3">
+                                <label class="border rounded p-2 d-block h-100">
+                                    <img src="{{ $detailImage->image_url }}" alt="{{ $detailImage->caption ?: 'Room detail photo' }}" class="rounded w-100 mb-2" style="height: 100px; object-fit: cover;">
+                                    <input type="checkbox" class="form-check-input me-1" name="remove_gallery_images[]" value="{{ $detailImage->id }}">
+                                    Remove {{ $detailImage->caption ?: 'photo' }}
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
             <div class="col-12 d-flex justify-content-end gap-2">
                 <a href="{{ route('admin.rooms.index') }}" class="btn btn-ta-outline">Cancel</a>
                 <button type="submit" class="btn btn-ta">Update room</button>
