@@ -86,11 +86,11 @@ class BookingController extends Controller
                 $query->where('is_active', true);
 
                 if ($booking->staff_id) {
-                    $query->orWhere('user_id', $booking->staff_id);
+                    $query->orWhere('employee_id', $booking->staff_id);
                 }
             })
             ->orderBy('name')
-            ->get(['user_id', 'name', 'username', 'is_active']);
+            ->get(['employee_id', 'name', 'username', 'is_active']);
 
         return view('admin.bookings.show', compact('booking', 'staffMembers'));
     }
@@ -101,13 +101,13 @@ class BookingController extends Controller
             'staff_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('employees', 'user_id')->where(function ($query) use ($booking): void {
+                Rule::exists('employees', 'employee_id')->where(function ($query) use ($booking): void {
                     $query->where('role', 'staff')
                         ->where(function ($staffQuery) use ($booking): void {
                             $staffQuery->where('is_active', true);
 
                             if ($booking->staff_id) {
-                                $staffQuery->orWhere('user_id', $booking->staff_id);
+                                $staffQuery->orWhere('employee_id', $booking->staff_id);
                             }
                         });
                 }),

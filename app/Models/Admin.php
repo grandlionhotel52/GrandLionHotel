@@ -9,7 +9,7 @@ class Admin extends Account
 {
     protected $table = 'employees';
 
-    protected $primaryKey = 'user_id';
+    protected $primaryKey = 'employee_id';
 
     protected $fillable = [
         'name',
@@ -31,11 +31,11 @@ class Admin extends Account
 
     public function createdStaff(): HasMany
     {
-        return $this->hasMany(Staff::class, 'created_by', 'user_id');
+        return $this->hasMany(Staff::class, 'created_by', 'employee_id');
     }
 
     public function statusUpdatedRooms(): HasMany
     {
-        return $this->hasMany(Room::class, 'admin_id', 'user_id');
+        return $this->hasMany(Room::class, 'admin_id', 'employee_id');
     }
 }

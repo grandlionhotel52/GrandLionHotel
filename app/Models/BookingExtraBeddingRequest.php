@@ -38,6 +38,6 @@ class BookingExtraBeddingRequest extends Model
 
     public function respondedByStaff(): BelongsTo
     {
-        return $this->belongsTo(Staff::class, 'responded_by_staff_id', 'user_id');
+        return $this->belongsTo(Staff::class, 'responded_by_staff_id', 'employee_id');
     }
 }

@@ -144,12 +144,12 @@ class Booking extends Model
 
     public function assignedStaff(): BelongsTo
     {
-        return $this->belongsTo(Staff::class, 'staff_id', 'user_id');
+        return $this->belongsTo(Staff::class, 'staff_id', 'employee_id');
     }
 
     public function rescheduleApprovedByAdmin(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'reschedule_approved_by_admin_id', 'user_id');
+        return $this->belongsTo(Admin::class, 'reschedule_approved_by_admin_id', 'employee_id');
     }
 
     public function nights(): int

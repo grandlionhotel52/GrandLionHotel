@@ -10,7 +10,7 @@ class Staff extends Account
 {
     protected $table = 'employees';
 
-    protected $primaryKey = 'user_id';
+    protected $primaryKey = 'employee_id';
 
     protected $fillable = [
         'name',
@@ -44,11 +44,11 @@ class Staff extends Account
 
     public function createdByAdmin(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'created_by', 'user_id');
+        return $this->belongsTo(Admin::class, 'created_by', 'employee_id');
     }
 
     public function assignedBookings(): HasMany
     {
-        return $this->hasMany(Booking::class, 'staff_id', 'user_id');
+        return $this->hasMany(Booking::class, 'staff_id', 'employee_id');
     }
 }
