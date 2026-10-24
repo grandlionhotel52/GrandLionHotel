@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Admin extends Account
 {
-    protected $table = 'admins';
+    protected $table = 'users';
 
-    protected $primaryKey = 'admin_id';
+    protected $primaryKey = 'user_id';
 
     protected $fillable = [
         'name',
@@ -19,14 +20,22 @@ class Admin extends Account
         'remember_token',
     ];
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('admin_role', static fn (Builder $query) => $query->where('role', 'admin'));
+        static::creating(static function (Admin $admin): void {
+            $admin->role = 'admin';
+            $admin->is_active = true;
+        });
+    }
+
     public function createdStaff(): HasMany
     {
-        return $this->hasMany(Staff::class, 'admin_id', 'admin_id');
+        return $this->hasMany(Staff::class, 'created_by', 'user_id');
     }
 
     public function statusUpdatedRooms(): HasMany
     {
-        return $this->hasMany(Room::class, 'admin_id', 'admin_id');
+        return $this->hasMany(Room::class, 'admin_id', 'user_id');
     }
-
 }

@@ -97,7 +97,10 @@ class DashboardController extends Controller
             ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
             ->leftJoin('booking_guest_details', 'booking_guest_details.booking_id', '=', 'bookings.booking_id')
             ->leftJoin('booking_discounts', 'booking_discounts.booking_id', '=', 'bookings.booking_id')
-            ->leftJoin('staff', 'staff.staff_id', '=', 'bookings.staff_id')
+            ->leftJoin('users as staff', function ($join): void {
+                $join->on('staff.user_id', '=', 'bookings.staff_id')
+                    ->where('staff.role', '=', 'staff');
+            })
             ->where('payments.status', 'paid')
             ->whereNotNull('payments.paid_at')
             ->whereDate('payments.paid_at', '>=', $from)

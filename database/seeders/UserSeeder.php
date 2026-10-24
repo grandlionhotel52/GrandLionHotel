@@ -15,9 +15,11 @@ class UserSeeder extends Seeder
         Admin::updateOrCreate(
             ['username' => strtolower(trim((string) env('SEED_ADMIN_USERNAME', 'admin')))],
             [
+                'role' => 'admin',
                 'name' => (string) env('SEED_ADMIN_NAME', 'Admin User'),
                 'phone' => (string) env('SEED_ADMIN_PHONE', '09170000001'),
                 'password' => Hash::make((string) env('SEED_ADMIN_PASSWORD', $defaultPassword)),
+                'is_active' => true,
             ]
         );
     }

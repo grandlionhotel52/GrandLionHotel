@@ -18,9 +18,7 @@ use Throwable;
 
 class BookingController extends Controller
 {
-    public function __construct(private readonly AvailabilityService $availabilityService)
-    {
-    }
+    public function __construct(private readonly AvailabilityService $availabilityService) {}
 
     public function index(Request $request)
     {
@@ -88,11 +86,11 @@ class BookingController extends Controller
                 $query->where('is_active', true);
 
                 if ($booking->staff_id) {
-                    $query->orWhere('staff_id', $booking->staff_id);
+                    $query->orWhere('user_id', $booking->staff_id);
                 }
             })
             ->orderBy('name')
-            ->get(['staff_id', 'name', 'username', 'is_active']);
+            ->get(['user_id', 'name', 'username', 'is_active']);
 
         return view('admin.bookings.show', compact('booking', 'staffMembers'));
     }
@@ -103,12 +101,15 @@ class BookingController extends Controller
             'staff_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('staff', 'staff_id')->where(function ($query) use ($booking): void {
-                    $query->where('is_active', true);
+                Rule::exists('users', 'user_id')->where(function ($query) use ($booking): void {
+                    $query->where('role', 'staff')
+                        ->where(function ($staffQuery) use ($booking): void {
+                            $staffQuery->where('is_active', true);
 
-                    if ($booking->staff_id) {
-                        $query->orWhere('staff_id', $booking->staff_id);
-                    }
+                            if ($booking->staff_id) {
+                                $staffQuery->orWhere('user_id', $booking->staff_id);
+                            }
+                        });
                 }),
             ],
         ]);
@@ -150,13 +151,13 @@ class BookingController extends Controller
             ]);
         }
 
-        if (!$booking->canTransitionTo($newStatus)) {
+        if (! $booking->canTransitionTo($newStatus)) {
             return back()->withErrors([
                 'status' => 'Invalid transition from '.ucfirst($previousStatus).' to '.ucfirst($newStatus).'.',
             ]);
         }
 
-        if ($newStatus === 'completed' && !$booking->canBeCheckedOutByStaff()) {
+        if ($newStatus === 'completed' && ! $booking->canBeCheckedOutByStaff()) {
             return back()->withErrors(['status' => 'Only checked-in confirmed bookings can be completed.']);
         }
 
@@ -200,11 +201,11 @@ class BookingController extends Controller
             return back()->withErrors(['payment' => 'This booking can no longer accept payment verification updates.']);
         }
 
-        if (!$payment || $payment->status !== 'pending_verification') {
+        if (! $payment || $payment->status !== 'pending_verification') {
             return back()->withErrors(['payment' => 'Only submitted online payments can be approved.']);
         }
 
-        if (!Payment::isOnlineMethod((string) $payment->method)) {
+        if (! Payment::isOnlineMethod((string) $payment->method)) {
             return back()->withErrors(['payment' => 'Only supported online payment submissions can be approved here.']);
         }
 
@@ -258,11 +259,11 @@ class BookingController extends Controller
             return back()->withErrors(['payment' => 'This booking can no longer accept payment verification updates.']);
         }
 
-        if (!$payment || $payment->status !== 'pending_verification') {
+        if (! $payment || $payment->status !== 'pending_verification') {
             return back()->withErrors(['payment' => 'Only submitted online payments can be rejected.']);
         }
 
-        if (!Payment::isOnlineMethod((string) $payment->method)) {
+        if (! Payment::isOnlineMethod((string) $payment->method)) {
             return back()->withErrors(['payment' => 'Only supported online payment submissions can be rejected here.']);
         }
 
@@ -280,18 +281,18 @@ class BookingController extends Controller
 
     public function approveReschedule(Request $request, Booking $booking)
     {
-        if (!$booking->hasPendingRescheduleRequest()) {
+        if (! $booking->hasPendingRescheduleRequest()) {
             return back()->withErrors(['booking' => 'There is no pending reschedule request to approve.']);
         }
 
-        if (!$booking->canBeRescheduledByStaff()) {
+        if (! $booking->canBeRescheduledByStaff()) {
             return back()->withErrors(['booking' => 'This booking can no longer be rescheduled.']);
         }
 
         $requestedCheckIn = $booking->requested_check_in?->toDateString();
         $requestedCheckOut = $booking->requested_check_out?->toDateString();
 
-        if (!$requestedCheckIn || !$requestedCheckOut || !$this->availabilityService->isRoomAvailable(
+        if (! $requestedCheckIn || ! $requestedCheckOut || ! $this->availabilityService->isRoomAvailable(
             $booking->room,
             $requestedCheckIn,
             $requestedCheckOut,
@@ -311,7 +312,7 @@ class BookingController extends Controller
 
     public function rejectReschedule(Booking $booking)
     {
-        if (!$booking->hasPendingRescheduleRequest()) {
+        if (! $booking->hasPendingRescheduleRequest()) {
             return back()->withErrors(['booking' => 'There is no pending reschedule request to reject.']);
         }
 
@@ -344,7 +345,7 @@ class BookingController extends Controller
 
     private function ensurePaidTransactionReference(Booking $booking): void
     {
-        if ($booking->payment_status !== 'paid' || !$booking->payment) {
+        if ($booking->payment_status !== 'paid' || ! $booking->payment) {
             return;
         }
 

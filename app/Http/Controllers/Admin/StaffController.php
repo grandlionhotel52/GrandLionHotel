@@ -114,7 +114,7 @@ class StaffController extends Controller
             'username' => $validated['username'],
             'phone' => $validated['phone'] ?? null,
             'password' => Hash::make($validated['password']),
-            'admin_id' => $request->user()->id,
+            'created_by' => $request->user()->id,
         ]);
 
         return redirect()
@@ -232,10 +232,10 @@ class StaffController extends Controller
             'name' => PersonName::combine($validated['first_name'], $validated['last_name']),
             'username' => $validated['username'],
             'phone' => $validated['phone'] ?? null,
-            'admin_id' => $staff->admin_id ?? $request->user()->id,
+            'created_by' => $staff->created_by ?? $request->user()->id,
         ];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);
         }
 
@@ -248,7 +248,7 @@ class StaffController extends Controller
 
     public function toggleStatus(Staff $staff)
     {
-        $staff->update(['is_active' => !$staff->is_active]);
+        $staff->update(['is_active' => ! $staff->is_active]);
 
         $status = $staff->is_active ? 'activated' : 'deactivated';
 
@@ -256,6 +256,7 @@ class StaffController extends Controller
             ->route('admin.staff.index')
             ->with('status', "Staff account {$status} successfully.");
     }
+
     private function resolveSelectedDate(string $rawDate): Carbon
     {
         $date = trim($rawDate);

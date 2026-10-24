@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\HasLegacyIdAttribute;
 use App\Models\Concerns\HasEncryptedRouteKey;
+use App\Models\Concerns\HasLegacyIdAttribute;
 use App\Services\PricingService;
 use Carbon\Carbon;
-use App\Models\Customer;
-use App\Models\Staff;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -146,12 +144,12 @@ class Booking extends Model
 
     public function assignedStaff(): BelongsTo
     {
-        return $this->belongsTo(Staff::class, 'staff_id', 'staff_id');
+        return $this->belongsTo(Staff::class, 'staff_id', 'user_id');
     }
 
     public function rescheduleApprovedByAdmin(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'reschedule_approved_by_admin_id', 'admin_id');
+        return $this->belongsTo(Admin::class, 'reschedule_approved_by_admin_id', 'user_id');
     }
 
     public function nights(): int
@@ -199,7 +197,7 @@ class Booking extends Model
         $requiredCount = app(PricingService::class)->calculateExtraBeddingCount($this->guests);
         $request = $this->getRelationValue('extraBeddingRequest');
 
-        if (!$request && !$this->relationLoaded('extraBeddingRequest') && !is_null($this->id)) {
+        if (! $request && ! $this->relationLoaded('extraBeddingRequest') && ! is_null($this->id)) {
             $request = $this->extraBeddingRequest()->first();
             $this->setRelation('extraBeddingRequest', $request);
         }
@@ -215,7 +213,7 @@ class Booking extends Model
         }
 
         $paymentAmount = $this->payment()->value('amount');
-        if (!is_null($paymentAmount)) {
+        if (! is_null($paymentAmount)) {
             return round((float) $paymentAmount, 2);
         }
 
@@ -234,16 +232,16 @@ class Booking extends Model
 
     public function hasPendingRescheduleRequest(): bool
     {
-        return !is_null($this->requested_check_in)
-            && !is_null($this->requested_check_out)
-            && !is_null($this->reschedule_requested_at);
+        return ! is_null($this->requested_check_in)
+            && ! is_null($this->requested_check_out)
+            && ! is_null($this->reschedule_requested_at);
     }
 
     public function isRescheduleApproved(): bool
     {
         return $this->hasPendingRescheduleRequest()
-            && !is_null($this->reschedule_approved_at)
-            && !is_null($this->reschedule_approved_by_admin_id);
+            && ! is_null($this->reschedule_approved_at)
+            && ! is_null($this->reschedule_approved_by_admin_id);
     }
 
     public function canRequestReschedule(): bool
@@ -266,7 +264,7 @@ class Booking extends Model
     public function hasPendingRoomTransferRequest(): bool
     {
         return filled($this->room_transfer_request_reason)
-            && !is_null($this->room_transfer_requested_at);
+            && ! is_null($this->room_transfer_requested_at);
     }
 
     public function canRequestRoomTransfer(): bool
@@ -327,7 +325,7 @@ class Booking extends Model
     public function canBeCheckedOutByStaff(): bool
     {
         return $this->status === 'confirmed'
-            && !is_null($this->actual_check_in_at)
+            && ! is_null($this->actual_check_in_at)
             && is_null($this->actual_check_out_at);
     }
 
@@ -339,7 +337,7 @@ class Booking extends Model
 
     public function isInHouse(): bool
     {
-        return !is_null($this->actual_check_in_at)
+        return ! is_null($this->actual_check_in_at)
             && is_null($this->actual_check_out_at)
             && $this->status === 'confirmed';
     }
@@ -398,7 +396,7 @@ class Booking extends Model
     public function getReservationMetaAttribute(): array
     {
         $detail = $this->guestDetailRecord();
-        if (!$detail) {
+        if (! $detail) {
             return [];
         }
 
@@ -433,7 +431,7 @@ class Booking extends Model
             'discount_id_photo_path' => $discount?->discount_id_photo_path,
             'promo_code' => $discount?->promoCode?->code,
             'promo_discount_percent' => $discount?->promoCode?->discount_percent,
-        ], static fn ($value): bool => !is_null($value) && $value !== '');
+        ], static fn ($value): bool => ! is_null($value) && $value !== '');
     }
 
     public function pricingQuote(): array
@@ -470,7 +468,7 @@ class Booking extends Model
             return $discount;
         }
 
-        if (!$this->supportsBookingDiscountTable()) {
+        if (! $this->supportsBookingDiscountTable()) {
             return $this->legacyDiscountRecord();
         }
 
@@ -489,7 +487,7 @@ class Booking extends Model
         $detail = $this->guestDetailRecord();
         $payment = $this->getRelationValue('payment');
 
-        if (!$payment && !is_null($this->id)) {
+        if (! $payment && ! is_null($this->id)) {
             $payment = $this->payment()->first();
             if ($payment) {
                 $this->setRelation('payment', $payment);
@@ -536,14 +534,14 @@ class Booking extends Model
     private function calculateExpectedTotalPrice(): float
     {
         $room = $this->getRelationValue('room');
-        if (!$room && !is_null($this->room_id)) {
+        if (! $room && ! is_null($this->room_id)) {
             $room = $this->room()->first(['room_id', 'price_per_night']);
             if ($room) {
                 $this->setRelation('room', $room);
             }
         }
 
-        if (!$room) {
+        if (! $room) {
             return 0.0;
         }
 

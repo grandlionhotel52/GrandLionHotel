@@ -120,7 +120,7 @@ class Room extends Model
 
     public function statusUpdatedByAdmin(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'admin_id', 'admin_id');
+        return $this->belongsTo(Admin::class, 'admin_id', 'user_id');
     }
 
     public function getImageUrlAttribute(): string
