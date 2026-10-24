@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Staff extends Account
 {
-    protected $table = 'users';
+    protected $table = 'employees';
 
     protected $primaryKey = 'user_id';
 

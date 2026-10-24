@@ -185,7 +185,7 @@ class RequestedCustomerHistorySeeder extends Seeder
             throw new RuntimeException('Seed the room inventory before adding requested customer booking history.');
         }
 
-        $adminId = DB::table('users')->where('role', 'admin')->orderBy('user_id')->value('user_id');
+        $adminId = DB::table('employees')->where('role', 'admin')->orderBy('user_id')->value('user_id');
         $password = Hash::make('Customer@123');
 
         DB::transaction(function () use ($rooms, $adminId, $password): void {

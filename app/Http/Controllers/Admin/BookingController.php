@@ -101,7 +101,7 @@ class BookingController extends Controller
             'staff_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('users', 'user_id')->where(function ($query) use ($booking): void {
+                Rule::exists('employees', 'user_id')->where(function ($query) use ($booking): void {
                     $query->where('role', 'staff')
                         ->where(function ($staffQuery) use ($booking): void {
                             $staffQuery->where('is_active', true);

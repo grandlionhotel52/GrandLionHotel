@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Admin extends Account
 {
-    protected $table = 'users';
+    protected $table = 'employees';
 
     protected $primaryKey = 'user_id';
 
