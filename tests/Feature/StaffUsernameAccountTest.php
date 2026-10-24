@@ -33,10 +33,11 @@ class StaffUsernameAccountTest extends TestCase
             ->assertRedirect(route('admin.staff.index'))
             ->assertSessionHasNoErrors();
 
-        $this->assertDatabaseHas('staff', [
+        $this->assertDatabaseHas('employees', [
             'name' => 'Front Desk',
             'username' => 'front.desk',
-            'admin_id' => $admin->id,
+            'role' => 'staff',
+            'created_by' => $admin->id,
         ]);
     }
 

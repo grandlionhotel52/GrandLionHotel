@@ -214,8 +214,9 @@ class AdminStaffButtonFlowsTest extends TestCase
 
         $this->patch(route('admin.staff.toggle-status', $createdStaff))
             ->assertRedirect(route('admin.staff.index'));
-        $this->assertDatabaseHas('staff', [
-            'staff_id' => $createdStaff->id,
+        $this->assertDatabaseHas('employees', [
+            'user_id' => $createdStaff->id,
+            'role' => 'staff',
             'is_active' => false,
         ]);
     }
@@ -395,7 +396,7 @@ class AdminStaffButtonFlowsTest extends TestCase
         $bookingsIndexResponse->assertOk();
         $bookingsIndexResponse->assertSee(route('staff.bookings.create'), false);
         $bookingsIndexResponse->assertSee('id="staff_booking_filter_form"', false);
-        $bookingsIndexResponse->assertSee("filterForm?.requestSubmit()", false);
+        $bookingsIndexResponse->assertSee('filterForm?.requestSubmit()', false);
         $bookingsIndexResponse->assertSee('id="staff_booking_results"', false);
         $bookingsIndexResponse->assertSee('await fetch(url', false);
         $bookingsIndexResponse->assertDontSee('Apply filters');
