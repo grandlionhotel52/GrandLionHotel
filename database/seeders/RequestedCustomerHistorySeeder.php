@@ -178,10 +178,18 @@ class RequestedCustomerHistorySeeder extends Seeder
     ];
 
     private const LOCATIONS = [
-        ['Calasiao', 'Pangasinan'],
         ['San Carlos City', 'Pangasinan'],
-        ['Dagupan City', 'Pangasinan'],
-        ['Urdaneta City', 'Pangasinan'],
+        ['Calasiao', 'Pangasinan'],
+        ['Malasiqui', 'Pangasinan'],
+    ];
+
+    private const ADDRESS_LINES = [
+        'Rizal Street',
+        'Mabini Street',
+        'Bonifacio Street',
+        'Burgos Street',
+        'Quezon Boulevard',
+        'Poblacion Road',
     ];
 
     private const SOURCES = [
@@ -240,7 +248,7 @@ class RequestedCustomerHistorySeeder extends Seeder
                     ? $this->naturalLocalPart($name).str_pad((string) ($index - count(self::NAMES) + 1), 2, '0', STR_PAD_LEFT).'@gmail.com'
                     : null;
                 [$city, $province] = self::LOCATIONS[$index % count(self::LOCATIONS)];
-                $profileIsComplete = $index % 4 !== 0;
+                $addressLine = $number.' '.self::ADDRESS_LINES[$index % count(self::ADDRESS_LINES)];
 
                 $legacyCustomerId = DB::table('customers')
                     ->whereIn('email', array_values(array_filter([$legacyEmail, $previousAdditionalEmail])))
@@ -258,9 +266,9 @@ class RequestedCustomerHistorySeeder extends Seeder
                         'email' => $email,
                         'password' => $password,
                         'phone' => $phone,
-                        'address_line' => $profileIsComplete ? $number.' '.self::LOCATIONS[($index + 1) % count(self::LOCATIONS)][0].' Road' : null,
-                        'city' => $profileIsComplete ? $city : null,
-                        'province' => $profileIsComplete ? $province : null,
+                        'address_line' => $addressLine,
+                        'city' => $city,
+                        'province' => $province,
                         'country' => 'Philippines',
                         'email_verified_at' => $joinedAt,
                         'is_active' => true,
@@ -275,6 +283,11 @@ class RequestedCustomerHistorySeeder extends Seeder
                     'name' => $name,
                     'email' => $email,
                     'phone' => $phone,
+                    'address_line' => $addressLine,
+                    'city' => $city,
+                    'province' => $province,
+                    'country' => 'Philippines',
+                    'is_active' => true,
                     'email_verified_at' => $joinedAt,
                     'created_at' => $joinedAt,
                     'updated_at' => $joinedAt->copy()->addMinutes(5),
@@ -321,7 +334,15 @@ class RequestedCustomerHistorySeeder extends Seeder
 
         $customers = DB::table('customers')
             ->whereIn('email', $emails)
-            ->get(['customer_id', 'email', 'created_at']);
+            ->get([
+                'customer_id',
+                'email',
+                'address_line',
+                'city',
+                'province',
+                'country',
+                'created_at',
+            ]);
 
         if ($customers->count() !== count($emails)) {
             return false;
@@ -336,6 +357,18 @@ class RequestedCustomerHistorySeeder extends Seeder
         );
 
         if ($hasUnexpectedLoginDate) {
+            return false;
+        }
+
+        $allowedCities = array_column(self::LOCATIONS, 0);
+        $hasUnexpectedAddress = $customers->contains(
+            fn (object $customer): bool => blank($customer->address_line)
+                || ! in_array($customer->city, $allowedCities, true)
+                || $customer->province !== 'Pangasinan'
+                || $customer->country !== 'Philippines'
+        );
+
+        if ($hasUnexpectedAddress) {
             return false;
         }
 

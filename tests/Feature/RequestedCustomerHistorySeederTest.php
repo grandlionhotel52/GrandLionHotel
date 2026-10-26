@@ -57,6 +57,18 @@ class RequestedCustomerHistorySeederTest extends TestCase
         $this->assertTrue(DB::table('customers')->where('name', 'Jazmine Ramos')->exists());
         $this->assertFalse(DB::table('customers')->whereIn('customer_id', $seededCustomerIds)->where('name', 'like', '% Gew')->exists());
         $this->assertFalse(DB::table('customers')->whereIn('customer_id', $seededCustomerIds)->where('email', 'like', '%.demo@%')->exists());
+        $seededCustomers = DB::table('customers')
+            ->whereIn('customer_id', $seededCustomerIds)
+            ->get(['address_line', 'city', 'province', 'country']);
+        $this->assertSame(
+            ['Calasiao', 'Malasiqui', 'San Carlos City'],
+            $seededCustomers->pluck('city')->unique()->sort()->values()->all()
+        );
+        $this->assertFalse($seededCustomers->contains(
+            fn (object $customer): bool => blank($customer->address_line)
+                || $customer->province !== 'Pangasinan'
+                || $customer->country !== 'Philippines'
+        ));
 
         $additionalCustomers = DB::table('customers')
             ->whereIn('name', self::ADDITIONAL_NAMES)
@@ -154,6 +166,9 @@ class RequestedCustomerHistorySeederTest extends TestCase
         $bookingCount = DB::table('bookings')->whereIn('customer_id', $customerIds)->count();
 
         Customer::query()->update([
+            'address_line' => 'Old Address',
+            'city' => 'Dagupan City',
+            'province' => 'Pangasinan',
             'created_at' => '2026-09-14 08:00:00',
             'updated_at' => '2026-09-14 08:05:00',
         ]);
@@ -171,6 +186,7 @@ class RequestedCustomerHistorySeederTest extends TestCase
         $this->seed(RequestedCustomerHistorySeeder::class);
 
         $this->assertSame(0, Customer::query()->whereMonth('created_at', 9)->whereYear('created_at', 2026)->count());
+        $this->assertSame(0, Customer::query()->whereNotIn('city', ['San Carlos City', 'Calasiao', 'Malasiqui'])->count());
         $this->assertSame($bookingCount, DB::table('bookings')->whereIn('customer_id', $customerIds)->count());
         $this->assertSame(0, DB::table('bookings')->whereIn('customer_id', $customerIds)->whereMonth('created_at', 9)->count());
         $this->assertSame(0, DB::table('bookings')->whereIn('customer_id', $customerIds)->whereMonth('check_in', 9)->count());
