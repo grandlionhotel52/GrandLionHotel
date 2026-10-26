@@ -37,6 +37,8 @@ class RoomReviewTest extends TestCase
             ->get(route('rooms.show', $room))
             ->assertOk()
             ->assertSee('Update your comment')
+            ->assertSee('aria-label="5 out of 5 stars"', false)
+            ->assertSee('name="rating"', false)
             ->assertSee('Ana R.')
             ->assertSee('Customer review')
             ->assertDontSee('Verified stay');

@@ -64,6 +64,48 @@
             content: " *";
             color: var(--danger);
         }
+        .star-rating-fieldset {
+            min-width: 0;
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+        .star-rating-options {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 0.22rem;
+        }
+        .star-rating-options input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+        .star-rating-options label {
+            color: #b8b0a4;
+            cursor: pointer;
+            font-size: 2rem;
+            line-height: 1;
+            transition: color .15s ease, transform .15s ease;
+        }
+        .star-rating-options label:hover,
+        .star-rating-options label:hover ~ label,
+        .star-rating-options input:checked + label,
+        .star-rating-options input:checked ~ label {
+            color: #b7791f;
+        }
+        .star-rating-options label:hover {
+            transform: translateY(-1px) scale(1.06);
+        }
+        .star-rating-options input:focus-visible + label {
+            border-radius: 5px;
+            outline: 3px solid rgba(184, 146, 84, 0.55);
+            outline-offset: 3px;
+        }
+        .star-rating-options.is-invalid label {
+            text-shadow: 0 0 0.01px var(--danger);
+        }
         @media (prefers-reduced-motion: reduce) {
             *,
             *::before,

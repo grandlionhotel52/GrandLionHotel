@@ -577,14 +577,7 @@
                 <form method="POST" action="{{ route('rooms.review.store', $room) }}" class="row g-3">
                     @csrf
                     <div class="col-md-4">
-                        <label class="form-label" for="room_review_rating">Overall rating</label>
-                        <select id="room_review_rating" name="rating" class="form-select @error('rating') is-invalid @enderror" required>
-                            <option value="">Choose a rating...</option>
-                            @foreach([5 => '5 stars - Excellent', 4 => '4 stars - Very good', 3 => '3 stars - Good', 2 => '2 stars - Fair', 1 => '1 star - Poor'] as $value => $label)
-                                <option value="{{ $value }}" @selected((int) old('rating', $currentCustomerReview?->rating) === $value)>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('rating')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <x-star-rating-input id="room_review_rating" :value="old('rating', $currentCustomerReview?->rating)" />
                     </div>
                     <div class="col-md-8">
                         <label class="form-label" for="room_review_comment">Your comment</label>
