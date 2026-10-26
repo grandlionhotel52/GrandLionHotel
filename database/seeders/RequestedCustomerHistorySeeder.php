@@ -153,6 +153,10 @@ class RequestedCustomerHistorySeeder extends Seeder
         ['name' => 'Brandon Macaraeg', 'phone' => '09183726459'],
         ['name' => 'Clarissa Domingo', 'phone' => '09251643870'],
         ['name' => 'Dominic Villanueva', 'phone' => '09527468139'],
+        ['name' => 'Emmanuel Garcia', 'phone' => '09941826375'],
+        ['name' => 'Francesca Cruz', 'phone' => '09169284730'],
+        ['name' => 'Nathaniel Ramos', 'phone' => '09658137420'],
+        ['name' => 'Sophia Mendoza', 'phone' => '09273948516'],
     ];
 
     private const LOCATIONS = [
@@ -171,8 +175,6 @@ class RequestedCustomerHistorySeeder extends Seeder
 
     public function run(): void
     {
-        $this->redistributeSeptember18Customers();
-
         if ($this->requestedHistoryIsComplete()) {
             return;
         }
@@ -205,13 +207,15 @@ class RequestedCustomerHistorySeeder extends Seeder
                 )
             );
 
+            $bookingSequence = 0;
+
             foreach ($customers as $index => $customer) {
                 $name = $customer['name'];
                 $number = $index + 1;
                 $legacyName = $customer['legacy_name'];
                 $phone = $customer['phone'];
                 $joinedAt = Carbon::parse('2026-09-14 08:00:00')
-                    ->addDays($index % 4)
+                    ->addDays($index % 5)
                     ->addMinutes(($index * 17) % 720);
                 $legacyEmail = $this->legacyEmail($legacyName);
                 $email = $this->naturalEmail($name, $phone);
@@ -269,44 +273,18 @@ class RequestedCustomerHistorySeeder extends Seeder
                         $customerId,
                         $name,
                         $email,
-                        $legacyEmail,
                         $phone,
                         $joinedAt,
                         $index,
                         $bookingIndex,
+                        $bookingSequence,
                         $rooms
                     );
+
+                    $bookingSequence++;
                 }
             }
         });
-    }
-
-    private function redistributeSeptember18Customers(): void
-    {
-        $customers = DB::table('customers')
-            ->whereDate('created_at', '2026-09-18')
-            ->orderBy('customer_id')
-            ->get(['customer_id', 'created_at']);
-
-        foreach ($customers as $index => $customer) {
-            $original = Carbon::parse($customer->created_at);
-            $createdAt = Carbon::parse('2026-09-14')
-                ->addDays($index % 4)
-                ->setTime($original->hour, $original->minute, $original->second);
-
-            DB::table('customers')
-                ->where('customer_id', $customer->customer_id)
-                ->update(['created_at' => $createdAt]);
-
-            DB::table('activity_logs')
-                ->where('subject_type', 'Customer')
-                ->where('subject_id', $customer->customer_id)
-                ->whereDate('created_at', '2026-09-18')
-                ->update([
-                    'created_at' => $createdAt,
-                    'updated_at' => $createdAt,
-                ]);
-        }
     }
 
     private function requestedHistoryIsComplete(): bool
@@ -371,19 +349,19 @@ class RequestedCustomerHistorySeeder extends Seeder
         int $customerId,
         string $name,
         string $email,
-        string $legacyEmail,
         string $phone,
         Carbon $joinedAt,
         int $index,
         int $bookingIndex,
+        int $bookingSequence,
         $rooms
     ): void {
-        $room = $rooms[($index + $bookingIndex) % $rooms->count()];
+        $room = $rooms[$bookingSequence % $rooms->count()];
         $createdAt = $joinedAt->copy()->addHours(2 + $bookingIndex);
-        $checkIn = Carbon::parse('2026-09-19')->addDays($index + ($bookingIndex * 2));
+        $checkIn = Carbon::parse('2026-09-19')
+            ->addDays(intdiv($bookingSequence, $rooms->count()) * 3);
         $checkOut = $checkIn->copy()->addDays(2);
         $status = $checkOut->isPast() ? 'completed' : 'confirmed';
-        $legacyMarker = "Requested demo history: {$legacyEmail} #".($bookingIndex + 1);
         $notes = [
             'Late arrival requested.',
             'Quiet room preferred.',
@@ -393,16 +371,23 @@ class RequestedCustomerHistorySeeder extends Seeder
         ][$index % 5];
         $existingBookingId = DB::table('bookings')
             ->where('customer_id', $customerId)
-            ->where(function ($query) use ($createdAt, $legacyMarker): void {
-                $query->where('created_at', $createdAt)
-                    ->orWhere('notes', $legacyMarker);
-            })
+            ->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-18 23:59:59'])
+            ->orderBy('booking_id')
+            ->offset($bookingIndex)
             ->value('booking_id');
 
         $parts = preg_split('/\s+/', trim($name), 2);
 
         if ($existingBookingId) {
-            DB::table('bookings')->where('booking_id', $existingBookingId)->update(['notes' => $notes]);
+            DB::table('bookings')->where('booking_id', $existingBookingId)->update([
+                'room_id' => $room->room_id,
+                'check_in' => $checkIn->toDateString(),
+                'check_out' => $checkOut->toDateString(),
+                'status' => $status,
+                'notes' => $notes,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt->copy()->addHour(),
+            ]);
             DB::table('booking_guest_details')->where('booking_id', $existingBookingId)->update([
                 'first_name' => $parts[0],
                 'last_name' => $parts[1],
@@ -410,6 +395,7 @@ class RequestedCustomerHistorySeeder extends Seeder
                 'phone' => $phone,
             ]);
             DB::table('payments')->where('booking_id', $existingBookingId)->update([
+                'amount' => round((float) $room->price_per_night * 2, 2),
                 'transaction_reference' => $this->transactionReference($createdAt, (int) $existingBookingId),
             ]);
 
