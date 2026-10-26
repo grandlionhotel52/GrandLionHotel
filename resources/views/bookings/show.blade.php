@@ -714,7 +714,7 @@
                             <small class="text-secondary">Maximum 1,500 characters. Do not include private contact or payment information.</small>
                             @error('comment')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-12">
+                        <div class="col-12 d-flex justify-content-end">
                             <button type="submit" class="btn btn-ta">{{ $booking->roomReview ? 'Update review' : 'Submit review' }}</button>
                         </div>
                     </form>

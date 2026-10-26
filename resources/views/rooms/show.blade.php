@@ -576,15 +576,15 @@
                 <p class="small text-secondary mb-3">You do not need a booking to leave a rating and comment.</p>
                 <form method="POST" action="{{ route('rooms.review.store', $room) }}" class="row g-3">
                     @csrf
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <x-star-rating-input id="room_review_rating" :value="old('rating', $currentCustomerReview?->rating)" />
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-12">
                         <label class="form-label" for="room_review_comment">Your comment</label>
                         <textarea id="room_review_comment" name="comment" class="form-control @error('comment') is-invalid @enderror" rows="4" maxlength="1500" placeholder="Share what you think about this room." required>{{ old('comment', $currentCustomerReview?->comment) }}</textarea>
                         @error('comment')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-12">
+                    <div class="col-12 d-flex justify-content-end">
                         <button type="submit" class="btn btn-ta">{{ $currentCustomerReview ? 'Update review' : 'Submit review' }}</button>
                     </div>
                 </form>
