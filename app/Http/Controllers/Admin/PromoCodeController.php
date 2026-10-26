@@ -47,12 +47,18 @@ class PromoCodeController extends Controller
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:40', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique('promo_codes', 'code')->ignore($promoCode)],
+            'description' => ['nullable', 'string', 'max:255'],
             'discount_percent' => ['required', 'numeric', 'decimal:0,2', 'gt:0', 'max:100'],
+            'new_customers_only' => ['nullable', 'boolean'],
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'is_active' => ['nullable', 'boolean'],
         ]);
         $validated['code'] = strtoupper(trim($validated['code']));
+        $validated['description'] = filled($validated['description'] ?? null)
+            ? trim((string) $validated['description'])
+            : null;
+        $validated['new_customers_only'] = $request->boolean('new_customers_only');
         $validated['is_active'] = $request->boolean('is_active');
 
         return $validated;

@@ -106,6 +106,24 @@
         .star-rating-options.is-invalid label {
             text-shadow: 0 0 0.01px var(--danger);
         }
+        .promo-modal-card {
+            border: 1px solid #e5d7c1;
+            border-radius: 16px;
+            background: linear-gradient(145deg, #fffdf9, #f8f0e3);
+            padding: 1rem;
+        }
+        .promo-code-token {
+            display: inline-flex;
+            align-items: center;
+            border: 1px dashed #a77b37;
+            border-radius: 10px;
+            background: #fff;
+            color: #6f4d19;
+            padding: .38rem .65rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-weight: 800;
+            letter-spacing: .06em;
+        }
         @media (prefers-reduced-motion: reduce) {
             *,
             *::before,
@@ -673,6 +691,15 @@
                                         @endif
                                     </div>
                                 </li>
+                                <li class="nav-item">
+                                    <button class="nav-link position-relative border-0 bg-transparent" type="button" data-bs-toggle="modal" data-bs-target="#promotionsModal" aria-label="View available promo codes">
+                                        <i class="bi bi-tag"></i>
+                                        <span class="mobile-nav-label">Promos</span>
+                                        @if($availablePromos->isNotEmpty())
+                                            <span class="notification-count badge rounded-pill bg-success">{{ $availablePromos->count() > 9 ? '9+' : $availablePromos->count() }}</span>
+                                        @endif
+                                    </button>
+                                </li>
                             @endif
                             <li class="nav-item auth-cta-wrap">
                                 <div class="auth-cta-group">
@@ -703,6 +730,63 @@
                 </div>
             </div>
         </nav>
+
+        @auth('customer')
+            <div class="modal fade" id="promotionsModal" tabindex="-1" aria-labelledby="promotionsModalTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header">
+                            <div>
+                                <p class="ta-eyebrow mb-1">Available offers</p>
+                                <h2 class="modal-title h4 mb-0" id="promotionsModalTitle">Promo codes</h2>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @forelse($availablePromos as $promo)
+                                <article class="promo-modal-card mb-3">
+                                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                        <div>
+                                            <span class="promo-code-token">{{ $promo->code }}</span>
+                                            @if($promo->new_customers_only)
+                                                <span class="badge text-bg-success ms-1">New customer</span>
+                                            @endif
+                                        </div>
+                                        <strong class="text-nowrap">{{ \App\Support\Money::display($promo->discount_percent) }}% off</strong>
+                                    </div>
+                                    <p class="small mb-2">{{ $promo->description ?: 'Save on an eligible room booking with this promo code.' }}</p>
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                        <small class="text-secondary">
+                                            @if($promo->starts_at && $promo->ends_at)
+                                                Valid {{ $promo->starts_at->format('M d, Y') }}&ndash;{{ $promo->ends_at->format('M d, Y') }}
+                                            @elseif($promo->ends_at)
+                                                Valid until {{ $promo->ends_at->format('M d, Y') }}
+                                            @elseif($promo->starts_at)
+                                                Available from {{ $promo->starts_at->format('M d, Y') }}
+                                            @else
+                                                Available while active
+                                            @endif
+                                        </small>
+                                        <button type="button" class="btn btn-sm btn-ta-outline" data-copy-promo="{{ $promo->code }}">
+                                            <i class="bi bi-copy me-1" aria-hidden="true"></i>Copy code
+                                        </button>
+                                    </div>
+                                </article>
+                            @empty
+                                <div class="text-center py-4">
+                                    <i class="bi bi-tag fs-2 text-secondary" aria-hidden="true"></i>
+                                    <p class="text-secondary mt-2 mb-0">There are no active promo codes right now.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <a href="{{ route('rooms.index') }}" class="btn btn-ta">Browse rooms</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endauth
 
         <main id="main-content" tabindex="-1" class="main-content container-xl {{ $isHomePage ? 'pt-0 pb-4 pb-lg-5' : 'py-4 py-lg-5' }}">
             @php
@@ -795,6 +879,22 @@
                 if (control.required && !label.textContent.includes('*')) {
                     label.classList.add('is-required');
                 }
+            });
+
+            document.querySelectorAll('[data-copy-promo]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const code = button.dataset.copyPromo || '';
+                    if (!code) return;
+
+                    try {
+                        await navigator.clipboard.writeText(code);
+                        const original = button.innerHTML;
+                        button.innerHTML = '<i class="bi bi-check2 me-1" aria-hidden="true"></i>Copied';
+                        setTimeout(() => { button.innerHTML = original; }, 1800);
+                    } catch (error) {
+                        window.prompt('Copy this promo code:', code);
+                    }
+                });
             });
 
             document.addEventListener('submit', (event) => {

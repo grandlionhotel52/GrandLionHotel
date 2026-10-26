@@ -13,12 +13,21 @@ class PromoCode extends Model
 
     protected $primaryKey = 'promo_code_id';
 
-    protected $fillable = ['code', 'discount_percent', 'starts_at', 'ends_at', 'is_active'];
+    protected $fillable = [
+        'code',
+        'description',
+        'discount_percent',
+        'new_customers_only',
+        'starts_at',
+        'ends_at',
+        'is_active',
+    ];
 
     protected function casts(): array
     {
         return [
             'discount_percent' => 'decimal:2',
+            'new_customers_only' => 'boolean',
             'starts_at' => 'date',
             'ends_at' => 'date',
             'is_active' => 'boolean',
@@ -35,5 +44,19 @@ class PromoCode extends Model
         return $query->where('is_active', true)
             ->where(fn (Builder $q) => $q->whereNull('starts_at')->orWhereDate('starts_at', '<=', today()))
             ->where(fn (Builder $q) => $q->whereNull('ends_at')->orWhereDate('ends_at', '>=', today()));
+    }
+
+    public function scopeAvailableFor(Builder $query, Customer $customer): Builder
+    {
+        $hasExistingBooking = $customer->bookings()
+            ->visibleToOperations()
+            ->exists();
+
+        return $query
+            ->available()
+            ->when(
+                $hasExistingBooking,
+                static fn (Builder $q): Builder => $q->where('new_customers_only', false)
+            );
     }
 }

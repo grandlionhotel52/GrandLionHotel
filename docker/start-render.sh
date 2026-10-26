@@ -81,6 +81,9 @@ php artisan db:seed --class='Database\Seeders\RequestedCustomerHistorySeeder' --
 echo "[startup] Ensuring an administrator account exists..."
 php artisan db:seed --class='Database\Seeders\UserSeeder' --force
 
+echo "[startup] Ensuring the new-customer promotion exists..."
+php artisan db:seed --class='Database\Seeders\PromoCodeSeeder' --force
+
 echo "[startup] Optimizing Laravel for production..."
 php artisan optimize
 

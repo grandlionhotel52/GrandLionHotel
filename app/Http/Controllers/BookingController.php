@@ -59,7 +59,9 @@ class BookingController extends Controller
             );
         }
 
-        $activePromoCodes = PromoCode::available()->orderBy('code')->get(['promo_code_id', 'code', 'discount_percent']);
+        $activePromoCodes = PromoCode::availableFor($request->user())
+            ->orderBy('code')
+            ->get(['promo_code_id', 'code', 'discount_percent']);
 
         return view('bookings.create', compact('room', 'prefill', 'pricingPreview', 'activePromoCodes'));
     }
@@ -75,7 +77,9 @@ class BookingController extends Controller
         $promoCode = null;
         if ($request->input('discount_type') === 'promo') {
             $normalizedPromoCode = strtoupper(trim((string) $request->input('promo_code')));
-            $promoCode = PromoCode::available()->where('code', $normalizedPromoCode)->first();
+            $promoCode = PromoCode::availableFor($request->user())
+                ->where('code', $normalizedPromoCode)
+                ->first();
             if (!$promoCode) {
                 return $this->respondWithBookingError($request, [
                     'promo_code' => 'This promotional code is invalid, inactive, or expired.',

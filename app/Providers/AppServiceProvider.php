@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Room;
 use App\Models\Payment;
+use App\Models\PromoCode;
 use App\Models\Staff;
 use App\Models\SystemSetting;
 use App\Observers\OperationalAuditObserver;
@@ -18,6 +19,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -36,6 +38,26 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        View::composer('layouts.app', function ($view): void {
+            $availablePromos = collect();
+            $customer = request()->user('customer');
+
+            try {
+                if ($customer instanceof Customer && Schema::hasTable('promo_codes')) {
+                    $availablePromos = PromoCode::query()
+                        ->availableFor($customer)
+                        ->orderByDesc('new_customers_only')
+                        ->orderByDesc('discount_percent')
+                        ->orderBy('code')
+                        ->get();
+                }
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+
+            $view->with('availablePromos', $availablePromos);
+        });
 
         try {
             if (Schema::hasTable('system_settings')) {
