@@ -11,6 +11,24 @@ use RuntimeException;
 
 class RequestedCustomerHistorySeeder extends Seeder
 {
+    private const LOGIN_DATES = [
+        '2026-10-07',
+        '2026-10-08',
+        '2026-10-09',
+        '2026-10-12',
+        '2026-10-13',
+        '2026-10-14',
+        '2026-10-15',
+    ];
+
+    private const BOOKING_WAVE_STARTS = [
+        '2026-10-18',
+        '2026-11-04',
+        '2026-11-20',
+        '2026-12-06',
+        '2026-12-22',
+    ];
+
     private const LEGACY_NAMES = [
         'Desiree T. Daroy',
         'Ryza Barbadillo',
@@ -214,8 +232,7 @@ class RequestedCustomerHistorySeeder extends Seeder
                 $number = $index + 1;
                 $legacyName = $customer['legacy_name'];
                 $phone = $customer['phone'];
-                $joinedAt = Carbon::parse('2026-09-14 08:00:00')
-                    ->addDays($index % 5)
+                $joinedAt = Carbon::parse(self::LOGIN_DATES[$index % count(self::LOGIN_DATES)].' 08:00:00')
                     ->addMinutes(($index * 17) % 720);
                 $legacyEmail = $this->legacyEmail($legacyName);
                 $email = $this->naturalEmail($name, $phone);
@@ -289,25 +306,59 @@ class RequestedCustomerHistorySeeder extends Seeder
 
     private function requestedHistoryIsComplete(): bool
     {
-        $emails = array_map(
+        $additionalEmails = array_map(
             fn (array $customer): string => $this->naturalEmail($customer['name'], $customer['phone']),
             self::ADDITIONAL_CUSTOMERS
+        );
+        $emails = array_merge(
+            array_map(
+                fn (string $name, string $phone): string => $this->naturalEmail($name, $phone),
+                self::NAMES,
+                self::PHONE_NUMBERS
+            ),
+            $additionalEmails
         );
 
         $customers = DB::table('customers')
             ->whereIn('email', $emails)
-            ->pluck('customer_id', 'email');
+            ->get(['customer_id', 'email', 'created_at']);
 
-        if ($customers->count() !== count(self::ADDITIONAL_CUSTOMERS)) {
+        if ($customers->count() !== count($emails)) {
             return false;
         }
 
+        $hasUnexpectedLoginDate = $customers->contains(
+            fn (object $customer): bool => ! in_array(
+                Carbon::parse($customer->created_at)->toDateString(),
+                self::LOGIN_DATES,
+                true
+            )
+        );
+
+        if ($hasUnexpectedLoginDate) {
+            return false;
+        }
+
+        $customerIds = $customers->pluck('customer_id');
+        $additionalCustomerIds = $customers
+            ->whereIn('email', $additionalEmails)
+            ->pluck('customer_id');
         $customersWithBookings = DB::table('bookings')
-            ->whereIn('customer_id', $customers->values())
+            ->whereIn('customer_id', $additionalCustomerIds)
             ->distinct()
             ->count('customer_id');
 
-        return $customersWithBookings === count(self::ADDITIONAL_CUSTOMERS);
+        $bookingsOutsideRequestedMonths = DB::table('bookings')
+            ->whereIn('customer_id', $customerIds)
+            ->where(function ($query): void {
+                $query->whereNotBetween('created_at', ['2026-10-01 00:00:00', '2026-12-31 23:59:59'])
+                    ->orWhereNotBetween('check_in', ['2026-10-01', '2026-12-31'])
+                    ->orWhereNotBetween('check_out', ['2026-10-01', '2026-12-31']);
+            })
+            ->exists();
+
+        return $customersWithBookings === count(self::ADDITIONAL_CUSTOMERS)
+            && ! $bookingsOutsideRequestedMonths;
     }
 
     private function seedCustomerActivity(
@@ -356,11 +407,20 @@ class RequestedCustomerHistorySeeder extends Seeder
         int $bookingSequence,
         $rooms
     ): void {
-        $room = $rooms[$bookingSequence % $rooms->count()];
-        $createdAt = $joinedAt->copy()->addHours(2 + $bookingIndex);
-        $checkIn = Carbon::parse('2026-09-19')
-            ->addDays(intdiv($bookingSequence, $rooms->count()) * 3);
+        $roomPosition = $bookingSequence % $rooms->count();
+        $bookingWave = intdiv($bookingSequence, $rooms->count());
+        $room = $rooms[$roomPosition];
+        $checkIn = Carbon::parse(self::BOOKING_WAVE_STARTS[$bookingWave])
+            ->addDays((($roomPosition * 7) + ($bookingWave * 3)) % 6);
         $checkOut = $checkIn->copy()->addDays(2);
+        $createdAt = $checkIn->copy()
+            ->subDays(2 + (($index * 3 + $bookingIndex) % 7))
+            ->setTime(9 + ($index % 8), ($index * 13) % 60);
+
+        if ($createdAt->lessThanOrEqualTo($joinedAt)) {
+            $createdAt = $joinedAt->copy()->addHours(2 + $bookingIndex);
+        }
+
         $status = $checkOut->isPast() ? 'completed' : 'confirmed';
         $notes = [
             'Late arrival requested.',
@@ -371,7 +431,7 @@ class RequestedCustomerHistorySeeder extends Seeder
         ][$index % 5];
         $existingBookingId = DB::table('bookings')
             ->where('customer_id', $customerId)
-            ->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-18 23:59:59'])
+            ->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-12-31 23:59:59'])
             ->orderBy('booking_id')
             ->offset($bookingIndex)
             ->value('booking_id');

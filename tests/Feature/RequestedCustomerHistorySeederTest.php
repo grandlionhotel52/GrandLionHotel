@@ -5,12 +5,23 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use Database\Seeders\RequestedCustomerHistorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class RequestedCustomerHistorySeederTest extends TestCase
 {
     use RefreshDatabase;
+
+    private const LOGIN_DATES = [
+        '2026-10-07' => 12,
+        '2026-10-08' => 12,
+        '2026-10-09' => 12,
+        '2026-10-12' => 11,
+        '2026-10-13' => 11,
+        '2026-10-14' => 11,
+        '2026-10-15' => 11,
+    ];
 
     private const ADDITIONAL_NAMES = [
         'Andrea Villareal', 'Paolo Mendoza', 'Bianca Torres', 'Carlo Ramirez',
@@ -29,15 +40,18 @@ class RequestedCustomerHistorySeederTest extends TestCase
         $this->seed();
 
         $seededCustomerIds = DB::table('customers')
-            ->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-18 23:59:59'])
+            ->whereBetween('created_at', ['2026-10-07 00:00:00', '2026-10-15 23:59:59'])
             ->pluck('customer_id');
         $customerCount = $seededCustomerIds->count();
         $bookingCount = DB::table('bookings')->whereIn('customer_id', $seededCustomerIds)->count();
 
         $this->assertSame(80, $customerCount);
-        foreach (range(14, 18) as $day) {
-            $this->assertSame(16, DB::table('customers')->whereDate('created_at', "2026-09-{$day}")->count());
+        foreach (self::LOGIN_DATES as $date => $expectedCount) {
+            $this->assertSame($expectedCount, DB::table('customers')->whereDate('created_at', $date)->count());
         }
+        $this->assertSame(0, DB::table('customers')->whereDate('created_at', '2026-10-10')->count());
+        $this->assertSame(0, DB::table('customers')->whereDate('created_at', '2026-10-11')->count());
+        $this->assertSame(0, DB::table('customers')->whereMonth('created_at', 9)->whereYear('created_at', 2026)->count());
         $this->assertGreaterThan(0, $bookingCount);
         $this->assertTrue(DB::table('customers')->where('name', 'Maurice Valdez')->exists());
         $this->assertTrue(DB::table('customers')->where('name', 'Jazmine Ramos')->exists());
@@ -62,7 +76,7 @@ class RequestedCustomerHistorySeederTest extends TestCase
             0,
             DB::table('bookings')
                 ->whereIn('customer_id', $additionalCustomerIds)
-                ->whereNotBetween('created_at', ['2026-09-14 00:00:00', '2026-09-18 23:59:59'])
+                ->whereNotBetween('created_at', ['2026-10-01 00:00:00', '2026-12-31 23:59:59'])
                 ->count()
         );
 
@@ -72,10 +86,34 @@ class RequestedCustomerHistorySeederTest extends TestCase
                 ->where('action', 'logged_in')
                 ->where('subject_type', 'Customer')
                 ->whereIn('subject_id', $seededCustomerIds)
-                ->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-18 23:59:59'])
+                ->whereBetween('created_at', ['2026-10-07 00:00:00', '2026-10-15 23:59:59'])
                 ->distinct()
                 ->count('subject_id')
         );
+
+        $seededBookings = DB::table('bookings')
+            ->whereIn('customer_id', $seededCustomerIds)
+            ->get(['created_at', 'check_in', 'check_out']);
+        $this->assertSame(
+            ['10', '11', '12'],
+            $seededBookings->pluck('created_at')->map(
+                fn (string $date): string => Carbon::parse($date)->format('m')
+            )->unique()->sort()->values()->all()
+        );
+        $this->assertSame(
+            ['10', '11', '12'],
+            $seededBookings->pluck('check_in')->map(
+                fn (string $date): string => Carbon::parse($date)->format('m')
+            )->unique()->sort()->values()->all()
+        );
+        $this->assertFalse($seededBookings->contains(
+            fn (object $booking): bool => Carbon::parse($booking->created_at)->year !== 2026
+                || Carbon::parse($booking->check_in)->year !== 2026
+                || Carbon::parse($booking->check_out)->year !== 2026
+                || Carbon::parse($booking->created_at)->month < 10
+                || Carbon::parse($booking->check_in)->month < 10
+                || Carbon::parse($booking->check_out)->month < 10
+        ));
 
         $this->assertSame(
             0,
@@ -93,17 +131,48 @@ class RequestedCustomerHistorySeederTest extends TestCase
 
         $this->seed(RequestedCustomerHistorySeeder::class);
 
-        $this->assertSame($customerCount, DB::table('customers')->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-18 23:59:59'])->count());
+        $this->assertSame($customerCount, DB::table('customers')->whereBetween('created_at', ['2026-10-07 00:00:00', '2026-10-15 23:59:59'])->count());
         $this->assertSame($bookingCount, DB::table('bookings')->whereIn('customer_id', $seededCustomerIds)->count());
     }
 
-    public function test_customer_accounts_and_logins_cover_september_14_through_18(): void
+    public function test_customer_accounts_and_logins_use_only_the_requested_october_dates(): void
     {
         $this->seed();
 
         $this->assertSame(80, Customer::query()
-            ->whereBetween('created_at', ['2026-09-14 00:00:00', '2026-09-18 23:59:59'])
+            ->whereBetween('created_at', ['2026-10-07 00:00:00', '2026-10-15 23:59:59'])
             ->count());
-        $this->assertSame(16, Customer::query()->whereDate('created_at', '2026-09-18')->count());
+        $this->assertSame(0, Customer::query()->whereDate('created_at', '2026-10-10')->count());
+        $this->assertSame(0, Customer::query()->whereDate('created_at', '2026-10-11')->count());
+    }
+
+    public function test_existing_september_history_is_moved_to_the_new_dates(): void
+    {
+        $this->seed();
+
+        $customerIds = Customer::query()->pluck('customer_id');
+        $bookingCount = DB::table('bookings')->whereIn('customer_id', $customerIds)->count();
+
+        Customer::query()->update([
+            'created_at' => '2026-09-14 08:00:00',
+            'updated_at' => '2026-09-14 08:05:00',
+        ]);
+        DB::table('activity_logs')->whereIn('subject_id', $customerIds)->update([
+            'created_at' => '2026-09-14 08:12:00',
+            'updated_at' => '2026-09-14 08:12:00',
+        ]);
+        DB::table('bookings')->whereIn('customer_id', $customerIds)->update([
+            'created_at' => '2026-09-15 09:00:00',
+            'updated_at' => '2026-09-15 10:00:00',
+            'check_in' => '2026-09-20',
+            'check_out' => '2026-09-22',
+        ]);
+
+        $this->seed(RequestedCustomerHistorySeeder::class);
+
+        $this->assertSame(0, Customer::query()->whereMonth('created_at', 9)->whereYear('created_at', 2026)->count());
+        $this->assertSame($bookingCount, DB::table('bookings')->whereIn('customer_id', $customerIds)->count());
+        $this->assertSame(0, DB::table('bookings')->whereIn('customer_id', $customerIds)->whereMonth('created_at', 9)->count());
+        $this->assertSame(0, DB::table('bookings')->whereIn('customer_id', $customerIds)->whereMonth('check_in', 9)->count());
     }
 }
