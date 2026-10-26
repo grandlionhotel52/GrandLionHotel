@@ -78,14 +78,8 @@ done
 echo "[startup] Ensuring requested customer history exists..."
 php artisan db:seed --class='Database\Seeders\RequestedCustomerHistorySeeder' --force
 
-if [ "${SEED_ADMIN_ON_DEPLOY:-false}" = "true" ]; then
-  if [ -z "${SEED_ADMIN_USERNAME:-}" ] || [ -z "${SEED_ADMIN_PASSWORD:-}" ]; then
-    echo "[startup] SEED_ADMIN_ON_DEPLOY is enabled, but credentials are incomplete; skipping optional admin seed."
-  else
-    echo "[startup] Creating or updating the configured administrator..."
-    php artisan db:seed --class='Database\Seeders\UserSeeder' --force
-  fi
-fi
+echo "[startup] Ensuring an administrator account exists..."
+php artisan db:seed --class='Database\Seeders\UserSeeder' --force
 
 echo "[startup] Optimizing Laravel for production..."
 php artisan optimize

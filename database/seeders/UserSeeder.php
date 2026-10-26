@@ -10,7 +10,18 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $defaultPassword = (string) env('SEED_DEFAULT_PASSWORD', 'password');
+        $manageAdminOnDeploy = filter_var(
+            env('SEED_ADMIN_ON_DEPLOY', false),
+            FILTER_VALIDATE_BOOL
+        );
+
+        // A fresh production database needs one account that can administer it.
+        // Once an administrator exists, only update it when explicitly requested.
+        if (Admin::query()->exists() && !$manageAdminOnDeploy) {
+            return;
+        }
+
+        $defaultPassword = (string) env('SEED_DEFAULT_PASSWORD', 'Password');
 
         Admin::updateOrCreate(
             ['username' => strtolower(trim((string) env('SEED_ADMIN_USERNAME', 'admin')))],
