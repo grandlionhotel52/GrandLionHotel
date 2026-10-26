@@ -69,6 +69,7 @@ Route::middleware('auth:customer')->group(function () {
     Route::delete('/notifications', [ProfileController::class, 'deleteAllNotifications'])->name('notifications.delete-all');
     Route::delete('/notifications/{notification}', [ProfileController::class, 'deleteNotification'])->name('notifications.delete-one');
     Route::get('/rooms/{room}/book', [BookingController::class, 'create'])->name('bookings.create');
+    Route::post('/rooms/{room}/review', [RoomReviewController::class, 'store'])->name('rooms.review.store');
     Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings/my', [BookingController::class, 'myBookings'])->name('bookings.my');
     Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
@@ -77,7 +78,7 @@ Route::middleware('auth:customer')->group(function () {
     Route::patch('/bookings/{booking}/request-reschedule', [BookingController::class, 'requestReschedule'])->name('bookings.request-reschedule');
     Route::patch('/bookings/{booking}/request-room-transfer', [BookingController::class, 'requestRoomTransfer'])->name('bookings.request-room-transfer');
     Route::post('/bookings/{booking}/extra-bedding-request', [BookingController::class, 'requestExtraBedding'])->name('bookings.request-extra-bedding');
-    Route::post('/bookings/{booking}/review', [RoomReviewController::class, 'store'])->name('bookings.review.store');
+    Route::post('/bookings/{booking}/review', [RoomReviewController::class, 'storeForBooking'])->name('bookings.review.store');
     Route::get('/bookings/{booking}/success', [BookingController::class, 'success'])->name('bookings.success');
 
     Route::get('/payments/{booking}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');

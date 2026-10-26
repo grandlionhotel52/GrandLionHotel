@@ -11,6 +11,8 @@ class RoomReview extends Model
 
     protected $fillable = [
         'booking_id',
+        'room_id',
+        'customer_id',
         'rating',
         'comment',
     ];
@@ -25,5 +27,15 @@ class RoomReview extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class, 'booking_id', 'booking_id');
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class, 'room_id', 'room_id');
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'customer_id', 'customer_id');
     }
 }

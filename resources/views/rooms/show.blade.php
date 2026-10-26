@@ -555,7 +555,7 @@
             <div>
                 <p class="ta-eyebrow mb-1">Customer Satisfaction</p>
                 <h2 class="h3 mb-1" id="guest_reviews_title">Guest ratings and comments</h2>
-                <p class="text-secondary mb-0">Feedback from customers who completed a stay in this room.</p>
+                <p class="text-secondary mb-0">Customers can share their thoughts about this room before or after booking.</p>
             </div>
             @if($reviewCount > 0)
                 <div class="text-md-end">
@@ -570,18 +570,51 @@
             @endif
         </div>
 
+        @if($viewer?->isCustomer())
+            <div class="border rounded-4 bg-light p-3 p-lg-4 mb-4">
+                <h3 class="h5 mb-2">{{ $currentCustomerReview ? 'Update your comment' : 'Comment on this room' }}</h3>
+                <p class="small text-secondary mb-3">You do not need a booking to leave a rating and comment.</p>
+                <form method="POST" action="{{ route('rooms.review.store', $room) }}" class="row g-3">
+                    @csrf
+                    <div class="col-md-4">
+                        <label class="form-label" for="room_review_rating">Overall rating</label>
+                        <select id="room_review_rating" name="rating" class="form-select @error('rating') is-invalid @enderror" required>
+                            <option value="">Choose a rating...</option>
+                            @foreach([5 => '5 stars - Excellent', 4 => '4 stars - Very good', 3 => '3 stars - Good', 2 => '2 stars - Fair', 1 => '1 star - Poor'] as $value => $label)
+                                <option value="{{ $value }}" @selected((int) old('rating', $currentCustomerReview?->rating) === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        @error('rating')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" for="room_review_comment">Your comment</label>
+                        <textarea id="room_review_comment" name="comment" class="form-control @error('comment') is-invalid @enderror" rows="4" maxlength="1500" placeholder="Share what you think about this room." required>{{ old('comment', $currentCustomerReview?->comment) }}</textarea>
+                        @error('comment')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-ta">{{ $currentCustomerReview ? 'Update review' : 'Submit review' }}</button>
+                    </div>
+                </form>
+            </div>
+        @elseif(!$viewer)
+            <div class="alert alert-light border d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <span>Sign in as a customer to rate or comment on this room. No booking is required.</span>
+                <a href="{{ route('login') }}" class="btn btn-outline-ta btn-sm">Sign in to comment</a>
+            </div>
+        @endif
+
         @if($reviews->isEmpty())
             <div class="text-center py-4">
                 <i class="bi bi-chat-square-heart fs-2 text-secondary" aria-hidden="true"></i>
-                <p class="text-secondary mt-2 mb-0">No customer comments yet. Completed guests can leave the first review.</p>
+                <p class="text-secondary mt-2 mb-0">No customer comments yet. Be the first to share your thoughts.</p>
             </div>
         @else
             <div class="row g-3">
                 @foreach($reviews as $review)
                     @php
-                        $reviewerName = trim((string) ($review->booking?->customer?->name ?? 'Verified guest'));
+                        $reviewerName = trim((string) ($review->customer?->name ?? $review->booking?->customer?->name ?? 'Customer'));
                         $reviewerParts = preg_split('/\s+/', $reviewerName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-                        $reviewerDisplay = $reviewerParts[0] ?? 'Verified guest';
+                        $reviewerDisplay = $reviewerParts[0] ?? 'Customer';
                         if (count($reviewerParts) > 1) {
                             $reviewerDisplay .= ' '.mb_strtoupper(mb_substr(end($reviewerParts), 0, 1)).'.';
                         }
@@ -591,7 +624,11 @@
                             <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
                                 <div>
                                     <strong>{{ $reviewerDisplay }}</strong>
-                                    <small class="d-block text-success"><i class="bi bi-patch-check-fill me-1"></i>Verified stay</small>
+                                    @if($review->booking_id)
+                                        <small class="d-block text-success"><i class="bi bi-patch-check-fill me-1"></i>Verified stay</small>
+                                    @else
+                                        <small class="d-block text-secondary"><i class="bi bi-person-check me-1"></i>Customer review</small>
+                                    @endif
                                 </div>
                                 <div class="room-rating-stars" aria-label="{{ $review->rating }} out of 5 stars">
                                     @for($star = 1; $star <= 5; $star++)

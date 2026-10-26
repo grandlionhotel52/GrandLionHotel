@@ -49,6 +49,7 @@ class RoomController extends Controller
         $emptyReviews = collect();
         $reviewCount = 0;
         $averageRating = null;
+        $currentCustomerReview = null;
 
         try {
             if (Schema::hasTable('room_images')) {
@@ -115,10 +116,16 @@ class RoomController extends Controller
                     ? round((float) $reviewSummary->average_rating, 1)
                     : null;
                 $reviews = $room->reviews()
-                    ->with('booking.customer')
+                    ->with(['customer', 'booking.customer'])
                     ->latest('room_reviews.created_at')
                     ->limit(20)
                     ->get();
+
+                if ($request->user()?->isCustomer()) {
+                    $currentCustomerReview = $room->reviews()
+                        ->where('customer_id', $request->user()->getKey())
+                        ->first();
+                }
             }
         } catch (Throwable $exception) {
             report($exception);
@@ -132,7 +139,8 @@ class RoomController extends Controller
             'unavailableDateRanges',
             'reviewCount',
             'averageRating',
-            'reviews'
+            'reviews',
+            'currentCustomerReview'
         );
 
         try {

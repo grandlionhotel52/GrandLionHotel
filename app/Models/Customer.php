@@ -31,4 +31,9 @@ class Customer extends Account
         return $this->hasMany(Booking::class, 'customer_id', 'customer_id');
     }
 
+    public function roomReviews(): HasMany
+    {
+        return $this->hasMany(RoomReview::class, 'customer_id', 'customer_id');
+    }
+
 }
