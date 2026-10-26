@@ -27,6 +27,10 @@
             --night: #101828;
             --font-main: 'Manrope', sans-serif;
         }
+        html {
+            overflow-y: scroll;
+            scrollbar-gutter: stable;
+        }
         body {
             font-family: var(--font-main);
             font-weight: 500;
@@ -38,6 +42,14 @@
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+        }
+        body.modal-open {
+            overflow: hidden;
+            padding-right: 0 !important;
+        }
+        body.modal-open :where(.fixed-top, .fixed-bottom, .is-fixed, .sticky-top) {
+            padding-right: 0 !important;
+            margin-right: 0 !important;
         }
         .skip-link {
             position: fixed;

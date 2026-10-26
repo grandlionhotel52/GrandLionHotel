@@ -23,6 +23,8 @@ class PromoDiscoveryTest extends TestCase
             ->get(route('home'))
             ->assertOk()
             ->assertSee('data-bs-target="#promotionsModal"', false)
+            ->assertSee('body.modal-open', false)
+            ->assertSee('scrollbar-gutter: stable', false)
             ->assertSee('WELCOME10')
             ->assertSee('New customer')
             ->assertSee('Welcome offer for your first hotel booking.');
