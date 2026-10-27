@@ -54,9 +54,23 @@ class PromoCode extends Model
 
         return $query
             ->available()
+            ->whereDoesntHave(
+                'bookingDiscounts.booking',
+                static fn (Builder $q): Builder => $q->where('customer_id', $customer->getKey())
+            )
             ->when(
                 $hasExistingBooking,
                 static fn (Builder $q): Builder => $q->where('new_customers_only', false)
             );
+    }
+
+    public function hasBeenUsedBy(Customer $customer): bool
+    {
+        return $this->bookingDiscounts()
+            ->whereHas(
+                'booking',
+                static fn (Builder $q): Builder => $q->where('customer_id', $customer->getKey())
+            )
+            ->exists();
     }
 }

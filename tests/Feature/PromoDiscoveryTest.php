@@ -26,8 +26,15 @@ class PromoDiscoveryTest extends TestCase
             ->assertSee('body.modal-open', false)
             ->assertSee('scrollbar-gutter: stable', false)
             ->assertSee('WELCOME10')
+            ->assertSee('30% off')
             ->assertSee('New customer')
             ->assertSee('Welcome offer for your first hotel booking.');
+
+        $this->assertDatabaseHas('promo_codes', [
+            'code' => 'WELCOME10',
+            'discount_percent' => 30,
+            'new_customers_only' => true,
+        ]);
     }
 
     public function test_admin_activated_seasonal_code_appears_but_inactive_code_does_not(): void

@@ -182,6 +182,43 @@ class BookingWorkflowImprovementsTest extends TestCase
         $this->assertSame('1775.89', $booking->fresh('payment')->payment->amount);
     }
 
+    public function test_customer_cannot_use_the_same_promo_code_more_than_once(): void
+    {
+        $customer = Customer::factory()->create([
+            'phone' => '09170000003',
+            'address_line' => 'One Use Street',
+            'city' => 'Manila',
+            'province' => 'Metro Manila (NCR)',
+        ]);
+        $firstRoom = Room::factory()->create(['is_available' => true]);
+        $secondRoom = Room::factory()->create(['is_available' => true]);
+        $promo = PromoCode::create([
+            'code' => 'ONCE20',
+            'discount_percent' => 20,
+            'is_active' => true,
+        ]);
+        $bookingDetails = [
+            'check_in' => today()->addDay()->toDateString(),
+            'check_out' => today()->addDays(2)->toDateString(),
+            'discount_type' => 'promo',
+            'promo_code' => 'ONCE20',
+        ];
+
+        $this->actingAs($customer)->post(route('bookings.store'), array_merge($bookingDetails, [
+            'room_id' => $firstRoom->id,
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertFalse(PromoCode::query()->availableFor($customer)->whereKey($promo->getKey())->exists());
+
+        $this->actingAs($customer)->post(route('bookings.store'), array_merge($bookingDetails, [
+            'room_id' => $secondRoom->id,
+        ]))->assertSessionHasErrors([
+            'promo_code' => 'You have already used this promotional code.',
+        ]);
+
+        $this->assertDatabaseCount('bookings', 1);
+    }
+
     public function test_pwd_or_senior_discount_cannot_be_combined_with_a_promo_code(): void
     {
         $customer = Customer::factory()->create([

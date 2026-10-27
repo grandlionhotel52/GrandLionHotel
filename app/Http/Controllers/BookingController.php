@@ -81,6 +81,16 @@ class BookingController extends Controller
                 ->where('code', $normalizedPromoCode)
                 ->first();
             if (!$promoCode) {
+                $previouslyUsedPromo = PromoCode::available()
+                    ->where('code', $normalizedPromoCode)
+                    ->first();
+
+                if ($previouslyUsedPromo?->hasBeenUsedBy($request->user())) {
+                    return $this->respondWithBookingError($request, [
+                        'promo_code' => 'You have already used this promotional code.',
+                    ]);
+                }
+
                 return $this->respondWithBookingError($request, [
                     'promo_code' => 'This promotional code is invalid, inactive, or expired.',
                 ]);
@@ -142,12 +152,26 @@ class BookingController extends Controller
                 $room,
                 $reservationMeta,
                 $checkIn,
-                $checkOut
+                $checkOut,
+                $promoCode
             ): Booking {
                 $lockedRoom = Room::query()
                     ->whereKey($room->id)
                     ->lockForUpdate()
                     ->firstOrFail();
+
+                if ($promoCode) {
+                    $lockedPromoCode = PromoCode::query()
+                        ->whereKey($promoCode->getKey())
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+                    if ($lockedPromoCode->hasBeenUsedBy($request->user())) {
+                        throw ValidationException::withMessages([
+                            'promo_code' => 'You have already used this promotional code.',
+                        ]);
+                    }
+                }
 
                 if (!$lockedRoom->is_available) {
                     throw ValidationException::withMessages([

@@ -9,11 +9,11 @@ class PromoCodeSeeder extends Seeder
 {
     public function run(): void
     {
-        PromoCode::query()->firstOrCreate(
+        PromoCode::query()->updateOrCreate(
             ['code' => 'WELCOME10'],
             [
                 'description' => 'Welcome offer for your first hotel booking.',
-                'discount_percent' => 10,
+                'discount_percent' => 30,
                 'starts_at' => null,
                 'ends_at' => null,
                 'new_customers_only' => true,
