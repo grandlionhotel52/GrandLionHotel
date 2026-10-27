@@ -9,16 +9,18 @@ class PromoCodeSeeder extends Seeder
 {
     public function run(): void
     {
-        PromoCode::query()->updateOrCreate(
-            ['code' => 'WELCOME10'],
-            [
-                'description' => 'Welcome offer for your first hotel booking.',
-                'discount_percent' => 30,
-                'starts_at' => null,
-                'ends_at' => null,
-                'new_customers_only' => true,
-                'is_active' => true,
-            ]
-        );
+        $promo = PromoCode::query()
+            ->whereIn('code', ['NEWUSERDISCOUNT', 'WELCOME10'])
+            ->first() ?? new PromoCode();
+
+        $promo->fill([
+            'code' => 'NEWUSERDISCOUNT',
+            'description' => 'New User Discount for your first hotel booking.',
+            'discount_percent' => 30,
+            'starts_at' => null,
+            'ends_at' => null,
+            'new_customers_only' => true,
+            'is_active' => true,
+        ])->save();
     }
 }

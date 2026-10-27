@@ -25,13 +25,13 @@ class PromoDiscoveryTest extends TestCase
             ->assertSee('data-bs-target="#promotionsModal"', false)
             ->assertSee('body.modal-open', false)
             ->assertSee('scrollbar-gutter: stable', false)
-            ->assertSee('WELCOME10')
+            ->assertSee('NEWUSERDISCOUNT')
             ->assertSee('30% off')
             ->assertSee('New customer')
-            ->assertSee('Welcome offer for your first hotel booking.');
+            ->assertSee('New User Discount for your first hotel booking.');
 
         $this->assertDatabaseHas('promo_codes', [
-            'code' => 'WELCOME10',
+            'code' => 'NEWUSERDISCOUNT',
             'discount_percent' => 30,
             'new_customers_only' => true,
         ]);
@@ -107,11 +107,11 @@ class PromoDiscoveryTest extends TestCase
         $this->actingAs($customer, 'customer')
             ->get(route('home'))
             ->assertOk()
-            ->assertDontSee('WELCOME10')
+            ->assertDontSee('NEWUSERDISCOUNT')
             ->assertSee('HOLIDAY15');
 
         $this->assertFalse(
-            PromoCode::query()->availableFor($customer)->where('code', 'WELCOME10')->exists()
+            PromoCode::query()->availableFor($customer)->where('code', 'NEWUSERDISCOUNT')->exists()
         );
     }
 }
