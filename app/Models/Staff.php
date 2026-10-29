@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Staff extends Account
 {
-    protected $table = 'employees';
+    protected $table = 'staff';
 
-    protected $primaryKey = 'employee_id';
+    protected $primaryKey = 'staff_id';
 
     protected $fillable = [
         'name',
@@ -24,12 +23,9 @@ class Staff extends Account
         'is_active',
     ];
 
-    protected static function booted(): void
+    public function getRoleAttribute(): string
     {
-        static::addGlobalScope('staff_role', static fn (Builder $query) => $query->where('role', 'staff'));
-        static::creating(static function (Staff $staff): void {
-            $staff->role = 'staff';
-        });
+        return 'staff';
     }
 
     public function getAdminIdAttribute(): mixed
@@ -44,11 +40,11 @@ class Staff extends Account
 
     public function createdByAdmin(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'created_by', 'employee_id');
+        return $this->belongsTo(Admin::class, 'created_by', 'admin_id');
     }
 
     public function assignedBookings(): HasMany
     {
-        return $this->hasMany(Booking::class, 'staff_id', 'employee_id');
+        return $this->hasMany(Booking::class, 'staff_id', 'staff_id');
     }
 }

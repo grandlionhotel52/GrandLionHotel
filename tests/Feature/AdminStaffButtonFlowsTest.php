@@ -214,9 +214,8 @@ class AdminStaffButtonFlowsTest extends TestCase
 
         $this->patch(route('admin.staff.toggle-status', $createdStaff))
             ->assertRedirect(route('admin.staff.index'));
-        $this->assertDatabaseHas('employees', [
-            'employee_id' => $createdStaff->id,
-            'role' => 'staff',
+        $this->assertDatabaseHas('staff', [
+            'staff_id' => $createdStaff->id,
             'is_active' => false,
         ]);
     }
