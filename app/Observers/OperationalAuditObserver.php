@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Booking;
+use App\Models\BookingBill;
 use App\Models\Payment;
 use App\Notifications\BookingActivityNotification;
 use App\Services\AuditLogger;
@@ -26,7 +27,7 @@ class OperationalAuditObserver
 
     public function updated(Model $model): void
     {
-        if ($model instanceof Payment && $this->belongsToDraftBooking($model)) {
+        if (($model instanceof Payment || $model instanceof BookingBill) && $this->belongsToDraftBooking($model)) {
             return;
         }
 
@@ -86,7 +87,7 @@ class OperationalAuditObserver
             return $model->status === Booking::STATUS_DRAFT;
         }
 
-        if ($model instanceof Payment) {
+        if ($model instanceof Payment || $model instanceof BookingBill) {
             return $model->booking?->status === Booking::STATUS_DRAFT;
         }
 

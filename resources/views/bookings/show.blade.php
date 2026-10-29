@@ -436,7 +436,7 @@
                                     <small class="text-secondary d-block mb-1">Hotel staff response</small>
                                     <p class="mb-1">{{ $extraBeddingRequest->staff_response }}</p>
                                     <small class="text-secondary">
-                                        {{ $extraBeddingRequest->respondedByStaff?->name ?? 'Hotel staff' }}
+                                        Assigned staff: {{ $booking->assignedStaff?->name ?? 'Hotel staff' }}
                                         @if($extraBeddingRequest->responded_at)
                                             &middot; {{ $extraBeddingRequest->responded_at->format('M d, Y h:i A') }}
                                         @endif
@@ -645,10 +645,10 @@
                 @endif
                 <p class="mb-1"><small class="text-secondary">Service charge (8%)</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['service_fee'] ?? 0), 2) }}</strong></p>
                 <p class="mb-1"><small class="text-secondary">Breakfast</small><br><strong>&#8369;{{ number_format((float) ($pricingQuote['breakfast_fee'] ?? 0), 2) }}</strong></p>
-                @if(($billingQuote['vat_exempt'] ?? false) && (float) ($booking->payment?->discount_amount ?? 0) > 0)
-                    <p class="mb-1 text-success"><small>Less: Senior/PWD discount (20%)</small><br><strong>-&#8369;{{ number_format((float) $booking->payment->discount_amount, 2) }}</strong></p>
-                @elseif((float) ($booking->payment?->discount_amount ?? 0) > 0)
-                    <p class="mb-1 text-success"><small>Less: Discount</small><br><strong>-&#8369;{{ number_format((float) $booking->payment->discount_amount, 2) }}</strong></p>
+                @if(($billingQuote['vat_exempt'] ?? false) && (float) ($booking->bill?->discount_amount ?? 0) > 0)
+                    <p class="mb-1 text-success"><small>Less: Senior/PWD discount (20%)</small><br><strong>-&#8369;{{ number_format((float) $booking->bill?->discount_amount, 2) }}</strong></p>
+                @elseif((float) ($booking->bill?->discount_amount ?? 0) > 0)
+                    <p class="mb-1 text-success"><small>Less: Discount</small><br><strong>-&#8369;{{ number_format((float) $booking->bill?->discount_amount, 2) }}</strong></p>
                 @endif
                 <p class="mb-1"><small class="text-secondary">Taxes excluded from this summary</small><br><strong>VAT and local tax</strong> &mdash; itemized on receipt</p>
                 <p class="mb-1"><small class="text-secondary">Locked booking total</small><br><strong>&#8369;{{ number_format((float) ($booking->payment?->amount ?? $booking->total_price), 2) }}</strong></p>
@@ -673,7 +673,7 @@
                         <a href="{{ route('payments.checkout', $booking) }}" class="btn btn-ta">Complete payment</a>
                     @endif
 
-                    @if($booking->payment_status === 'paid')
+                    @if($booking->payments()->where('status', 'paid')->exists())
                         <a href="{{ route('bookings.receipt', $booking) }}" class="btn btn-ta-outline">Download receipt (PDF)</a>
                     @endif
 

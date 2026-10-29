@@ -23,7 +23,7 @@ class BookingRescheduleRequestTest extends TestCase
         $customer = Customer::factory()->create();
         $room = $this->createRoom();
         $booking = $this->createConfirmedUnpaidBooking($customer, $room);
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 3000,
             'method' => 'cash',
             'status' => 'paid',
@@ -56,14 +56,14 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertSame('Need to move the trip because of work schedule.', $booking->reschedule_request_notes);
         $this->assertNotNull($booking->reschedule_requested_at);
         $this->assertNull($booking->reschedule_approved_at);
-        $this->assertNull($booking->reschedule_approved_by_admin_id);
+        $this->assertNull($booking->admin_id);
     }
 
     public function test_customer_cannot_request_schedule_change_before_payment(): void
     {
         $customer = Customer::factory()->create();
         $booking = $this->createConfirmedUnpaidBooking($customer, $this->createRoom());
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 3000,
             'method' => 'pending',
             'status' => 'unpaid',
@@ -103,7 +103,7 @@ class BookingRescheduleRequestTest extends TestCase
             'reschedule_requested_at' => now(),
         ]);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 4000,
             'method' => 'pending',
             'status' => 'unpaid',
@@ -137,7 +137,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertNull($booking->reschedule_request_notes);
         $this->assertNull($booking->reschedule_requested_at);
         $this->assertSame($staff->id, $booking->staff_id);
-        $this->assertSame('6267.86', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('6267.86', number_format((float) $booking->bill->total_amount, 2, '.', ''));
     }
 
     public function test_staff_reschedule_submission_requires_admin_approval_before_it_is_applied(): void
@@ -149,7 +149,7 @@ class BookingRescheduleRequestTest extends TestCase
             'staff_id' => $staff->id,
         ]);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 5000,
             'method' => 'pending',
             'status' => 'unpaid',
@@ -173,7 +173,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertSame(now()->addDays(7)->toDateString(), $booking->requested_check_in?->toDateString());
         $this->assertSame(now()->addDays(10)->toDateString(), $booking->requested_check_out?->toDateString());
         $this->assertNull($booking->reschedule_approved_at);
-        $this->assertSame('5000.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('5000.00', number_format((float) $booking->bill->total_amount, 2, '.', ''));
 
         $this->approveReschedule($booking);
         $this->actingAs($staff, 'staff')
@@ -188,7 +188,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertNull($booking->reschedule_request_notes);
         $this->assertNull($booking->reschedule_requested_at);
         $this->assertSame($staff->id, $booking->staff_id);
-        $this->assertSame('7834.82', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('7834.82', number_format((float) $booking->bill->total_amount, 2, '.', ''));
     }
 
     public function test_staff_can_apply_requested_schedule_for_confirmed_booking_with_pending_verification_payment(): void
@@ -204,7 +204,7 @@ class BookingRescheduleRequestTest extends TestCase
             'reschedule_requested_at' => now(),
         ]);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 3600,
             'method' => 'gcash',
             'status' => 'pending_verification',
@@ -228,7 +228,7 @@ class BookingRescheduleRequestTest extends TestCase
         $this->assertNull($booking->reschedule_request_notes);
         $this->assertNull($booking->reschedule_requested_at);
         $this->assertSame($staff->id, $booking->staff_id);
-        $this->assertSame('5641.07', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('5641.07', number_format((float) $booking->bill->total_amount, 2, '.', ''));
     }
 
     public function test_approved_staff_reschedule_updates_paid_booking_balance(): void
@@ -240,7 +240,7 @@ class BookingRescheduleRequestTest extends TestCase
             'staff_id' => $staff->id,
         ]);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 4600,
             'method' => 'gcash',
             'status' => 'paid',
@@ -280,7 +280,7 @@ class BookingRescheduleRequestTest extends TestCase
 
         $this->assertSame($newCheckIn, $booking->check_in->toDateString());
         $this->assertSame($newCheckOut, $booking->check_out->toDateString());
-        $this->assertSame(number_format($expectedNewTotal, 2, '.', ''), number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame(number_format($expectedNewTotal, 2, '.', ''), number_format((float) $booking->bill->total_amount, 2, '.', ''));
         $this->assertSame(number_format($expectedNewTotal - 4600, 2, '.', ''), number_format((float) $booking->payment->balance_due, 2, '.', ''));
         $this->assertSame('unpaid', $booking->payment->status);
         $this->assertSame($staff->id, $booking->staff_id);
@@ -288,7 +288,8 @@ class BookingRescheduleRequestTest extends TestCase
         $chargedPayment = app(PaymentService::class)->charge($booking, 'cash', [
             'amount' => $booking->payment->balance_due,
         ]);
-        $this->assertSame(number_format($expectedNewTotal, 2, '.', ''), number_format((float) $chargedPayment->amount, 2, '.', ''));
+        $this->assertSame(number_format($expectedNewTotal - 4600, 2, '.', ''), number_format((float) $chargedPayment->amount, 2, '.', ''));
+        $this->assertSame(2, $booking->payments()->where('status', 'paid')->count());
         $this->assertSame('0.00', number_format((float) $chargedPayment->balance_due, 2, '.', ''));
         $this->assertSame('paid', $chargedPayment->status);
     }
@@ -306,7 +307,7 @@ class BookingRescheduleRequestTest extends TestCase
             'requested_check_out' => $requestedCheckOut,
             'reschedule_requested_at' => now(),
         ]);
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 9000,
             'method' => 'cash',
             'status' => 'paid',
@@ -328,7 +329,7 @@ class BookingRescheduleRequestTest extends TestCase
         $booking->refresh()->load('payment');
         $this->assertSame($requestedCheckIn, $booking->check_in->toDateString());
         $this->assertSame($requestedCheckOut, $booking->check_out->toDateString());
-        $this->assertSame('9000.00', number_format((float) $booking->payment->amount, 2, '.', ''));
+        $this->assertSame('9000.00', number_format((float) $booking->bill->total_amount, 2, '.', ''));
         $this->assertSame('0.00', number_format((float) $booking->payment->balance_due, 2, '.', ''));
         $this->assertSame('paid', $booking->payment->status);
     }
@@ -344,7 +345,7 @@ class BookingRescheduleRequestTest extends TestCase
             'check_out' => now()->toDateString(),
         ]);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 1900,
             'method' => 'pending',
             'status' => 'unpaid',
@@ -392,7 +393,7 @@ class BookingRescheduleRequestTest extends TestCase
             ->assertRedirect(route('admin.bookings.show', $booking));
 
         $booking->refresh();
-        $this->assertSame($admin->id, $booking->reschedule_approved_by_admin_id);
+        $this->assertSame($admin->id, $booking->admin_id);
         $this->assertNotNull($booking->reschedule_approved_at);
     }
 
@@ -407,11 +408,7 @@ class BookingRescheduleRequestTest extends TestCase
             'notes' => 'Confirmed booking for reschedule test',
         ], $attributes));
 
-        $booking->guestDetail()->create([
-            'first_name' => 'Test',
-            'last_name' => 'Guest',
-            'email' => $customer->email,
-            'phone' => $customer->phone,
+        $booking->details()->create([
             'adults' => 2,
             'kids' => 0,
         ]);

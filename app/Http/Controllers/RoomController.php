@@ -50,6 +50,7 @@ class RoomController extends Controller
         $reviewCount = 0;
         $averageRating = null;
         $currentCustomerReview = null;
+        $reviewBooking = null;
 
         try {
             if (Schema::hasTable('room_images')) {
@@ -108,7 +109,7 @@ class RoomController extends Controller
 
         try {
             if (Schema::hasTable('room_reviews')) {
-                $reviewSummary = $room->reviews()
+                $reviewSummary = $room->reviews()->toBase()
                     ->selectRaw('COUNT(*) as review_count, AVG(rating) as average_rating')
                     ->first();
                 $reviewCount = (int) ($reviewSummary?->review_count ?? 0);
@@ -122,9 +123,10 @@ class RoomController extends Controller
                     ->get();
 
                 if ($request->user()?->isCustomer()) {
-                    $currentCustomerReview = $room->reviews()
-                        ->where('customer_id', $request->user()->getKey())
-                        ->first();
+                    $reviewBooking = $room->bookings()
+                        ->where('customer_id', $request->user()->id)->where('status', 'completed')
+                        ->orderByDesc('check_out')->orderByDesc('booking_id')->first();
+                    $currentCustomerReview = $reviewBooking?->roomReview;
                 }
             }
         } catch (Throwable $exception) {
@@ -140,7 +142,8 @@ class RoomController extends Controller
             'reviewCount',
             'averageRating',
             'reviews',
-            'currentCustomerReview'
+            'currentCustomerReview',
+            'reviewBooking'
         );
 
         try {

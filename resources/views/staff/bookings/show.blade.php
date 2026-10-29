@@ -275,8 +275,8 @@
         $defaultCheckInTime = old('actual_check_in_at', now()->format('Y-m-d\TH:i'));
         $defaultCheckOutTime = old('actual_check_out_at', now()->format('Y-m-d\TH:i'));
         $standardGuests = \App\Models\Room::standardGuestCapacity();
-        $currentAdults = max(1, (int) old('adults', $booking->guestDetail?->adults ?? max(1, $booking->guests)));
-        $currentKids = max(0, (int) old('kids', $booking->guestDetail?->kids ?? 0));
+        $currentAdults = max(1, (int) old('adults', $booking->details?->adults ?? max(1, $booking->guests)));
+        $currentKids = max(0, (int) old('kids', $booking->details?->kids ?? 0));
         $currentOccupancyTotal = $currentAdults + $currentKids;
         $extraBeddingRequest = $booking->extraBeddingRequest;
         $currentExtraBedding = max(0, $currentOccupancyTotal - $standardGuests);
@@ -399,7 +399,7 @@
             </form>
         @endif
 
-        @if($booking->payment_status === 'paid')
+        @if($booking->payments()->where('status', 'paid')->exists())
             <a href="{{ route('staff.bookings.receipt', $booking) }}" class="btn btn-staff-outline">
                 <i class="bi bi-file-earmark-arrow-down"></i>
                 <span>Receipt PDF</span>
@@ -527,7 +527,7 @@
                 <div>
                     <h2 class="h5 mb-1">Schedule Change Request</h2>
                     @if($booking->isRescheduleApproved())
-                        <p class="booking-note mb-0 text-success">Approved by {{ $booking->rescheduleApprovedByAdmin?->name ?? 'an admin' }}. Staff may now apply the requested dates.</p>
+                        <p class="booking-note mb-0 text-success">Approved by {{ $booking->admin?->name ?? 'an admin' }}. Staff may now apply the requested dates.</p>
                     @else
                         <p class="booking-note mb-0 text-warning">Waiting for admin approval. Staff cannot apply the requested dates yet.</p>
                     @endif
@@ -788,11 +788,11 @@
                     </div>
                     <div class="booking-info-item">
                         <p class="booking-info-label">Adults</p>
-                        <p class="booking-info-value">{{ (int) ($booking->guestDetail?->adults ?? $booking->guests) }}</p>
+                        <p class="booking-info-value">{{ (int) ($booking->details?->adults ?? $booking->guests) }}</p>
                     </div>
                     <div class="booking-info-item">
                         <p class="booking-info-label">Children</p>
-                        <p class="booking-info-value">{{ (int) ($booking->guestDetail?->kids ?? 0) }}</p>
+                        <p class="booking-info-value">{{ (int) ($booking->details?->kids ?? 0) }}</p>
                     </div>
                     <div class="booking-info-item">
                         <p class="booking-info-label">Standard Occupancy</p>
@@ -1174,18 +1174,18 @@
                         </div>
                     @endif
 
-                    @if(filled(data_get($reservationMeta, 'discount_type')) && (float) ($booking->payment->discount_amount ?? 0) > 0)
+                    @if(filled(data_get($reservationMeta, 'discount_type')) && (float) ($booking->bill?->discount_amount ?? 0) > 0)
                         <div class="booking-meta-line">
                             <span class="booking-meta-label">Original Amount</span>
-                            <span class="booking-meta-value">PHP {{ number_format((float) ($booking->payment->original_amount ?? $booking->total_price), 2) }}</span>
+                            <span class="booking-meta-value">PHP {{ number_format((float) ($booking->bill?->original_amount ?? $booking->total_price), 2) }}</span>
                         </div>
                         <div class="booking-meta-line">
                             <span class="booking-meta-label">Discount</span>
-                            <span class="booking-meta-value">{{ strtoupper((string) data_get($reservationMeta, 'discount_type')) }} ({{ number_format((float) ($booking->payment->discount_rate ?? 0) * 100, 0) }}%)</span>
+                            <span class="booking-meta-value">{{ strtoupper((string) data_get($reservationMeta, 'discount_type')) }} ({{ number_format((float) ($booking->bill?->discount_rate ?? 0) * 100, 0) }}%)</span>
                         </div>
                         <div class="booking-meta-line">
                             <span class="booking-meta-label">Discount Amount</span>
-                            <span class="booking-meta-value">PHP {{ number_format((float) ($booking->payment->discount_amount ?? 0), 2) }}</span>
+                            <span class="booking-meta-value">PHP {{ number_format((float) ($booking->bill?->discount_amount ?? 0), 2) }}</span>
                         </div>
                     @endif
 

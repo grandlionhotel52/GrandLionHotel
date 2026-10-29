@@ -27,7 +27,8 @@ class AdminDashboardExperienceTest extends TestCase
         ]);
 
         $todayBooking = Booking::factory()->create(['room_id' => $room->id]);
-        $todayBooking->payment()->updateOrCreate(['booking_id' => $todayBooking->id], [
+        $todayBooking->bill()->update(['total_amount' => 1200]);
+        $todayBooking->ensureBill()->payments()->updateOrCreate(['booking_bill_id' => $todayBooking->ensureBill()->getKey()], [
             'amount' => 1200,
             'method' => Payment::METHOD_CASH,
             'status' => 'paid',
@@ -35,7 +36,8 @@ class AdminDashboardExperienceTest extends TestCase
         ]);
 
         $monthBooking = Booking::factory()->create(['room_id' => $room->id]);
-        $monthBooking->payment()->updateOrCreate(['booking_id' => $monthBooking->id], [
+        $monthBooking->bill()->update(['total_amount' => 800]);
+        $monthBooking->ensureBill()->payments()->updateOrCreate(['booking_bill_id' => $monthBooking->ensureBill()->getKey()], [
             'amount' => 800,
             'method' => Payment::METHOD_CASH,
             'status' => 'paid',

@@ -23,7 +23,7 @@ class StaffCheckInPaymentGuardTest extends TestCase
             'actual_check_in_at' => null,
             'staff_id' => $staff->id,
         ]);
-        $booking->payment()->update([
+        $booking->payment()->firstOrFail()->update([
             'status' => 'unpaid',
             'paid_at' => null,
         ]);
@@ -47,7 +47,7 @@ class StaffCheckInPaymentGuardTest extends TestCase
             'actual_check_in_at' => null,
             'staff_id' => $staff->id,
         ]);
-        $booking->payment()->update(['status' => 'unpaid', 'paid_at' => null]);
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'paid_at' => null]);
         app(PaymentService::class)->charge($booking, 'cash');
 
         $this->actingAs($staff, 'staff')

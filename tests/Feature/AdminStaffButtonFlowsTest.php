@@ -468,7 +468,7 @@ class AdminStaffButtonFlowsTest extends TestCase
 
         $walkInBooking = Booking::query()
             ->where('room_id', $walkInRoom->id)
-            ->whereNull('customer_id')
+            ->whereHas('customer', fn ($query) => $query->where('email', 'walkin@example.com'))
             ->latest('booking_id')
             ->first();
 
@@ -514,11 +514,7 @@ class AdminStaffButtonFlowsTest extends TestCase
             'notes' => 'Automated test booking',
         ]);
 
-        $booking->guestDetail()->create([
-            'first_name' => 'Test',
-            'last_name' => 'Guest',
-            'email' => $customer->email,
-            'phone' => $customer->phone,
+        $booking->details()->create([
             'adults' => 2,
             'kids' => 0,
             'payment_preference' => $paymentMethod === 'pending' ? 'cash' : $paymentMethod,
@@ -531,8 +527,8 @@ class AdminStaffButtonFlowsTest extends TestCase
             'paid_at' => $paymentStatus === 'paid' ? now() : null,
         ], $paymentExtras);
 
-        $booking->payment()->create($paymentPayload);
+        $booking->createPayment($paymentPayload);
 
-        return $booking->fresh(['payment', 'guestDetail', 'room', 'user']);
+        return $booking->fresh(['payment', 'details', 'room', 'user']);
     }
 }

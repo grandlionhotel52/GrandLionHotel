@@ -260,8 +260,8 @@
                             <tr>
                                 <td>
                                     @php
-                                        $adultCount = (int) ($booking->guestDetail?->adults ?? $booking->guests);
-                                        $childCount = (int) ($booking->guestDetail?->kids ?? 0);
+                                        $adultCount = (int) ($booking->details?->adults ?? $booking->guests);
+                                        $childCount = (int) ($booking->details?->kids ?? 0);
                                     @endphp
                                     <div class="d-flex flex-column">
                                         <span>{{ $booking->guestName() }}</span>

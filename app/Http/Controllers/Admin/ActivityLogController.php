@@ -150,7 +150,7 @@ class ActivityLogController extends Controller
 
         $bookingIds = $this->subjectIds($logs, 'Booking');
         if ($bookingIds->isNotEmpty()) {
-            foreach (Booking::query()->with(['customer', 'guestDetail'])->whereKey($bookingIds)->get() as $booking) {
+            foreach (Booking::query()->with(['customer', 'details'])->whereKey($bookingIds)->get() as $booking) {
                 $labels['Booking:'.$booking->getKey()] = 'Booking #'.$booking->getKey().' · '.$booking->guestName();
             }
         }

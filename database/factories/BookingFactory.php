@@ -19,18 +19,14 @@ class BookingFactory extends Factory
     {
         return $this->afterCreating(function (Booking $booking): void {
             $guestTotal = Room::standardGuestCapacity();
-            $booking->guestDetail()->create([
-                'first_name' => fake()->firstName(),
-                'last_name' => fake()->lastName(),
-                'email' => fake()->safeEmail(),
-                'phone' => fake()->phoneNumber(),
+            $booking->details()->create([
                 'adults' => $guestTotal,
                 'kids' => 0,
             ]);
 
             $isPaid = in_array($booking->status, ['confirmed', 'completed'], true);
 
-            $booking->payment()->create([
+            $booking->createPayment([
                 'amount' => $booking->total_price,
                 'method' => $isPaid ? fake()->randomElement(['cash', 'bank_transfer', 'gcash', 'paymaya']) : 'pending',
                 'status' => $isPaid ? 'paid' : 'unpaid',

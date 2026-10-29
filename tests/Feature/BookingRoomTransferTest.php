@@ -33,7 +33,7 @@ class BookingRoomTransferTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 4000,
             'method' => 'pending',
             'status' => 'unpaid',
@@ -75,7 +75,7 @@ class BookingRoomTransferTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 5000,
             'method' => 'cash',
             'status' => 'paid',
@@ -118,7 +118,7 @@ class BookingRoomTransferTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 5600,
             'method' => 'gcash',
             'status' => 'paid',
@@ -162,11 +162,7 @@ class BookingRoomTransferTest extends TestCase
             'staff_id' => $staff->id,
         ], $attributes));
 
-        $booking->guestDetail()->create([
-            'first_name' => 'Transfer',
-            'last_name' => 'Guest',
-            'email' => $customer->email,
-            'phone' => $customer->phone,
+        $booking->details()->create([
             'adults' => 2,
             'kids' => 0,
         ]);

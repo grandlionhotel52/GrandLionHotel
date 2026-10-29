@@ -92,7 +92,7 @@
         $vatExemption = (float) ($billingQuote['vat_exemption'] ?? 0);
         $vatExemptSales = (float) ($billingQuote['vat_exempt_sales'] ?? 0);
         $isVatExempt = (bool) ($billingQuote['vat_exempt'] ?? false);
-        $discountAmount = (float) ($billingQuote['discount_amount_applied'] ?? $booking->payment?->discount_amount ?? 0);
+        $discountAmount = (float) ($billingQuote['discount_amount_applied'] ?? $booking->bill?->discount_amount ?? 0);
         $merchantName = (string) config('services.qr_wallets.merchant_name', config('app.name'));
         $configuredQrUrl = trim((string) data_get(config('services.qr_wallets'), 'instapay.qr_image_url', ''));
         $instapayQrUrl = $configuredQrUrl;

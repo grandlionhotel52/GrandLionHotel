@@ -68,7 +68,8 @@ class NoRefundPolicyTest extends TestCase
             'actual_check_out_at' => null,
         ]);
 
-        $booking->payment()->update([
+        $booking->bill()->update(['total_amount' => (float) $booking->total_price]);
+        $booking->payment()->firstOrFail()->update([
             'amount' => (float) $booking->total_price,
             'method' => 'cash',
             'status' => 'paid',

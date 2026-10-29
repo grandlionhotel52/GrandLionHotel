@@ -7,6 +7,7 @@ use App\Mail\BookingPaidMail;
 use App\Mail\BookingCancelledMail;
 use App\Mail\BookingConfirmedMail;
 use App\Models\Booking;
+use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\Room;
 use App\Models\RoomStatus;
@@ -62,13 +63,11 @@ class BookingController extends Controller
 
             $query->where(function (Builder $nested) use ($keyword): void {
                 $nested->where('booking_id', $keyword)
-                    ->orWhereHas('user', fn (Builder $userQuery) => $userQuery->where('name', 'like', '%'.$keyword.'%'))
                     ->orWhereHas('room', fn (Builder $roomQuery) => $roomQuery->where('name', 'like', '%'.$keyword.'%'))
-                    ->orWhereHas('guestDetail', static function (Builder $detailQuery) use ($keyword): void {
-                        $detailQuery->where('email', 'like', '%'.$keyword.'%')
+                    ->orWhereHas('user', static function (Builder $customerQuery) use ($keyword): void {
+                        $customerQuery->where('email', 'like', '%'.$keyword.'%')
                             ->orWhere('phone', 'like', '%'.$keyword.'%')
-                            ->orWhere('first_name', 'like', '%'.$keyword.'%')
-                            ->orWhere('last_name', 'like', '%'.$keyword.'%');
+                            ->orWhere('name', 'like', '%'.$keyword.'%');
                     });
             });
         };
@@ -103,7 +102,7 @@ class BookingController extends Controller
 
         $bookingsQuery = Booking::query()
             ->visibleToOperations()
-            ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff', 'extraBeddingRequest']);
+            ->with(['user', 'room', 'payment', 'details', 'assignedStaff', 'extraBeddingRequest']);
 
         $applyCommonFilters($bookingsQuery);
         $applyQueueFilter($bookingsQuery, $queue);
@@ -145,10 +144,10 @@ class BookingController extends Controller
             'user',
             'room.roomStatus',
             'payment',
-            'guestDetail',
+            'details',
             'assignedStaff',
-            'extraBeddingRequest.respondedByStaff',
-            'rescheduleApprovedByAdmin',
+            'extraBeddingRequest.booking.assignedStaff',
+            'admin',
         ]);
         $this->ensurePaidTransactionReference($booking);
         $returnTo = $this->resolveSafeReturnTo($request->query('return_to'));
@@ -234,7 +233,7 @@ class BookingController extends Controller
         }
 
         $booking->update($updatePayload);
-        $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+        $booking->loadMissing(['user', 'room', 'payment', 'details', 'assignedStaff']);
 
         if ($previousStatus !== $newStatus) {
             if ($newStatus === 'confirmed') {
@@ -256,7 +255,7 @@ class BookingController extends Controller
         $booking->update($this->withAssignedStaff($booking, [
             'status' => 'confirmed',
         ]));
-        $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+        $booking->loadMissing(['user', 'room', 'payment', 'details', 'assignedStaff']);
 
         $this->sendBookingMail($booking, new BookingConfirmedMail($booking));
 
@@ -279,7 +278,7 @@ class BookingController extends Controller
             'actual_check_out_at' => null,
         ]));
 
-        $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+        $booking->loadMissing(['user', 'room', 'payment', 'details', 'assignedStaff']);
 
         $this->sendBookingMail($booking, new BookingCancelledMail($booking));
 
@@ -407,7 +406,7 @@ class BookingController extends Controller
         $selectedDate = $validated['date'] ?? Carbon::today()->toDateString();
 
         $arrivals = Booking::query()
-            ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff'])
+            ->with(['user', 'room', 'payment', 'details', 'assignedStaff'])
             ->whereDate('check_in', $selectedDate)
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereNull('actual_check_in_at')
@@ -454,7 +453,7 @@ class BookingController extends Controller
             return back()->withErrors(['occupancy' => 'Guest count can only be updated for pending or confirmed bookings.']);
         }
 
-        $booking->loadMissing(['room', 'payment', 'guestDetail']);
+        $booking->loadMissing(['room', 'payment', 'details']);
 
         $validated = $request->validate([
             'adults' => ['required', 'integer', 'min:1', 'max:20'],
@@ -493,7 +492,7 @@ class BookingController extends Controller
                 ]);
         }
 
-        $booking->guestDetail()->updateOrCreate(
+        $booking->details()->updateOrCreate(
             ['booking_id' => $booking->id],
             [
                 'adults' => $adults,
@@ -558,11 +557,14 @@ class BookingController extends Controller
             ]);
         }
 
+        Booking::query()->whereKey($booking->id)->whereNull('staff_id')->update(['staff_id' => auth('staff')->id()]);
+        $booking->refresh();
+        abort_unless((int) $booking->staff_id === (int) auth('staff')->id(), 403);
+
         $beddingRequest->update([
             'status' => $validated['extra_bedding_status'],
             'approved_count' => $proposedApprovedCount,
             'staff_response' => trim($validated['staff_response']),
-            'responded_by_staff_id' => auth('staff')->id(),
             'responded_at' => now(),
         ]);
 
@@ -571,7 +573,7 @@ class BookingController extends Controller
         $pricingQuote = $this->pricingService->quoteBooking($booking);
         $billingQuote = $this->pricingService->quoteBookingBill($booking);
         $newPayableAmount = round((float) $billingQuote['total'], 2);
-        $currentAmount = round((float) ($booking->payment?->amount ?? 0), 2);
+        $currentAmount = round((float) ($booking->bill?->total_amount ?? 0), 2);
 
         if ($booking->payment_status === 'paid' && $newPayableAmount > $currentAmount) {
             $this->lockHigherReschedulePrice($booking, $newPayableAmount);
@@ -580,8 +582,9 @@ class BookingController extends Controller
             $discountRate = (float) ($billingQuote['discount_rate'] ?? 0);
 
             if ($payment) {
+                $booking->bill()->update(['total_amount' => $newPayableAmount]);
                 $payment->update([
-                    'amount' => $newPayableAmount,
+                    'amount' => $booking->bill()->firstOrFail()->outstandingAmount(),
                     'original_amount' => $discountRate > 0 ? round((float) $pricingQuote['total'], 2) : null,
                     'discount_amount' => $discountRate > 0
                         ? round((float) ($billingQuote['discount_amount_applied'] ?? 0), 2)
@@ -613,7 +616,7 @@ class BookingController extends Controller
         try {
             DB::transaction(function () use ($booking, $validated): void {
                 $lockedBooking = Booking::query()
-                    ->with(['room.roomStatus', 'payment', 'guestDetail'])
+                    ->with(['room.roomStatus', 'payment', 'details'])
                     ->lockForUpdate()
                     ->findOrFail($booking->id);
 
@@ -673,12 +676,7 @@ class BookingController extends Controller
                 ]));
 
                 if ($lockedBooking->payment && $lockedBooking->payment_status === 'unpaid') {
-                    $lockedBooking->payment->update([
-                        'amount' => $newStayTotal,
-                        'original_amount' => null,
-                        'discount_rate' => null,
-                        'discount_amount' => null,
-                    ]);
+                    $this->syncBookingAmount($lockedBooking, $newStayTotal);
                 }
             }, 3);
         } catch (ValidationException $exception) {
@@ -746,12 +744,19 @@ class BookingController extends Controller
             ])->withInput();
         }
 
+        $received = (float) $booking->payments()->where('status', 'paid')->sum('amount')
+            + (float) ($booking->bill?->opening_credit_amount ?? 0);
+        if ($payableAmount + 0.009 < $received) {
+            return back()->withErrors(['payment' => 'The revised bill cannot be less than the payments already received.']);
+        }
         $this->syncBookingDiscount(
             $booking,
             $discountRate > 0 ? $discountType : null,
             $discountRate > 0 ? ($validated['discount_id'] ?? null) : null,
             $discountRate > 0 ? $uploadedDiscountProofPath : null
         );
+
+        $booking->bill()->updateOrCreate([], ['total_amount' => $payableAmount]);
 
         $this->paymentService->charge($booking, Payment::METHOD_CASH, [
             'amount' => $payableAmount,
@@ -761,7 +766,7 @@ class BookingController extends Controller
         ]);
         $booking->refresh();
         $booking->update($this->withAssignedStaff($booking));
-        $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+        $booking->loadMissing(['user', 'room', 'payment', 'details', 'assignedStaff']);
 
         $this->sendBookingMail($booking, new BookingPaidMail($booking));
 
@@ -789,13 +794,13 @@ class BookingController extends Controller
             return back()->withErrors(['payment' => 'The submitted online payment is missing its customer reference number.']);
         }
 
-        if ((float) $payment->amount <= 0 || abs((float) $payment->amount - (float) $booking->total_price) > 0.009) {
+        if ((float) $payment->amount <= 0 || abs((float) $payment->amount - $payment->outstandingAmount()) > 0.009) {
             return back()->withErrors(['payment' => 'The submitted online payment amount does not match the booking total.']);
         }
 
         $payment->update([
             'status' => 'paid',
-            'balance_due' => 0,
+
             'source' => 'online_verified',
             'paid_at' => now(),
             'verified_at' => now(),
@@ -803,7 +808,7 @@ class BookingController extends Controller
         $payment->ensureTransactionReference((int) $booking->id);
 
         $booking->update($this->withAssignedStaff($booking));
-        $booking->refresh()->load(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+        $booking->refresh()->load(['user', 'room', 'payment', 'details', 'assignedStaff']);
 
         $this->sendBookingMail($booking, new BookingPaidMail($booking));
 
@@ -880,7 +885,7 @@ class BookingController extends Controller
             'requested_check_out' => $validated['check_out'],
             'reschedule_request_notes' => 'Schedule change submitted by hotel staff.',
             'reschedule_requested_at' => now(),
-            'reschedule_approved_by_admin_id' => null,
+            'admin_id' => null,
             'reschedule_approved_at' => null,
         ]));
 
@@ -931,7 +936,7 @@ class BookingController extends Controller
             'requested_check_out' => null,
             'reschedule_request_notes' => null,
             'reschedule_requested_at' => null,
-            'reschedule_approved_by_admin_id' => null,
+            'admin_id' => null,
             'reschedule_approved_at' => null,
         ]));
 
@@ -956,14 +961,16 @@ class BookingController extends Controller
 
     public function receipt(Booking $booking)
     {
-        if ($booking->payment_status !== 'paid') {
+        $receiptPayment = $booking->payments()->where('status', 'paid')->latest('payment_id')->first();
+        if (! $receiptPayment) {
             return redirect()
                 ->route('staff.bookings.show', $booking)
-                ->withErrors(['booking' => 'Receipt is available only for paid bookings.']);
+                ->withErrors(['booking' => 'Receipt is available after a payment has been received.']);
         }
 
-        $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
-        $this->ensurePaidTransactionReference($booking);
+        $booking->loadMissing(['user', 'room', 'payment', 'details', 'assignedStaff']);
+        $receiptPayment->ensureTransactionReference((int) $booking->id);
+        $booking->setRelation('payment', $receiptPayment);
 
         $pdf = Pdf::loadView('receipts.booking', [
             'booking' => $booking,
@@ -988,7 +995,7 @@ class BookingController extends Controller
             }
         }
 
-        $billableTotal = $payment?->original_amount ?? $payment?->amount;
+        $billableTotal = $booking->bill?->original_amount ?? $booking->bill?->total_amount;
         if (is_numeric($billableTotal) && (float) $billableTotal > 0) {
             return round((float) $billableTotal, 2);
         }
@@ -999,35 +1006,19 @@ class BookingController extends Controller
     private function syncBookingAmount(Booking $booking, float $amount): void
     {
         $normalizedAmount = round(max(0, $amount), 2);
-        $payment = $booking->getRelationValue('payment');
-
-        if (!$payment) {
-            $payment = $booking->payment()->first();
-            if ($payment) {
-                $booking->setRelation('payment', $payment);
-            }
+        $received = (float) $booking->payments()->where('status', 'paid')->sum('amount')
+            + (float) ($booking->bill?->opening_credit_amount ?? 0);
+        if ($normalizedAmount + 0.009 < $received) {
+            throw ValidationException::withMessages(['booking' => 'The revised bill cannot be less than the payments already received.']);
         }
-
-        if ($payment) {
-            $payment->update([
-                'amount' => $normalizedAmount,
-                'original_amount' => null,
-                'discount_rate' => null,
-                'discount_amount' => null,
-            ]);
-
-            $booking->setRelation('payment', $payment->fresh());
-
-            return;
-        }
-
-        $payment = $booking->payment()->create([
-            'amount' => $normalizedAmount,
-            'method' => 'pending',
-            'status' => 'unpaid',
+        $booking->bill()->updateOrCreate([], [
+            'total_amount' => $normalizedAmount,
+            'original_amount' => null, 'discount_rate' => null, 'discount_amount' => null,
         ]);
-
-        $booking->setRelation('payment', $payment);
+        $booking->preparePaymentAttempt([
+            'amount' => $booking->bill()->firstOrFail()->outstandingAmount(),
+            'method' => 'pending', 'status' => 'unpaid',
+        ]);
     }
 
     private function redirectAfterBookingAction(Request $request, Booking $booking, string $message)
@@ -1191,7 +1182,7 @@ class BookingController extends Controller
             $this->bookingHasBreakfast($booking)
         );
         $discountType = strtolower(trim((string) data_get($booking->reservation_meta, 'discount_type', '')));
-        $storedRate = $booking->payment?->discount_rate;
+        $storedRate = $booking->bill?->discount_rate;
         $discountRate = is_numeric($storedRate)
             ? (float) $storedRate
             : match ($discountType) {
@@ -1212,51 +1203,19 @@ class BookingController extends Controller
      */
     private function lockHigherReschedulePrice(Booking $booking, float $calculatedTotal): array
     {
-        $booking->loadMissing('payment');
-        $payment = $booking->payment;
-        $currentTotal = round(max(0, (float) ($payment?->amount ?? $booking->total_price)), 2);
+        $bill = $booking->bill()->firstOrCreate([], ['total_amount' => $booking->total_price]);
+        $currentTotal = round((float) $bill->total_amount, 2);
         $lockedTotal = round(max($currentTotal, $calculatedTotal), 2);
         $increase = round(max(0, $lockedTotal - $currentTotal), 2);
-
-        if (!$payment) {
-            $payment = $booking->payment()->create([
-                'amount' => $lockedTotal,
-                'balance_due' => 0,
-                'method' => 'pending',
-                'status' => 'unpaid',
+        $bill->update(['total_amount' => $lockedTotal]);
+        $balanceDue = $bill->outstandingAmount();
+        if ($increase > 0 && $balanceDue > 0) {
+            $booking->preparePaymentAttempt([
+                'amount' => $balanceDue, 'method' => 'pending', 'status' => 'unpaid',
             ]);
-            $booking->setRelation('payment', $payment);
-
-            return ['locked_total' => $lockedTotal, 'balance_due' => 0.0, 'increased' => $increase > 0];
         }
 
-        $balanceDue = round(max(0, (float) $payment->balance_due), 2);
-        $status = (string) $payment->status;
-
-        if ($increase > 0) {
-            if ($status === 'paid') {
-                $balanceDue = $increase;
-                $status = 'unpaid';
-            } elseif ($balanceDue > 0) {
-                $balanceDue = round($balanceDue + $increase, 2);
-            } elseif ($status === 'pending_verification') {
-                $status = 'unpaid';
-                $balanceDue = 0.0;
-            }
-        }
-
-        $payment->update([
-            'amount' => $lockedTotal,
-            'balance_due' => $balanceDue,
-            'status' => $status,
-        ]);
-        $booking->setRelation('payment', $payment->fresh());
-
-        return [
-            'locked_total' => $lockedTotal,
-            'balance_due' => $balanceDue,
-            'increased' => $increase > 0,
-        ];
+        return ['locked_total' => $lockedTotal, 'balance_due' => $balanceDue, 'increased' => $increase > 0];
     }
 
     /** @param array{locked_total: float, balance_due: float, increased: bool} $priceUpdate */
@@ -1321,8 +1280,8 @@ class BookingController extends Controller
         if ($normalizedType === '' || $normalizedType === 'none') {
             if (Schema::hasTable('booking_discounts')) {
                 $booking->discount()->delete();
-            } elseif (Schema::hasColumn('booking_guest_details', 'discount_type')) {
-                $booking->guestDetail()->update([
+            } elseif (Schema::hasColumn('booking_details', 'discount_type')) {
+                $booking->details()->update([
                     'discount_type' => null,
                     'discount_id' => null,
                     'discount_id_photo_path' => null,
@@ -1347,8 +1306,8 @@ class BookingController extends Controller
             return;
         }
 
-        if (Schema::hasColumn('booking_guest_details', 'discount_type')) {
-            $booking->guestDetail()->update($payload);
+        if (Schema::hasColumn('booking_details', 'discount_type')) {
+            $booking->details()->update($payload);
         }
     }
 
@@ -1430,8 +1389,20 @@ class BookingController extends Controller
                     (int) $validated['guests']
                 );
 
+                $email = strtolower(trim((string) ($validated['customer_email'] ?? '')));
+                $customer = $email !== ''
+                    ? Customer::query()->whereRaw('LOWER(email) = ?', [$email])->first()
+                    : null;
+                $customer ??= Customer::create([
+                    'name' => trim($validated['customer_name']),
+                    'email' => $email !== '' ? $email : null,
+                    'phone' => $validated['customer_phone'] ?? null,
+                    'password' => null,
+                    'is_active' => true,
+                ]);
+
                 $booking = Booking::create([
-                    'customer_id' => null,
+                    'customer_id' => $customer->id,
                     'room_id' => $lockedRoom->id,
                     'check_in' => $validated['check_in'],
                     'check_out' => $validated['check_out'],
@@ -1440,22 +1411,13 @@ class BookingController extends Controller
                     'staff_id' => auth()->id(),
                 ]);
 
-                $customerName = trim((string) $validated['customer_name']);
-                $nameParts = preg_split('/\s+/', $customerName, 2);
-                $firstName = trim((string) ($nameParts[0] ?? ''));
-                $lastName = trim((string) ($nameParts[1] ?? ''));
-
-                $booking->guestDetail()->create(array_filter([
-                    'first_name' => $firstName !== '' ? $firstName : $customerName,
-                    'last_name' => $lastName !== '' ? $lastName : null,
-                    'email' => $validated['customer_email'] ?? null,
-                    'phone' => $validated['customer_phone'] ?? null,
+                $booking->details()->create(array_filter([
                     'adults' => (int) $validated['guests'],
                     'kids' => 0,
                     'payment_preference' => $validated['payment_preference'] ?? null,
                 ], static fn (mixed $value): bool => !is_null($value) && $value !== ''));
 
-                $booking->payment()->create([
+                $booking->createPayment([
                     'amount' => $totalPrice,
                     'method' => 'pending',
                     'status' => 'unpaid',

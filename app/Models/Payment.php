@@ -7,6 +7,7 @@ use App\Models\Concerns\HasLegacyIdAttribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Str;
 
 class Payment extends Model
@@ -32,10 +33,15 @@ class Payment extends Model
 
     protected $primaryKey = 'payment_id';
 
+    // Legacy callers may supply snapshot fields; their storage belongs to the bill.
+    private array $billAttributes = [];
+
+    private ?int $legacyBookingId = null;
+
     protected $fillable = [
         'booking_id',
+        'booking_bill_id',
         'amount',
-        'balance_due',
         'method',
         'status',
         'source',
@@ -56,7 +62,6 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
-            'balance_due' => 'decimal:2',
             'paid_at' => 'datetime',
             'verified_at' => 'datetime',
             'original_amount' => 'decimal:2',
@@ -65,9 +70,20 @@ class Payment extends Model
         ];
     }
 
-    public function booking(): BelongsTo
+    public function booking(): HasOneThrough
     {
-        return $this->belongsTo(Booking::class, 'booking_id', 'booking_id');
+        return $this->hasOneThrough(Booking::class, BookingBill::class,
+            'booking_bill_id', 'booking_id', 'booking_bill_id', 'booking_id');
+    }
+
+    public function getBookingIdAttribute($value): mixed
+    {
+        return $value ?? $this->legacyBookingId ?? $this->bill?->booking_id;
+    }
+
+    public function setBookingIdAttribute($value): void
+    {
+        $this->legacyBookingId = $value === null ? null : (int) $value;
     }
 
     public static function allowedMethods(): array
@@ -102,13 +118,67 @@ class Payment extends Model
         };
     }
 
+    public function bill(): BelongsTo
+    {
+        return $this->belongsTo(BookingBill::class, 'booking_bill_id', 'booking_bill_id');
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Payment $payment): void {
+            $bill = $payment->booking_bill_id
+                ? BookingBill::query()->findOrFail($payment->booking_bill_id)
+                : BookingBill::firstOrCreate(
+                    ['booking_id' => $payment->legacyBookingId],
+                    ['total_amount' => $payment->amount]
+                );
+            $payment->booking_bill_id = $bill->getKey();
+            if ($payment->billAttributes !== []) {
+                $bill->update($payment->billAttributes);
+                $payment->billAttributes = [];
+            }
+            $payment->unsetRelation('bill');
+        });
+    }
+
     public function outstandingAmount(): float
     {
-        $balanceDue = round(max(0, (float) $this->balance_due), 2);
+        return $this->bill?->outstandingAmount() ?? 0.0;
+    }
 
-        return $balanceDue > 0
-            ? min(round(max(0, (float) $this->amount), 2), $balanceDue)
-            : round(max(0, (float) $this->amount), 2);
+    public function getBalanceDueAttribute(): string
+    {
+        return number_format($this->outstandingAmount(), 2, '.', '');
+    }
+
+    public function getOriginalAmountAttribute($value): mixed
+    {
+        return $value ?? $this->bill?->original_amount;
+    }
+
+    public function setOriginalAmountAttribute($value): void
+    {
+        $this->billAttributes['original_amount'] = $value;
+    }
+
+    public function getDiscountRateAttribute($value): mixed
+    {
+        return $value ?? $this->bill?->discount_rate;
+    }
+
+    public function setDiscountRateAttribute($value): void
+    {
+        $this->billAttributes['discount_rate'] = $value;
+    }
+
+    public function getDiscountAmountAttribute($value): mixed
+    {
+        return $value ?? $this->bill?->discount_amount;
+    }
+
+    public function setDiscountAmountAttribute($value): void
+    {
+        $this->billAttributes['discount_amount'] = $value;
     }
 
     public function ensureTransactionReference(?int $bookingId = null): string

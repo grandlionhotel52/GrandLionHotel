@@ -91,7 +91,7 @@ class BookingAutomationTest extends TestCase
             'status' => 'pending',
             'created_at' => now()->subHours(30),
         ]);
-        $paid->payment()->update(['status' => 'paid', 'paid_at' => now()]);
+        $paid->payment()->firstOrFail()->update(['status' => 'paid', 'paid_at' => now()]);
 
         $this->artisan('bookings:process-automation')->assertSuccessful();
 
@@ -134,13 +134,13 @@ class BookingAutomationTest extends TestCase
             'status' => 'confirmed',
             'payment_due_at' => now()->subMinute(),
         ]);
-        $overdue->payment()->update(['status' => 'unpaid', 'paid_at' => null]);
+        $overdue->payment()->firstOrFail()->update(['status' => 'unpaid', 'paid_at' => null]);
 
         $paid = Booking::factory()->create([
             'status' => 'confirmed',
             'payment_due_at' => now()->subMinute(),
         ]);
-        $paid->payment()->update(['status' => 'paid', 'paid_at' => now()]);
+        $paid->payment()->firstOrFail()->update(['status' => 'paid', 'paid_at' => now()]);
 
         $this->artisan('bookings:process-automation')->assertSuccessful();
 
@@ -161,7 +161,7 @@ class BookingAutomationTest extends TestCase
             'payment_due_at' => now()->addHours(3),
             'payment_reminder_sent_at' => null,
         ]);
-        $booking->payment()->update(['status' => 'unpaid', 'paid_at' => null]);
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'paid_at' => null]);
 
         $this->artisan('bookings:process-automation')->assertSuccessful();
         $this->artisan('bookings:process-automation')->assertSuccessful();
@@ -183,7 +183,7 @@ class BookingAutomationTest extends TestCase
             'actual_check_in_at' => null,
             'no_show_at' => null,
         ]);
-        $booking->payment()->update(['status' => 'paid', 'paid_at' => now()->subDays(3)]);
+        $booking->payment()->firstOrFail()->update(['status' => 'paid', 'paid_at' => now()->subDays(3)]);
 
         $this->artisan('bookings:process-automation')->assertSuccessful();
 

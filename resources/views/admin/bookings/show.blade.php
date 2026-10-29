@@ -229,7 +229,7 @@
                 @if($booking->isRescheduleApproved())
                     <div class="booking-admin-item">
                         <p class="booking-admin-label">Approved by</p>
-                        <p class="booking-admin-value">{{ $booking->rescheduleApprovedByAdmin?->name ?? 'Admin' }} on {{ $booking->reschedule_approved_at->format('M d, Y h:i A') }}</p>
+                        <p class="booking-admin-value">{{ $booking->admin?->name ?? 'Admin' }} on {{ $booking->reschedule_approved_at->format('M d, Y h:i A') }}</p>
                     </div>
                 @endif
             </div>

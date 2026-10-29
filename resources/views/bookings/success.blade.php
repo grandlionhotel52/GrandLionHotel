@@ -28,7 +28,7 @@
 
                 <div class="d-flex flex-wrap justify-content-center gap-2">
                     <a href="{{ route('bookings.show', $booking) }}" class="btn btn-ta">View booking details</a>
-                    @if($booking->payment_status === 'paid')
+                    @if($booking->payments()->where('status', 'paid')->exists())
                         <a href="{{ route('bookings.receipt', $booking) }}" class="btn btn-ta-outline">Download receipt</a>
                     @endif
                     <a href="{{ route('rooms.index') }}" class="btn btn-ta-outline">Book another room</a>

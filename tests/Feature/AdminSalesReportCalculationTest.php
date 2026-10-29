@@ -21,7 +21,7 @@ class AdminSalesReportCalculationTest extends TestCase
         $staff = Staff::factory()->create();
 
         $breakfastPayment = $this->createPayment($staff, 1000, Payment::METHOD_CASH, 'paid', '2026-09-05 10:00:00');
-        $breakfastPayment->booking->guestDetail()->update(['meal_plan' => 'breakfast_included']);
+        $breakfastPayment->booking->details()->update(['meal_plan' => 'breakfast_included']);
         $this->createPayment($staff, 2000, Payment::METHOD_CASH, 'paid', '2026-09-06 10:00:00');
         $this->createPayment($staff, 3000, Payment::METHOD_GCASH, 'paid', '2026-09-06 11:00:00');
 
@@ -216,7 +216,8 @@ class AdminSalesReportCalculationTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $booking->payment()->update([
+        $booking->bill()->update(['total_amount' => $amount]);
+        $booking->payment()->firstOrFail()->update([
             'amount' => $amount,
             'method' => $method,
             'status' => $status,

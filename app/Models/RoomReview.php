@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class RoomReview extends Model
 {
@@ -11,8 +12,6 @@ class RoomReview extends Model
 
     protected $fillable = [
         'booking_id',
-        'room_id',
-        'customer_id',
         'rating',
         'comment',
     ];
@@ -29,13 +28,13 @@ class RoomReview extends Model
         return $this->belongsTo(Booking::class, 'booking_id', 'booking_id');
     }
 
-    public function room(): BelongsTo
+    public function room(): HasOneThrough
     {
-        return $this->belongsTo(Room::class, 'room_id', 'room_id');
+        return $this->hasOneThrough(Room::class, Booking::class, 'booking_id', 'room_id', 'booking_id', 'room_id');
     }
 
-    public function customer(): BelongsTo
+    public function customer(): HasOneThrough
     {
-        return $this->belongsTo(Customer::class, 'customer_id', 'customer_id');
+        return $this->hasOneThrough(Customer::class, Booking::class, 'booking_id', 'customer_id', 'booking_id', 'customer_id');
     }
 }

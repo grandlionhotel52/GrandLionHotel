@@ -36,7 +36,7 @@ class DashboardController extends Controller
         ];
 
         $arrivalsToday = Booking::query()
-            ->with(['user', 'room', 'payment', 'guestDetail'])
+            ->with(['user', 'room', 'payment', 'details'])
             ->whereDate('check_in', $today)
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereNull('actual_check_in_at')
@@ -46,7 +46,7 @@ class DashboardController extends Controller
             ->get();
 
         $inHouseGuests = Booking::query()
-            ->with(['user', 'room', 'payment', 'guestDetail'])
+            ->with(['user', 'room', 'payment', 'details'])
             ->where('status', 'confirmed')
             ->whereNotNull('actual_check_in_at')
             ->whereNull('actual_check_out_at')

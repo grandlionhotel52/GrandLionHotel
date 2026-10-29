@@ -44,7 +44,7 @@ class PayMongoWebhookController extends Controller
 
         $checkoutSession = PayMongoCheckoutSession::query()->where('provider_session_id', $sessionId)->first();
         $payment = $checkoutSession
-            ? Payment::query()->where('booking_id', $checkoutSession->booking_id)->first()
+            ? Payment::query()->whereHas('bill', fn ($query) => $query->where('booking_id', $checkoutSession->booking_id))->where('provider_session_id', $sessionId)->latest('payment_id')->first()
             : Payment::query()->where('provider_session_id', $sessionId)->first();
         if (!$payment || $reference !== 'BOOKING-'.$payment->booking_id || !$paymentData) {
             return response('Ignored.', 200);
@@ -59,7 +59,7 @@ class PayMongoWebhookController extends Controller
             return response('Ignored.', 200);
         }
 
-        $expectedAmount = (int) round($payment->outstandingAmount() * 100);
+        $expectedAmount = (int) round(($payment->status === 'paid' ? (float) $payment->amount : $payment->outstandingAmount()) * 100);
         $providerAmount = (int) data_get($paymentData, 'attributes.amount');
         if ($providerAmount !== $expectedAmount
             || ($checkoutSession && (int) $checkoutSession->amount_centavos !== $providerAmount)
@@ -89,6 +89,8 @@ class PayMongoWebhookController extends Controller
         };
         $paidPayment = $payments->charge($booking, $paymentMethod, [
             'source' => 'paymongo_checkout',
+            'provider_payment_id' => $providerPaymentId,
+            'provider_session_id' => $sessionId,
         ]);
         $paidPayment->forceFill([
             'provider_payment_id' => $providerPaymentId ?: null,

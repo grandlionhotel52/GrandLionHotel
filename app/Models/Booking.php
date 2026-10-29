@@ -5,12 +5,16 @@ namespace App\Models;
 use App\Models\Concerns\HasEncryptedRouteKey;
 use App\Models\Concerns\HasLegacyIdAttribute;
 use App\Services\PricingService;
+use App\Support\PersonName;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Schema;
 
 class Booking extends Model
@@ -34,7 +38,7 @@ class Booking extends Model
         'requested_check_out',
         'reschedule_request_notes',
         'reschedule_requested_at',
-        'reschedule_approved_by_admin_id',
+        'admin_id',
         'reschedule_approved_at',
         'room_transfer_request_reason',
         'room_transfer_requested_at',
@@ -117,14 +121,52 @@ class Booking extends Model
         return $this->belongsTo(Room::class, 'room_id', 'room_id');
     }
 
-    public function payment(): HasOne
+    public function payment(): HasOneThrough
     {
-        return $this->hasOne(Payment::class, 'booking_id', 'booking_id');
+        return $this->hasOneThrough(Payment::class, BookingBill::class,
+            'booking_id', 'booking_bill_id', 'booking_id', 'booking_bill_id')
+            ->whereNotIn('payments.status', ['cancelled', 'failed'])
+            ->whereRaw("payments.payment_id = (SELECT MAX(latest_payment.payment_id) FROM payments latest_payment WHERE latest_payment.booking_bill_id = payments.booking_bill_id AND latest_payment.status NOT IN ('cancelled', 'failed'))");
     }
 
-    public function guestDetail(): HasOne
+    public function bill(): HasOne
     {
-        return $this->hasOne(BookingGuestDetail::class, 'booking_id', 'booking_id');
+        return $this->hasOne(BookingBill::class, 'booking_id', 'booking_id');
+    }
+
+    public function payments(): HasManyThrough
+    {
+        return $this->hasManyThrough(Payment::class, BookingBill::class,
+            'booking_id', 'booking_bill_id', 'booking_id', 'booking_bill_id');
+    }
+
+    public function ensureBill(?float $total = null): BookingBill
+    {
+        return $this->bill()->firstOrCreate([], ['total_amount' => $total ?? $this->total_price]);
+    }
+
+    public function createPayment(array $attributes): Payment
+    {
+        return $this->ensureBill(isset($attributes['amount']) ? (float) $attributes['amount'] : null)
+            ->payments()->create($attributes);
+    }
+
+    public function preparePaymentAttempt(array $attributes): Payment
+    {
+        $payment = $this->payments()->whereIn('status', ['unpaid', 'pending_verification'])->latest('payment_id')->first();
+        if ($payment) {
+            $payment->update($attributes);
+        } else {
+            $payment = $this->createPayment($attributes);
+        }
+        $this->setRelation('payment', $payment);
+
+        return $payment;
+    }
+
+    public function details(): HasOne
+    {
+        return $this->hasOne(BookingDetail::class, 'booking_id', 'booking_id');
     }
 
     public function discount(): HasOne
@@ -147,9 +189,9 @@ class Booking extends Model
         return $this->belongsTo(Staff::class, 'staff_id', 'staff_id');
     }
 
-    public function rescheduleApprovedByAdmin(): BelongsTo
+    public function admin(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'reschedule_approved_by_admin_id', 'admin_id');
+        return $this->belongsTo(Admin::class, 'admin_id', 'admin_id');
     }
 
     public function nights(): int
@@ -176,7 +218,7 @@ class Booking extends Model
 
     public function getGuestsAttribute(mixed $value = null): int
     {
-        $detail = $this->guestDetailRecord();
+        $detail = $this->detailsRecord();
 
         if ($detail) {
             $adults = max(0, (int) ($detail->adults ?? 0));
@@ -207,14 +249,9 @@ class Booking extends Model
 
     public function getTotalPriceAttribute(mixed $value = null): float
     {
-        $payment = $this->getRelationValue('payment');
-        if ($payment) {
-            return round((float) $payment->amount, 2);
-        }
-
-        $paymentAmount = $this->payment()->value('amount');
-        if (! is_null($paymentAmount)) {
-            return round((float) $paymentAmount, 2);
+        $bill = $this->bill()->first();
+        if ($bill) {
+            return round((float) $bill->total_amount, 2);
         }
 
         if (is_numeric($value)) {
@@ -241,7 +278,7 @@ class Booking extends Model
     {
         return $this->hasPendingRescheduleRequest()
             && ! is_null($this->reschedule_approved_at)
-            && ! is_null($this->reschedule_approved_by_admin_id);
+            && ! is_null($this->admin_id);
     }
 
     public function canRequestReschedule(): bool
@@ -281,14 +318,16 @@ class Booking extends Model
             return $query;
         }
 
+        $settled = "EXISTS (SELECT 1 FROM booking_bills WHERE booking_bills.booking_id = bookings.booking_id AND booking_bills.total_amount - booking_bills.opening_credit_amount <= COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.booking_bill_id = booking_bills.booking_bill_id AND p.status = 'paid'), 0) + 0.009)";
+        if ($status === 'paid') {
+            return $query->whereRaw($settled);
+        }
         if ($status === 'unpaid') {
-            return $query->where(function (Builder $nested): void {
-                $nested->whereDoesntHave('payment')
-                    ->orWhereHas('payment', static fn (Builder $paymentQuery) => $paymentQuery->whereIn('status', ['unpaid', 'pending_verification']));
-            });
+            return $query->whereRaw('NOT ('.$settled.')');
         }
 
-        return $query->whereHas('payment', static fn (Builder $paymentQuery) => $paymentQuery->where('status', $status));
+        return $query->whereRaw('NOT ('.$settled.')')
+            ->whereHas('payment', static fn (Builder $paymentQuery) => $paymentQuery->where('status', $status));
     }
 
     public function scopeVisibleToOperations(Builder $query): Builder
@@ -344,84 +383,61 @@ class Booking extends Model
 
     public function guestName(): string
     {
-        if (filled($this->user?->name)) {
-            return (string) $this->user->name;
-        }
-
-        $detail = $this->guestDetailRecord();
-        $profileName = trim(trim((string) ($detail?->first_name ?? '')).' '.trim((string) ($detail?->last_name ?? '')));
-
-        return $profileName !== '' ? $profileName : 'Guest';
+        return filled($this->user?->name) ? (string) $this->user->name : 'Guest';
     }
 
     public function guestEmail(): string
     {
-        if (filled($this->user?->email)) {
-            return (string) $this->user->email;
-        }
-
-        $detail = $this->guestDetailRecord();
-        $value = trim((string) ($detail?->email ?? ''));
-        if ($value !== '') {
-            return $value;
-        }
-
-        return '-';
+        return filled($this->user?->email) ? (string) $this->user->email : '-';
     }
 
     public function guestPhone(): string
     {
-        if (filled($this->user?->phone)) {
-            return (string) $this->user->phone;
-        }
-
-        $detail = $this->guestDetailRecord();
-        $value = trim((string) ($detail?->phone ?? ''));
-        if ($value !== '') {
-            return $value;
-        }
-
-        return '-';
+        return filled($this->user?->phone) ? (string) $this->user->phone : '-';
     }
 
     public function getPaymentStatusAttribute(): string
     {
+        $bill = $this->bill()->first();
+        if ($bill && $bill->outstandingAmount() <= 0.009) {
+            return 'paid';
+        }
         $payment = $this->getRelationValue('payment');
 
-        $status = strtolower(trim((string) ($payment?->status ?? '')));
-
-        return $status !== '' ? $status : 'unpaid';
+        return $payment?->status === 'pending_verification' ? 'pending_verification' : 'unpaid';
     }
 
     public function getReservationMetaAttribute(): array
     {
-        $detail = $this->guestDetailRecord();
+        $detail = $this->detailsRecord();
         if (! $detail) {
             return [];
         }
 
         $discount = $this->discountRecord();
 
-        $fullName = trim(trim((string) $detail->first_name).' '.trim((string) $detail->last_name));
+        $customer = $this->user;
+        $fullName = trim((string) $customer?->name);
+        $name = PersonName::split($fullName);
 
         return array_filter([
             'customer_name' => $fullName !== '' ? $fullName : null,
-            'customer_email' => $detail->email,
-            'customer_phone' => $detail->phone,
-            'first_name' => $detail->first_name,
-            'last_name' => $detail->last_name,
-            'street_address' => $detail->address_line,
-            'street_address_line_2' => $detail->street_address_line_2,
-            'guest_city' => $detail->city,
-            'state_province' => $detail->province,
-            'postal_code' => $detail->postal_code,
-            'contact_phone' => $detail->phone,
-            'contact_email' => $detail->email,
-            'email' => $detail->email,
-            'phone' => $detail->phone,
-            'address_line' => $detail->address_line,
-            'city' => $detail->city,
-            'province' => $detail->province,
+            'customer_email' => $customer?->email,
+            'customer_phone' => $customer?->phone,
+            'first_name' => $name['first_name'],
+            'last_name' => $name['last_name'],
+            'street_address' => $customer?->address_line,
+            'street_address_line_2' => $customer?->street_address_line_2,
+            'guest_city' => $customer?->city,
+            'state_province' => $customer?->province,
+            'postal_code' => $customer?->postal_code,
+            'contact_phone' => $customer?->phone,
+            'contact_email' => $customer?->email,
+            'email' => $customer?->email,
+            'phone' => $customer?->phone,
+            'address_line' => $customer?->address_line,
+            'city' => $customer?->city,
+            'province' => $customer?->province,
             'adults' => $detail->adults,
             'kids' => $detail->kids,
             'meal_plan' => $detail->meal_plan ?: 'room_only',
@@ -444,19 +460,19 @@ class Booking extends Model
         return app(PricingService::class)->quoteBookingBill($this);
     }
 
-    private function guestDetailRecord(): ?BookingGuestDetail
+    private function detailsRecord(): ?BookingDetail
     {
-        $detail = $this->getRelationValue('guestDetail');
+        $detail = $this->getRelationValue('details');
         if ($detail) {
             return $detail;
         }
 
-        if ($this->relationLoaded('guestDetail') || is_null($this->id)) {
+        if ($this->relationLoaded('details') || is_null($this->id)) {
             return null;
         }
 
-        $detail = $this->guestDetail()->first();
-        $this->setRelation('guestDetail', $detail);
+        $detail = $this->details()->first();
+        $this->setRelation('details', $detail);
 
         return $detail;
     }
@@ -484,7 +500,7 @@ class Booking extends Model
 
     private function legacyDiscountRecord(): ?BookingDiscount
     {
-        $detail = $this->guestDetailRecord();
+        $detail = $this->detailsRecord();
         $payment = $this->getRelationValue('payment');
 
         if (! $payment && ! is_null($this->id)) {

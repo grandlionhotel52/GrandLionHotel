@@ -16,7 +16,6 @@ class BookingExtraBeddingRequest extends Model
         'customer_message',
         'status',
         'staff_response',
-        'responded_by_staff_id',
         'requested_at',
         'responded_at',
     ];
@@ -36,8 +35,4 @@ class BookingExtraBeddingRequest extends Model
         return $this->belongsTo(Booking::class, 'booking_id', 'booking_id');
     }
 
-    public function respondedByStaff(): BelongsTo
-    {
-        return $this->belongsTo(Staff::class, 'responded_by_staff_id', 'staff_id');
-    }
 }

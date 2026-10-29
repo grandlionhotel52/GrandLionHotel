@@ -73,9 +73,9 @@
         $pricingQuote = $booking->pricingQuote();
         $billingQuote = $booking->billingQuote();
         $paidAmount = (float) ($booking->payment?->amount ?? $booking->total_price);
-        $originalAmount = (float) ($booking->payment?->original_amount ?? ($pricingQuote['total'] ?? $booking->total_price));
+        $originalAmount = (float) ($booking->bill?->original_amount ?? ($pricingQuote['total'] ?? $booking->total_price));
         $discountType = (string) data_get($booking->reservation_meta, 'discount_type', '');
-        $discountAmount = (float) ($booking->payment?->discount_amount ?? 0);
+        $discountAmount = (float) ($booking->bill?->discount_amount ?? 0);
         $billedUnits = max(1, $booking->nights());
         $unitLabel = 'night';
         $roomSubtotal = (float) ($pricingQuote['room_total'] ?? $booking->total_price);
@@ -218,9 +218,11 @@
             </tr>
         @endif
         <tr>
-            <th>Final Amount Paid</th>
+            <th>Payment Received</th>
             <td class="total">&#8369;{{ number_format($paidAmount, 2) }}</td>
         </tr>
+        <tr><th>Current Bill Total</th><td>&#8369;{{ number_format($booking->total_price, 2) }}</td></tr>
+        <tr><th>Current Balance Due</th><td>&#8369;{{ number_format($booking->bill?->outstandingAmount() ?? 0, 2) }}</td></tr>
         <tr>
             <th>Guest Care Staff</th>
             <td>{{ $booking->assignedStaff?->name ?? 'Not recorded' }}</td>

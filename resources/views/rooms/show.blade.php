@@ -555,7 +555,7 @@
             <div>
                 <p class="ta-eyebrow mb-1">Customer Satisfaction</p>
                 <h2 class="h3 mb-1" id="guest_reviews_title">Guest ratings and comments</h2>
-                <p class="text-secondary mb-0">Customers can share their thoughts about this room before or after booking.</p>
+                <p class="text-secondary mb-0">Guests can share their experience after completing a stay.</p>
             </div>
             @if($reviewCount > 0)
                 <div class="text-md-end">
@@ -570,10 +570,10 @@
             @endif
         </div>
 
-        @if($viewer?->isCustomer())
+        @if($viewer?->isCustomer() && $reviewBooking)
             <div class="border rounded-4 bg-light p-3 p-lg-4 mb-4">
                 <h3 class="h5 mb-2">{{ $currentCustomerReview ? 'Update your comment' : 'Comment on this room' }}</h3>
-                <p class="small text-secondary mb-3">You do not need a booking to leave a rating and comment.</p>
+                <p class="small text-secondary mb-3">This review is linked to your completed stay.</p>
                 <form method="POST" action="{{ route('rooms.review.store', $room) }}" class="row g-3">
                     @csrf
                     <div class="col-12">
@@ -589,9 +589,11 @@
                     </div>
                 </form>
             </div>
+        @elseif($viewer?->isCustomer())
+            <p class="text-secondary mb-4">You can review this room after completing a stay.</p>
         @elseif(!$viewer)
             <div class="alert alert-light border d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-                <span>Sign in as a customer to rate or comment on this room. No booking is required.</span>
+                <span>Sign in to review a room after completing your stay.</span>
                 <a href="{{ route('login') }}" class="btn btn-outline-ta btn-sm">Sign in to comment</a>
             </div>
         @endif

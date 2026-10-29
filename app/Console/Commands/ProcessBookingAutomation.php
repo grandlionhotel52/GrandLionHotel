@@ -49,7 +49,7 @@ class ProcessBookingAutomation extends Command
                 foreach ($bookings as $candidate) {
                     $booking = DB::transaction(function () use ($candidate): ?Booking {
                         $locked = Booking::query()
-                            ->with(['customer', 'room', 'guestDetail', 'payment'])
+                            ->with(['customer', 'room', 'details', 'payment'])
                             ->lockForUpdate()
                             ->find($candidate->getKey());
 
@@ -66,7 +66,7 @@ class ProcessBookingAutomation extends Command
                             'expired_at' => now(),
                         ]);
 
-                        return $locked->fresh(['customer', 'room', 'guestDetail', 'payment']);
+                        return $locked->fresh(['customer', 'room', 'details', 'payment']);
                     }, 3);
 
                     if (! $booking) {
@@ -99,7 +99,7 @@ class ProcessBookingAutomation extends Command
                 foreach ($bookings as $candidate) {
                     $booking = DB::transaction(function () use ($candidate): ?Booking {
                         $locked = Booking::query()
-                            ->with(['customer', 'room', 'guestDetail', 'payment'])
+                            ->with(['customer', 'room', 'details', 'payment'])
                             ->lockForUpdate()
                             ->find($candidate->getKey());
 
@@ -116,7 +116,7 @@ class ProcessBookingAutomation extends Command
                             'expired_at' => now(),
                         ]);
 
-                        return $locked->fresh(['customer', 'room', 'guestDetail', 'payment']);
+                        return $locked->fresh(['customer', 'room', 'details', 'payment']);
                     }, 3);
 
                     if (! $booking) {
@@ -143,7 +143,7 @@ class ProcessBookingAutomation extends Command
             ->whereNull('payment_reminder_sent_at')
             ->whereBetween('payment_due_at', [now(), now()->addHours($hours)])
             ->whereDoesntHave('payment', static fn ($query) => $query->whereIn('status', ['paid', 'pending_verification']))
-            ->with(['customer', 'room', 'guestDetail', 'payment'])
+            ->with(['customer', 'room', 'details', 'payment'])
             ->each(function (Booking $booking) use (&$reminded): void {
                 $booking->update(['payment_reminder_sent_at' => now()]);
                 $message = 'Payment for your booking is due '.$booking->payment_due_at->format('M d, Y g:i A').'. Pay before this time to keep your reservation.';
@@ -166,7 +166,7 @@ class ProcessBookingAutomation extends Command
             ->whereNull('actual_check_in_at')
             ->whereNull('no_show_at')
             ->whereDate('check_in', '<=', $cutoff)
-            ->with(['customer', 'room', 'guestDetail', 'payment'])
+            ->with(['customer', 'room', 'details', 'payment'])
             ->each(function (Booking $booking) use (&$count): void {
                 $booking->update([
                     'status' => 'cancelled',
@@ -196,7 +196,7 @@ class ProcessBookingAutomation extends Command
                 foreach ($bookings as $candidate) {
                     $booking = DB::transaction(function () use ($candidate): ?Booking {
                         $locked = Booking::query()
-                            ->with(['customer', 'room', 'guestDetail', 'payment'])
+                            ->with(['customer', 'room', 'details', 'payment'])
                             ->lockForUpdate()
                             ->find($candidate->getKey());
 
@@ -206,7 +206,7 @@ class ProcessBookingAutomation extends Command
 
                         $locked->update(['check_in_reminder_sent_at' => now()]);
 
-                        return $locked->fresh(['customer', 'room', 'guestDetail', 'payment']);
+                        return $locked->fresh(['customer', 'room', 'details', 'payment']);
                     }, 3);
 
                     if (! $booking) {

@@ -44,8 +44,9 @@ class StaffController extends Controller
         $earningsSnapshot = Payment::query()
             ->selectRaw('bookings.staff_id as staff_id')
             ->selectRaw('COALESCE(SUM(payments.amount), 0) as revenue_total')
-            ->selectRaw('COUNT(payments.payment_id) as paid_bookings')
-            ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
+            ->selectRaw('COUNT(DISTINCT booking_bills.booking_id) as paid_bookings')
+            ->join('booking_bills', 'booking_bills.booking_bill_id', '=', 'payments.booking_bill_id')
+            ->join('bookings', 'bookings.booking_id', '=', 'booking_bills.booking_id')
             ->whereNotNull('bookings.staff_id')
             ->where('payments.status', 'paid')
             ->whereDate('payments.paid_at', $selectedDateString)
@@ -132,20 +133,18 @@ class StaffController extends Controller
         $assignedBookingsBase = Booking::query()->where('staff_id', $staff->id);
 
         $bookingsQuery = (clone $assignedBookingsBase)
-            ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff'])
+            ->with(['user', 'room', 'payment', 'details', 'assignedStaff'])
             ->when($statusFilter !== '', static function (Builder $query) use ($statusFilter): void {
                 $query->where('status', $statusFilter);
             })
             ->when($keyword !== '', static function (Builder $query) use ($keyword): void {
                 $query->where(function (Builder $nested) use ($keyword): void {
                     $nested->where('booking_id', $keyword)
-                        ->orWhereHas('user', fn (Builder $userQuery) => $userQuery->where('name', 'like', '%'.$keyword.'%'))
                         ->orWhereHas('room', fn (Builder $roomQuery) => $roomQuery->where('name', 'like', '%'.$keyword.'%'))
-                        ->orWhereHas('guestDetail', static function (Builder $detailQuery) use ($keyword): void {
-                            $detailQuery->where('email', 'like', '%'.$keyword.'%')
+                        ->orWhereHas('user', static function (Builder $customerQuery) use ($keyword): void {
+                            $customerQuery->where('email', 'like', '%'.$keyword.'%')
                                 ->orWhere('phone', 'like', '%'.$keyword.'%')
-                                ->orWhere('first_name', 'like', '%'.$keyword.'%')
-                                ->orWhere('last_name', 'like', '%'.$keyword.'%');
+                                ->orWhere('name', 'like', '%'.$keyword.'%');
                         });
                 });
             });
@@ -182,17 +181,19 @@ class StaffController extends Controller
             'cancelled' => (clone $assignedBookingsBase)->where('status', 'cancelled')->count(),
             'customers' => $customerCount,
             'paid_revenue_for_date' => (float) Payment::query()
-                ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
+                ->join('booking_bills', 'booking_bills.booking_bill_id', '=', 'payments.booking_bill_id')
+            ->join('bookings', 'bookings.booking_id', '=', 'booking_bills.booking_id')
                 ->where('bookings.staff_id', $staff->id)
                 ->where('payments.status', 'paid')
                 ->whereDate('payments.paid_at', $selectedDateString)
                 ->sum('payments.amount'),
             'paid_bookings_for_date' => (int) Payment::query()
-                ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
+                ->join('booking_bills', 'booking_bills.booking_bill_id', '=', 'payments.booking_bill_id')
+            ->join('bookings', 'bookings.booking_id', '=', 'booking_bills.booking_id')
                 ->where('bookings.staff_id', $staff->id)
                 ->where('payments.status', 'paid')
                 ->whereDate('payments.paid_at', $selectedDateString)
-                ->count('payments.payment_id'),
+                ->distinct()->count('booking_bills.booking_id'),
         ];
 
         $selectedDateLabel = $selectedDate->format('M d, Y');

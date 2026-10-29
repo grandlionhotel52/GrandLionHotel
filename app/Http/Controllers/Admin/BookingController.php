@@ -48,7 +48,7 @@ class BookingController extends Controller
 
         $bookingsQuery = Booking::query()
             ->visibleToOperations()
-            ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+            ->with(['user', 'room', 'payment', 'details', 'assignedStaff']);
         $applyFilters($bookingsQuery);
 
         $bookings = $bookingsQuery
@@ -69,7 +69,8 @@ class BookingController extends Controller
                 ->wherePaymentStatus('unpaid')
                 ->count(),
             'paid_revenue' => (clone $counterQuery)
-                ->join('payments', 'payments.booking_id', '=', 'bookings.booking_id')
+                ->join('booking_bills', 'booking_bills.booking_id', '=', 'bookings.booking_id')
+                ->join('payments', 'payments.booking_bill_id', '=', 'booking_bills.booking_bill_id')
                 ->where('payments.status', 'paid')
                 ->sum('payments.amount'),
         ];
@@ -79,7 +80,7 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
-        $booking->load(['user', 'room', 'payment', 'guestDetail', 'assignedStaff', 'rescheduleApprovedByAdmin']);
+        $booking->load(['user', 'room', 'payment', 'details', 'assignedStaff', 'admin']);
         $this->ensurePaidTransactionReference($booking);
         $staffMembers = Staff::query()
             ->where(function (Builder $query) use ($booking): void {
@@ -182,7 +183,7 @@ class BookingController extends Controller
         }
 
         $booking->update($updatePayload);
-        $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+        $booking->loadMissing(['user', 'room', 'payment', 'details', 'assignedStaff']);
 
         if ($previousStatus !== $newStatus && $newStatus === 'cancelled') {
             $this->sendBookingMail($booking, new BookingCancelledMail($booking));
@@ -221,7 +222,7 @@ class BookingController extends Controller
             return back()->withErrors(['payment' => 'The submitted online payment is missing its customer reference number.']);
         }
 
-        if ((float) $payment->amount <= 0 || abs((float) $payment->amount - (float) $booking->total_price) > 0.009) {
+        if ((float) $payment->amount <= 0 || abs((float) $payment->amount - $payment->outstandingAmount()) > 0.009) {
             return back()->withErrors(['payment' => 'The submitted online payment amount does not match the booking total.']);
         }
 
@@ -234,14 +235,14 @@ class BookingController extends Controller
 
         $payment->update([
             'status' => 'paid',
-            'balance_due' => 0,
+
             'source' => 'online_verified',
             'paid_at' => now(),
             'verified_at' => now(),
         ]);
         $payment->ensureTransactionReference((int) $booking->id);
 
-        $booking->refresh()->load(['user', 'room', 'payment', 'guestDetail', 'assignedStaff']);
+        $booking->refresh()->load(['user', 'room', 'payment', 'details', 'assignedStaff']);
 
         $this->sendBookingMail($booking, new BookingPaidMail($booking));
 
@@ -301,7 +302,7 @@ class BookingController extends Controller
         }
 
         $booking->update([
-            'reschedule_approved_by_admin_id' => $request->user('admin')->getKey(),
+            'admin_id' => $request->user('admin')->getKey(),
             'reschedule_approved_at' => now(),
         ]);
 
@@ -320,7 +321,7 @@ class BookingController extends Controller
             'requested_check_out' => null,
             'reschedule_request_notes' => null,
             'reschedule_requested_at' => null,
-            'reschedule_approved_by_admin_id' => null,
+            'admin_id' => null,
             'reschedule_approved_at' => null,
         ]);
 

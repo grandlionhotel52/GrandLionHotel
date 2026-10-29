@@ -469,8 +469,6 @@ class RequestedCustomerHistorySeeder extends Seeder
             ->offset($bookingIndex)
             ->value('booking_id');
 
-        $parts = preg_split('/\s+/', trim($name), 2);
-
         if ($existingBookingId) {
             DB::table('bookings')->where('booking_id', $existingBookingId)->update([
                 'room_id' => $room->room_id,
@@ -481,13 +479,11 @@ class RequestedCustomerHistorySeeder extends Seeder
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt->copy()->addHour(),
             ]);
-            DB::table('booking_guest_details')->where('booking_id', $existingBookingId)->update([
-                'first_name' => $parts[0],
-                'last_name' => $parts[1],
-                'email' => $email,
-                'phone' => $phone,
+            DB::table('booking_bills')->updateOrInsert(['booking_id' => $existingBookingId], [
+                'total_amount' => round((float) $room->price_per_night * 2, 2),
+                'created_at' => $createdAt, 'updated_at' => $createdAt,
             ]);
-            DB::table('payments')->where('booking_id', $existingBookingId)->update([
+            DB::table('payments')->whereIn('booking_bill_id', DB::table('booking_bills')->where('booking_id', $existingBookingId)->select('booking_bill_id'))->update([
                 'amount' => round((float) $room->price_per_night * 2, 2),
                 'transaction_reference' => $this->transactionReference($createdAt, (int) $existingBookingId),
             ]);
@@ -506,12 +502,8 @@ class RequestedCustomerHistorySeeder extends Seeder
             'updated_at' => $createdAt->copy()->addHour(),
         ], 'booking_id');
 
-        DB::table('booking_guest_details')->insert([
+        DB::table('booking_details')->insert([
             'booking_id' => $bookingId,
-            'first_name' => $parts[0],
-            'last_name' => $parts[1],
-            'email' => $email,
-            'phone' => $phone,
             'adults' => 2,
             'kids' => 0,
             'meal_plan' => 'room_only',
@@ -521,10 +513,13 @@ class RequestedCustomerHistorySeeder extends Seeder
         ]);
 
         $amount = round((float) $room->price_per_night * 2, 2);
+        $billId = DB::table('booking_bills')->insertGetId([
+            'booking_id' => $bookingId, 'total_amount' => $amount,
+            'created_at' => $createdAt, 'updated_at' => $createdAt,
+        ], 'booking_bill_id');
         DB::table('payments')->insert([
-            'booking_id' => $bookingId,
+            'booking_bill_id' => $billId,
             'amount' => $amount,
-            'balance_due' => 0,
             'method' => 'cash',
             'status' => 'paid',
             'transaction_reference' => $this->transactionReference($createdAt, (int) $bookingId),

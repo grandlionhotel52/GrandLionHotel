@@ -34,7 +34,7 @@ class StaffBookingOccupancyPricingTest extends TestCase
 
         $booking = $this->createBooking($customer, $room, $staff);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 4000,
             'method' => 'pending',
             'status' => 'unpaid',
@@ -48,11 +48,11 @@ class StaffBookingOccupancyPricingTest extends TestCase
 
         $response->assertRedirect(route('staff.bookings.show', $booking));
 
-        $booking->refresh()->load('payment', 'guestDetail');
+        $booking->refresh()->load('payment', 'details');
 
         $this->assertSame(3, $booking->guests);
         $this->assertSame('5223.21', number_format((float) $booking->payment->amount, 2, '.', ''));
-        $this->assertSame(3, (int) $booking->guestDetail->adults);
+        $this->assertSame(3, (int) $booking->details->adults);
     }
 
     public function test_staff_blocks_paid_booking_occupancy_changes_that_would_change_total(): void
@@ -65,7 +65,7 @@ class StaffBookingOccupancyPricingTest extends TestCase
 
         $booking = $this->createBooking($customer, $room, $staff);
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => 4000,
             'method' => Payment::METHOD_CASH,
             'status' => 'paid',
@@ -83,11 +83,11 @@ class StaffBookingOccupancyPricingTest extends TestCase
         $response->assertRedirect(route('staff.bookings.show', $booking));
         $response->assertSessionHasErrors('occupancy');
 
-        $booking->refresh()->load('payment', 'guestDetail');
+        $booking->refresh()->load('payment', 'details');
 
         $this->assertSame(2, $booking->guests);
         $this->assertSame('4000.00', number_format((float) $booking->payment->amount, 2, '.', ''));
-        $this->assertSame(2, (int) $booking->guestDetail->adults);
+        $this->assertSame(2, (int) $booking->details->adults);
     }
 
     public function test_customer_and_staff_can_coordinate_an_extra_bedding_request(): void
@@ -138,10 +138,10 @@ class StaffBookingOccupancyPricingTest extends TestCase
             'status' => 'approved',
             'approved_count' => 1,
             'staff_response' => 'Approved. The extra bed will be ready before check-in.',
-            'responded_by_staff_id' => $staff->id,
         ]);
 
         $booking->refresh()->load(['payment', 'extraBeddingRequest']);
+        $this->assertSame($staff->id, $booking->staff_id);
         $this->assertSame(1, $booking->extra_bedding_count);
         $this->assertSame(
             number_format((float) $booking->billingQuote()['total'], 2, '.', ''),
@@ -167,7 +167,7 @@ class StaffBookingOccupancyPricingTest extends TestCase
         $booking = $this->createBooking($customer, $room, $staff);
         $originalAmount = (float) $booking->billingQuote()['total'];
 
-        $booking->payment()->create([
+        $booking->createPayment([
             'amount' => $originalAmount,
             'balance_due' => 0,
             'method' => Payment::METHOD_CASH,
@@ -189,9 +189,9 @@ class StaffBookingOccupancyPricingTest extends TestCase
         $payment = $booking->fresh()->payment;
 
         $this->assertSame('unpaid', $payment->status);
-        $this->assertGreaterThan($originalAmount, (float) $payment->amount);
+        $this->assertGreaterThan($originalAmount, (float) $booking->fresh()->bill->total_amount);
         $this->assertSame(
-            number_format((float) $payment->amount - $originalAmount, 2, '.', ''),
+            number_format((float) $booking->fresh()->bill->total_amount - $originalAmount, 2, '.', ''),
             number_format((float) $payment->balance_due, 2, '.', '')
         );
     }
@@ -217,11 +217,7 @@ class StaffBookingOccupancyPricingTest extends TestCase
             'staff_id' => $staff->id,
         ]);
 
-        $booking->guestDetail()->create([
-            'first_name' => 'Occupancy',
-            'last_name' => 'Guest',
-            'email' => $customer->email,
-            'phone' => $customer->phone,
+        $booking->details()->create([
             'adults' => 2,
             'kids' => 0,
         ]);

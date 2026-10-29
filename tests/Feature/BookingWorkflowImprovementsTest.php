@@ -85,7 +85,7 @@ class BookingWorkflowImprovementsTest extends TestCase
         $response->assertSessionHas('status', 'Choose online payment or cash to submit your pre-booking for staff review.');
         $this->assertSame(Booking::STATUS_DRAFT, $booking->status);
         $this->assertSame('unpaid', $booking->payment_status);
-        $this->assertSame('breakfast_included', $booking->fresh('guestDetail')->guestDetail->meal_plan);
+        $this->assertSame('breakfast_included', $booking->fresh('details')->details->meal_plan);
         $this->assertSame('3330.00', $booking->fresh('payment')->payment->amount);
         $this->assertSame('792.86', $booking->payment->discount_amount);
         $this->assertDatabaseMissing('activity_logs', [
@@ -253,7 +253,7 @@ class BookingWorkflowImprovementsTest extends TestCase
             'actual_check_in_at' => null,
             'actual_check_out_at' => null,
         ]);
-        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending']);
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending']);
 
         $response = $this->actingAs($admin, 'admin')->patch(route('admin.bookings.update-status', $booking), [
             'status' => 'completed',
@@ -278,13 +278,12 @@ class BookingWorkflowImprovementsTest extends TestCase
             'room_id' => $room->id,
             'status' => 'pending',
         ]);
-        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending']);
-        $booking->guestDetail()->update([
-            'first_name' => 'Walk In',
-            'last_name' => 'Guest',
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending']);
+        $booking->customer()->associate(Customer::factory()->create([
+            'name' => 'Walk In Guest',
             'email' => 'walkin@example.com',
             'phone' => '+639000000009',
-        ]);
+        ]))->save();
 
         $response = $this->actingAs($staff, 'staff')->patch(route('staff.bookings.confirm', $booking));
 
@@ -308,16 +307,16 @@ class BookingWorkflowImprovementsTest extends TestCase
             'room_id' => $room->id,
             'status' => 'pending',
         ]);
-        $walkIn->payment()->update(['status' => 'unpaid', 'method' => 'pending']);
-        $walkIn->guestDetail()->update(['first_name' => 'Walk In', 'last_name' => 'Guest', 'email' => 'walkin@example.com']);
+        $walkIn->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending']);
+        $walkIn->customer()->associate(Customer::factory()->create(['name' => 'Walk In Guest', 'email' => 'walkin@example.com']))->save();
 
         $another = Booking::factory()->create([
             'customer_id' => null,
             'room_id' => $room->id,
             'status' => 'pending',
         ]);
-        $another->payment()->update(['status' => 'unpaid', 'method' => 'pending']);
-        $another->guestDetail()->update(['first_name' => 'Another', 'last_name' => 'Guest', 'email' => 'another@example.com']);
+        $another->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending']);
+        $another->customer()->associate(Customer::factory()->create(['name' => 'Another Guest', 'email' => 'another@example.com']))->save();
 
         $listResponse = $this->actingAs($staff, 'staff')->get(route('staff.bookings.index'));
         $listResponse->assertOk();
@@ -343,13 +342,13 @@ class BookingWorkflowImprovementsTest extends TestCase
             'status' => 'confirmed',
             'staff_id' => $staff->id,
         ]);
-        $booking->guestDetail()->update([
-            'first_name' => 'Walk In',
-            'last_name' => 'Guest',
+        $booking->customer()->associate(Customer::factory()->create([
+            'name' => 'Walk In Guest',
             'email' => 'walkin@example.com',
             'phone' => '+639000000321',
-        ]);
-        $booking->payment()->update([
+        ]))->save();
+        $booking->bill()->update(['total_amount' => (float) $booking->total_price]);
+        $booking->payment()->firstOrFail()->update([
             'amount' => (float) $booking->total_price,
             'method' => 'cash',
             'status' => 'paid',
@@ -473,15 +472,16 @@ class BookingWorkflowImprovementsTest extends TestCase
             'contact_email' => 'wrong@example.com',
         ])->assertSessionHasNoErrors();
 
-        $detail = Booking::query()->firstOrFail()->guestDetail;
+        $booking = Booking::query()->firstOrFail();
 
-        $this->assertSame('Profile', $detail->first_name);
-        $this->assertSame('Guest', $detail->last_name);
-        $this->assertSame('profile.guest@example.com', $detail->email);
-        $this->assertSame('09171234567', $detail->phone);
-        $this->assertSame('10 Profile Avenue', $detail->address_line);
-        $this->assertSame('Manila', $detail->city);
-        $this->assertSame('Metro Manila (NCR)', $detail->province);
+        $this->assertTrue($booking->customer->is($customer));
+        $this->assertSame('Profile Guest', $booking->guestName());
+        $this->assertSame('profile.guest@example.com', $booking->guestEmail());
+        $this->assertSame('09171234567', $booking->guestPhone());
+        $this->assertSame('10 Profile Avenue', $booking->reservation_meta['address_line']);
+        $this->assertSame('Manila', $booking->reservation_meta['city']);
+        $this->assertSame('Metro Manila (NCR)', $booking->reservation_meta['province']);
+
     }
 
     public function test_customer_booking_rejects_invalid_state_province_value(): void

@@ -14,8 +14,19 @@ return new class extends Migration
         }
 
         DB::transaction(function (): void {
-            $bookings = DB::table('bookings')
-                ->leftJoin('payments', 'payments.booking_id', '=', 'bookings.booking_id')
+            $query = DB::table('bookings');
+            $paymentStatus = 'payments.status as payment_status';
+            if (Schema::hasColumn('payments', 'booking_id')) {
+                $query->leftJoin('payments', 'payments.booking_id', '=', 'bookings.booking_id');
+            } else {
+                $totals = DB::table('payments')->select('booking_bill_id')
+                    ->selectRaw("SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as received")
+                    ->groupBy('booking_bill_id');
+                $query->leftJoin('booking_bills', 'booking_bills.booking_id', '=', 'bookings.booking_id')
+                    ->leftJoinSub($totals, 'collections', 'collections.booking_bill_id', '=', 'booking_bills.booking_bill_id');
+                $paymentStatus = DB::raw("CASE WHEN booking_bills.total_amount - booking_bills.opening_credit_amount <= COALESCE(collections.received, 0) THEN 'paid' ELSE 'unpaid' END as payment_status");
+            }
+            $bookings = $query
                 ->whereNotNull('bookings.customer_id')
                 ->whereIn('bookings.status', ['pending', 'confirmed'])
                 ->get([
@@ -26,7 +37,7 @@ return new class extends Migration
                     'bookings.check_out',
                     'bookings.status',
                     'bookings.actual_check_in_at',
-                    'payments.status as payment_status',
+                    $paymentStatus,
                 ]);
 
             $duplicateIds = $bookings
@@ -73,7 +84,11 @@ return new class extends Migration
         }
 
         $paymentIds = Schema::hasTable('payments')
-            ? DB::table('payments')->whereIn('booking_id', $bookingIds)->pluck('payment_id')
+            ? DB::table('payments')->when(
+                Schema::hasColumn('payments', 'booking_id'),
+                fn ($query) => $query->whereIn('booking_id', $bookingIds),
+                fn ($query) => $query->whereIn('booking_bill_id', DB::table('booking_bills')->whereIn('booking_id', $bookingIds)->select('booking_bill_id'))
+            )->pluck('payment_id')
             : collect();
 
         if (Schema::hasTable('activity_logs')) {

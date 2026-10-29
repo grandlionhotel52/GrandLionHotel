@@ -209,7 +209,8 @@ class OperationalFeaturesTest extends TestCase
                 'status' => 'confirmed',
             ]);
 
-            $booking->payment()->updateOrCreate(['booking_id' => $booking->id], [
+            $booking->bill()->update(['total_amount' => 1000]);
+        $booking->ensureBill()->payments()->updateOrCreate(['booking_bill_id' => $booking->ensureBill()->getKey()], [
                 'amount' => 1000,
                 'method' => $method,
                 'status' => 'paid',

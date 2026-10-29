@@ -73,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
 
         Booking::observe(OperationalAuditObserver::class);
         Payment::observe(OperationalAuditObserver::class);
+        \App\Models\BookingBill::observe(OperationalAuditObserver::class);
         Room::observe(OperationalAuditObserver::class);
         Admin::observe(OperationalAuditObserver::class);
         Staff::observe(OperationalAuditObserver::class);

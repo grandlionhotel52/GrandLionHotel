@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -71,11 +72,15 @@ class Room extends Model
         ];
     }
 
-    protected static function booted(): void
+    public function getCapacityAttribute(): int
     {
-        static::saving(function (Room $room): void {
-            $room->attributes['capacity'] = self::STANDARD_GUEST_CAPACITY;
-        });
+        return self::STANDARD_GUEST_CAPACITY;
+    }
+
+    public function setCapacityAttribute(mixed $value): void
+    {
+        // Older imports/factory states may supply capacity; occupancy is a
+        // system-wide rule and is no longer stored on individual rooms.
     }
 
     public static function standardGuestCapacity(): int
@@ -100,9 +105,9 @@ class Room extends Model
             ->orderBy('room_image_id');
     }
 
-    public function reviews(): HasMany
+    public function reviews(): HasManyThrough
     {
-        return $this->hasMany(RoomReview::class, 'room_id', 'room_id');
+        return $this->hasManyThrough(RoomReview::class, Booking::class, 'room_id', 'booking_id', 'room_id', 'booking_id');
     }
 
     public function roomStatus(): BelongsTo

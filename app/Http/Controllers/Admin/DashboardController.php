@@ -66,7 +66,7 @@ class DashboardController extends Controller
 
         $recentBookings = Booking::query()
             ->visibleToOperations()
-            ->with(['user', 'room', 'payment', 'guestDetail', 'assignedStaff'])
+            ->with(['user', 'room', 'payment', 'details', 'assignedStaff'])
             ->latest()
             ->take(10)
             ->get();
@@ -94,8 +94,9 @@ class DashboardController extends Controller
         }
 
         $paymentsQuery = Payment::query()
-            ->join('bookings', 'bookings.booking_id', '=', 'payments.booking_id')
-            ->leftJoin('booking_guest_details', 'booking_guest_details.booking_id', '=', 'bookings.booking_id')
+            ->join('booking_bills', 'booking_bills.booking_bill_id', '=', 'payments.booking_bill_id')
+            ->join('bookings', 'bookings.booking_id', '=', 'booking_bills.booking_id')
+            ->leftJoin('booking_details', 'booking_details.booking_id', '=', 'bookings.booking_id')
             ->leftJoin('booking_discounts', 'booking_discounts.booking_id', '=', 'bookings.booking_id')
             ->leftJoin('staff', 'staff.staff_id', '=', 'bookings.staff_id')
             ->where('payments.status', 'paid')
@@ -110,13 +111,14 @@ class DashboardController extends Controller
         $payments = (clone $paymentsQuery)
             ->select([
                 'payments.payment_id',
-                'payments.booking_id',
+                'booking_bills.booking_id',
                 'payments.amount',
                 'payments.method',
                 'payments.status',
-                'payments.discount_amount',
+                \Illuminate\Support\Facades\DB::raw('ROUND(COALESCE(booking_bills.discount_amount, 0) * payments.amount / NULLIF(booking_bills.total_amount, 0), 2) as discount_amount'),
+                'booking_bills.total_amount as bill_total_amount',
                 'payments.transaction_reference',
-                'booking_guest_details.meal_plan',
+                'booking_details.meal_plan',
                 'booking_discounts.discount_type',
                 'payments.paid_at',
                 'bookings.staff_id as assigned_staff_id',
@@ -131,7 +133,7 @@ class DashboardController extends Controller
 
                 $amount = round(max(0, (float) $payment->amount), 2);
                 $foodSales = $payment->meal_plan === 'breakfast_included'
-                    ? min($amount, round(max(0, (float) config('pricing.breakfast_fee', 1200)), 2))
+                    ? round(min((float) $payment->bill_total_amount, max(0, (float) config('pricing.breakfast_fee', 1200))) * $amount / max(0.01, (float) $payment->bill_total_amount), 2)
                     : 0.0;
 
                 $payment->setAttribute('report_food_sales', $foodSales);
@@ -139,7 +141,7 @@ class DashboardController extends Controller
             });
 
         $grossRevenue = (float) $payments->sum(static fn ($payment): float => (float) $payment->amount);
-        $paidBookings = $payments->count();
+        $paidBookings = $payments->pluck('booking_id')->unique()->count();
 
         $summary = [
             'total_revenue' => $grossRevenue,
@@ -168,7 +170,7 @@ class DashboardController extends Controller
 
                 return (object) [
                     'date' => $date,
-                    'paid_bookings' => $paymentRows->count(),
+                    'paid_bookings' => $paymentRows->pluck('booking_id')->unique()->count(),
                     'gross_revenue' => $gross,
                     'revenue' => $gross,
                     'discount_total' => (float) $paymentRows->sum(static fn ($payment): float => (float) ($payment->discount_amount ?? 0)),
@@ -188,7 +190,7 @@ class DashboardController extends Controller
 
                 return (object) [
                     'method' => $methodName,
-                    'paid_bookings' => $paymentRows->count(),
+                    'paid_bookings' => $paymentRows->pluck('booking_id')->unique()->count(),
                     'gross_revenue' => $gross,
                     'revenue' => $gross,
                 ];
@@ -214,7 +216,7 @@ class DashboardController extends Controller
                 return (object) [
                     'staff_id' => $staffId > 0 ? $staffId : null,
                     'staff_name' => $staffName !== '' ? $staffName : 'Not recorded',
-                    'paid_bookings' => $paymentRows->count(),
+                    'paid_bookings' => $paymentRows->pluck('booking_id')->unique()->count(),
                     'gross_revenue' => $gross,
                     'revenue' => $gross,
                 ];
@@ -256,7 +258,7 @@ class DashboardController extends Controller
         $booking = $payment->booking;
         abort_unless($booking, 404);
 
-        $booking->loadMissing(['user', 'room', 'payment', 'guestDetail', 'discount', 'assignedStaff']);
+        $booking->loadMissing(['user', 'room', 'payment', 'details', 'discount', 'assignedStaff']);
 
         if (blank($payment->transaction_reference)) {
             $payment->ensureTransactionReference((int) $booking->id);

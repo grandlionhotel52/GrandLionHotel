@@ -4,26 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Room;
-use App\Models\RoomReview;
 use Illuminate\Http\Request;
 
 class RoomReviewController extends Controller
 {
     public function store(Request $request, Room $room)
     {
-        $customer = $request->user('customer');
+        $booking = $room->bookings()->where('customer_id', $request->user('customer')->id)
+            ->where('status', 'completed')->orderByDesc('check_out')->orderByDesc('booking_id')->first();
+        if (! $booking) {
+            return back()->withErrors(['review' => 'You can review this room after completing a stay.']);
+        }
         $validated = $this->validateReview($request);
-
-        RoomReview::query()->updateOrCreate(
-            [
-                'room_id' => $room->getKey(),
-                'customer_id' => $customer->getKey(),
-            ],
-            [
-                'rating' => (int) $validated['rating'],
-                'comment' => trim($validated['comment']),
-            ]
-        );
+        $booking->roomReview()->updateOrCreate([], [
+            'rating' => (int) $validated['rating'], 'comment' => trim($validated['comment']),
+        ]);
 
         return redirect()
             ->to(route('rooms.show', $room).'#guest-reviews')
@@ -42,17 +37,9 @@ class RoomReviewController extends Controller
 
         $validated = $this->validateReview($request);
 
-        RoomReview::query()->updateOrCreate(
-            [
-                'room_id' => $booking->room_id,
-                'customer_id' => $booking->customer_id,
-            ],
-            [
-                'booking_id' => $booking->getKey(),
-                'rating' => (int) $validated['rating'],
-                'comment' => trim($validated['comment']),
-            ]
-        );
+        $booking->roomReview()->updateOrCreate([], [
+            'rating' => (int) $validated['rating'], 'comment' => trim($validated['comment']),
+        ]);
 
         return redirect()
             ->to(route('bookings.show', $booking).'#guest-review')

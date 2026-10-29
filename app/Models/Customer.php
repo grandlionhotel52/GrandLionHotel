@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Customer extends Account
 {
@@ -17,6 +18,8 @@ class Customer extends Account
         'google_id',
         'phone',
         'address_line',
+        'street_address_line_2',
+        'postal_code',
         'city',
         'province',
         'country',
@@ -31,9 +34,9 @@ class Customer extends Account
         return $this->hasMany(Booking::class, 'customer_id', 'customer_id');
     }
 
-    public function roomReviews(): HasMany
+    public function roomReviews(): HasManyThrough
     {
-        return $this->hasMany(RoomReview::class, 'customer_id', 'customer_id');
+        return $this->hasManyThrough(RoomReview::class, Booking::class, 'customer_id', 'booking_id', 'customer_id', 'booking_id');
     }
 
 }

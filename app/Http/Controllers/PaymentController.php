@@ -24,7 +24,7 @@ class PaymentController extends Controller
     public function checkout(Booking $booking)
     {
         $this->authorizeOwner($booking);
-        $booking->loadMissing(['room', 'guestDetail']);
+        $booking->loadMissing(['room', 'details']);
 
         if ($booking->payment_status === 'paid') {
             return redirect()->route('bookings.success', $booking)
@@ -49,7 +49,7 @@ class PaymentController extends Controller
     {
         $this->authorizeOwner($booking);
         $booking->loadMissing('payment');
-        $bookingTotal = (float) ($booking->payment?->amount ?? $booking->total_price);
+        $bookingTotal = $booking->total_price;
         $amountDue = $booking->payment
             ? $booking->payment->outstandingAmount()
             : $bookingTotal;
@@ -126,23 +126,20 @@ class PaymentController extends Controller
                 ]);
             }
 
-            $booking->payment()->updateOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'amount' => $bookingTotal,
-                    'method' => $validated['method'],
-                    'status' => 'unpaid',
-                    'source' => 'paymongo_checkout_pending',
-                    'provider_session_id' => $session['id'],
-                    'provider_payment_id' => null,
-                    'qr_reference' => null,
-                    'customer_reference' => null,
-                    'payment_proof_path' => null,
-                    'transaction_reference' => null,
-                    'paid_at' => null,
-                    'verified_at' => null,
-                ]
-            );
+            $booking->preparePaymentAttempt([
+                'amount' => $amountDue,
+                'method' => $validated['method'],
+                'status' => 'unpaid',
+                'source' => 'paymongo_checkout_pending',
+                'provider_session_id' => $session['id'],
+                'provider_payment_id' => null,
+                'qr_reference' => null,
+                'customer_reference' => null,
+                'payment_proof_path' => null,
+                'transaction_reference' => null,
+                'paid_at' => null,
+                'verified_at' => null,
+            ]);
 
             PayMongoCheckoutSession::query()->create([
                 'booking_id' => $booking->id,
@@ -158,23 +155,20 @@ class PaymentController extends Controller
         }
 
         if ($validated['method'] === Payment::METHOD_CASH) {
-            $booking->payment()->updateOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'amount' => $bookingTotal,
-                    'method' => Payment::METHOD_CASH,
-                    'status' => 'unpaid',
-                    'source' => 'cash_pending',
-                    'provider_session_id' => null,
-                    'provider_payment_id' => null,
-                    'qr_reference' => null,
-                    'customer_reference' => null,
-                    'payment_proof_path' => null,
-                    'transaction_reference' => null,
-                    'paid_at' => null,
-                    'verified_at' => null,
-                ]
-            );
+            $booking->preparePaymentAttempt([
+                'amount' => $amountDue,
+                'method' => Payment::METHOD_CASH,
+                'status' => 'unpaid',
+                'source' => 'cash_pending',
+                'provider_session_id' => null,
+                'provider_payment_id' => null,
+                'qr_reference' => null,
+                'customer_reference' => null,
+                'payment_proof_path' => null,
+                'transaction_reference' => null,
+                'paid_at' => null,
+                'verified_at' => null,
+            ]);
 
             $this->publishBooking($booking);
 
@@ -192,21 +186,18 @@ class PaymentController extends Controller
                 Storage::disk('public')->delete($oldProofPath);
             }
 
-            $booking->payment()->updateOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'amount' => $bookingTotal,
-                    'method' => $validated['method'],
-                    'status' => 'pending_verification',
-                    'source' => 'online_submitted',
-                    'qr_reference' => $validated['qr_reference'] ?? null,
-                    'customer_reference' => $validated['customer_reference'] ?? null,
-                    'payment_proof_path' => $proofPath,
-                    'paid_at' => null,
-                    'verified_at' => null,
-                    'transaction_reference' => null,
-                ]
-            );
+            $booking->preparePaymentAttempt([
+                'amount' => $amountDue,
+                'method' => $validated['method'],
+                'status' => 'pending_verification',
+                'source' => 'online_submitted',
+                'qr_reference' => $validated['qr_reference'] ?? null,
+                'customer_reference' => $validated['customer_reference'] ?? null,
+                'payment_proof_path' => $proofPath,
+                'paid_at' => null,
+                'verified_at' => null,
+                'transaction_reference' => null,
+            ]);
 
             $this->publishBooking($booking);
 
@@ -318,7 +309,7 @@ class PaymentController extends Controller
             default => Payment::METHOD_CREDIT_DEBIT_CARD,
         };
 
-        $paidPayment = $this->paymentService->charge($booking, $method, ['source' => 'paymongo_checkout']);
+        $paidPayment = $this->paymentService->charge($booking, $method, ['source' => 'paymongo_checkout', 'provider_payment_id' => $providerPaymentId, 'provider_session_id' => $sessionId]);
         $paidPayment->forceFill([
             'provider_payment_id' => $providerPaymentId,
             'source' => 'paymongo_checkout',

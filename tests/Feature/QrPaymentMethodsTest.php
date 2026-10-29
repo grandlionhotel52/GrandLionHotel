@@ -29,7 +29,7 @@ class QrPaymentMethodsTest extends TestCase
                 'room_id' => $room->id,
                 'status' => 'confirmed',
             ]);
-            $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
+            $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
             $customerReference = 'TEST-'.strtoupper($method).'-123456';
 
@@ -61,7 +61,7 @@ class QrPaymentMethodsTest extends TestCase
             'room_id' => $room->id,
             'status' => 'confirmed',
         ]);
-        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
         config(['services.paymongo.secret_key' => 'sk_test_example']);
         Http::fake([
@@ -100,7 +100,7 @@ class QrPaymentMethodsTest extends TestCase
             'customer_id' => $customer->id,
             'status' => 'pending',
         ]);
-        $booking->payment()->update([
+        $booking->payment()->firstOrFail()->update([
             'status' => 'unpaid',
             'method' => 'pending',
             'paid_at' => null,
@@ -125,7 +125,7 @@ class QrPaymentMethodsTest extends TestCase
     {
         $user = Customer::factory()->create();
         $booking = Booking::factory()->create(['customer_id' => $user->id, 'status' => 'confirmed']);
-        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
         config(['services.paymongo.secret_key' => 'sk_test_example']);
         Http::fake([
@@ -151,7 +151,8 @@ class QrPaymentMethodsTest extends TestCase
     public function test_signed_paymongo_webhook_marks_maya_payment_as_paid_automatically(): void
     {
         $booking = Booking::factory()->create(['status' => 'pending']);
-        $booking->payment()->update([
+        $booking->bill()->update(['total_amount' => 2500]);
+        $booking->payment()->firstOrFail()->update([
             'amount' => 2500,
             'status' => 'unpaid',
             'method' => 'credit_debit_card',
@@ -220,7 +221,7 @@ class QrPaymentMethodsTest extends TestCase
     {
         $customer = Customer::factory()->create();
         $booking = Booking::factory()->create(['customer_id' => $customer->id, 'status' => 'confirmed']);
-        $booking->payment()->update([
+        $booking->payment()->firstOrFail()->update([
             'status' => 'unpaid',
             'method' => 'credit_debit_card',
             'source' => 'paymongo_checkout_pending',
@@ -238,7 +239,7 @@ class QrPaymentMethodsTest extends TestCase
     {
         $customer = Customer::factory()->create();
         $booking = Booking::factory()->create(['customer_id' => $customer->id, 'status' => 'confirmed']);
-        $booking->payment()->update([
+        $booking->payment()->firstOrFail()->update([
             'status' => 'paid',
             'method' => 'credit_debit_card',
             'source' => 'paymongo_checkout',
@@ -267,7 +268,8 @@ class QrPaymentMethodsTest extends TestCase
     {
         $customer = Customer::factory()->create();
         $booking = Booking::factory()->create(['customer_id' => $customer->id, 'status' => 'confirmed']);
-        $booking->payment()->update([
+        $booking->bill()->update(['total_amount' => 2699]);
+        $booking->payment()->firstOrFail()->update([
             'amount' => 2699,
             'status' => 'unpaid',
             'method' => Payment::METHOD_CREDIT_DEBIT_CARD,
@@ -317,7 +319,7 @@ class QrPaymentMethodsTest extends TestCase
             'room_id' => $room->id,
             'status' => 'confirmed',
         ]);
-        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
         $response = $this->actingAs($user)->post(route('payments.process', $booking), [
             'method' => 'instapay',
@@ -334,7 +336,7 @@ class QrPaymentMethodsTest extends TestCase
         $booking = Booking::factory()->create([
             'status' => 'completed',
         ]);
-        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
         app(PaymentService::class)->charge($booking, 'cash');
 
@@ -348,7 +350,7 @@ class QrPaymentMethodsTest extends TestCase
         $booking = Booking::factory()->create([
             'status' => 'confirmed',
         ]);
-        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending', 'paid_at' => null]);
 
         $service = app(PaymentService::class);
 

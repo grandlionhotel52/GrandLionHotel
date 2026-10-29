@@ -10,7 +10,6 @@ use App\Models\PromoCode;
 use App\Models\Room;
 use App\Services\AvailabilityService;
 use App\Services\PricingService;
-use App\Support\PersonName;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -125,16 +124,7 @@ class BookingController extends Controller
             $discountIdPhotoPath = $request->file('discount_id_photo')->store('discount-ids', 'public');
         }
 
-        $customer = $request->user();
-        $customerName = PersonName::split($customer->name);
         $reservationMeta = array_filter([
-            'first_name' => $customerName['first_name'],
-            'last_name' => $customerName['last_name'],
-            'street_address' => $customer->address_line,
-            'guest_city' => $customer->city,
-            'state_province' => $customer->province,
-            'contact_phone' => $customer->phone,
-            'contact_email' => $customer->email,
             'adults' => $request->filled('adults') ? $request->integer('adults') : null,
             'kids' => $request->filled('kids') ? $request->integer('kids') : null,
             'meal_plan' => $request->input('meal_plan', 'room_only'),
@@ -218,17 +208,17 @@ class BookingController extends Controller
                     'notes' => $request->input('notes'),
                 ]);
 
-                $guestPayload = $this->toGuestDetailPayload(array_merge($reservationMeta, [
+                $guestPayload = $this->toBookingDetailPayload(array_merge($reservationMeta, [
                     'adults' => $request->filled('adults')
                         ? $request->integer('adults')
                         : $request->integer('guests'),
                     'kids' => $request->filled('kids') ? $request->integer('kids') : 0,
                 ]));
 
-                $booking->guestDetail()->create($guestPayload);
+                $booking->details()->create($guestPayload);
                 $this->syncBookingDiscount($booking, $reservationMeta);
 
-                $booking->payment()->create([
+                $booking->createPayment([
                     'amount' => $payableTotal,
                     'method' => 'pending',
                     'status' => 'unpaid',
@@ -266,7 +256,7 @@ class BookingController extends Controller
     public function success(Booking $booking)
     {
         $this->authorizeOwner($booking);
-        $booking->loadMissing(['room', 'payment', 'guestDetail']);
+        $booking->loadMissing(['room', 'payment', 'details']);
         $this->ensurePaidTransactionReference($booking);
 
         return view('bookings.success', compact('booking'));
@@ -276,7 +266,7 @@ class BookingController extends Controller
     {
         $bookings = $request->user()->bookings()
             ->visibleToOperations()
-            ->with(['room', 'payment', 'guestDetail'])
+            ->with(['room', 'payment', 'details'])
             ->latest()
             ->paginate(10);
         $bookings->getCollection()->each(function (Booking $booking): void {
@@ -299,7 +289,7 @@ class BookingController extends Controller
     public function show(Booking $booking)
     {
         $this->authorizeOwner($booking);
-        $booking->loadMissing(['room', 'payment', 'guestDetail', 'extraBeddingRequest.respondedByStaff', 'roomReview']);
+        $booking->loadMissing(['room', 'payment', 'details', 'extraBeddingRequest.booking.assignedStaff', 'roomReview']);
         $this->ensurePaidTransactionReference($booking);
 
         return view('bookings.show', compact('booking'));
@@ -337,7 +327,6 @@ class BookingController extends Controller
                 'customer_message' => trim($validated['customer_message']),
                 'status' => 'pending',
                 'staff_response' => null,
-                'responded_by_staff_id' => null,
                 'requested_at' => now(),
                 'responded_at' => null,
             ]
@@ -371,7 +360,7 @@ class BookingController extends Controller
             'cancellation_reason' => trim((string) $validated['cancellation_reason']),
         ]);
 
-        $booking->loadMissing(['user', 'room', 'payment', 'assignedStaff', 'guestDetail']);
+        $booking->loadMissing(['user', 'room', 'payment', 'assignedStaff', 'details']);
 
         try {
             Mail::to($booking->user->email)->queue(new BookingCancelledMail($booking));
@@ -427,7 +416,7 @@ class BookingController extends Controller
                 ? $validated['reschedule_request_notes']
                 : null,
             'reschedule_requested_at' => now(),
-            'reschedule_approved_by_admin_id' => null,
+            'admin_id' => null,
             'reschedule_approved_at' => null,
         ]);
 
@@ -467,14 +456,16 @@ class BookingController extends Controller
     {
         $this->authorizeOwner($booking);
 
-        if ($booking->payment_status !== 'paid') {
+        $receiptPayment = $booking->payments()->where('status', 'paid')->latest('payment_id')->first();
+        if (! $receiptPayment) {
             return redirect()
                 ->route('bookings.show', $booking)
-                ->withErrors(['booking' => 'Receipt is available only for paid bookings.']);
+                ->withErrors(['booking' => 'Receipt is available after a payment has been received.']);
         }
 
         $booking->loadMissing(['user', 'room', 'payment', 'assignedStaff']);
-        $this->ensurePaidTransactionReference($booking);
+        $receiptPayment->ensureTransactionReference((int) $booking->id);
+        $booking->setRelation('payment', $receiptPayment);
 
         $pdf = Pdf::loadView('receipts.booking', [
             'booking' => $booking,
@@ -614,25 +605,9 @@ class BookingController extends Controller
         return $prefill;
     }
 
-    private function toGuestDetailPayload(array $reservationMeta): array
+    private function toBookingDetailPayload(array $reservationMeta): array
     {
-        $firstName = trim((string) data_get($reservationMeta, 'first_name', ''));
-        $lastName = trim((string) data_get($reservationMeta, 'last_name', ''));
-
-        if ($firstName === '') {
-            $firstName = trim((string) data_get($reservationMeta, 'customer_name', ''));
-        }
-
         return array_filter([
-            'first_name' => $firstName !== '' ? $firstName : null,
-            'last_name' => $lastName !== '' ? $lastName : null,
-            'email' => data_get($reservationMeta, 'contact_email', data_get($reservationMeta, 'customer_email')),
-            'phone' => data_get($reservationMeta, 'contact_phone', data_get($reservationMeta, 'customer_phone')),
-            'address_line' => data_get($reservationMeta, 'street_address', data_get($reservationMeta, 'address_line')),
-            'street_address_line_2' => data_get($reservationMeta, 'street_address_line_2'),
-            'city' => data_get($reservationMeta, 'guest_city', data_get($reservationMeta, 'city')),
-            'province' => data_get($reservationMeta, 'state_province', data_get($reservationMeta, 'province')),
-            'postal_code' => data_get($reservationMeta, 'postal_code'),
             'adults' => data_get($reservationMeta, 'adults'),
             'kids' => data_get($reservationMeta, 'kids'),
             'meal_plan' => data_get($reservationMeta, 'meal_plan', 'room_only'),
@@ -662,8 +637,8 @@ class BookingController extends Controller
             return;
         }
 
-        if (Schema::hasColumn('booking_guest_details', 'discount_type')) {
-            $booking->guestDetail()->update($payload);
+        if (Schema::hasColumn('booking_details', 'discount_type')) {
+            $booking->details()->update($payload);
         }
     }
 }

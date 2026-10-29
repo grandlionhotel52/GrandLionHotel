@@ -299,7 +299,7 @@ class PricingService
     {
         $quote = $this->quoteBooking($booking);
         $type = strtolower(trim((string) data_get($booking->reservation_meta, 'discount_type', '')));
-        $storedRate = $booking->payment?->discount_rate;
+        $storedRate = $booking->bill?->discount_rate;
         $rate = is_numeric($storedRate)
             ? (float) $storedRate
             : match ($type) {

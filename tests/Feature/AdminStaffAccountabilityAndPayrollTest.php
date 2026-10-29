@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
+
 use App\Models\Admin;
 use App\Models\Booking;
 use App\Models\Staff;
@@ -24,11 +26,10 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
             'status' => 'pending',
             'staff_id' => null,
         ]);
-        $booking->payment()->update(['status' => 'unpaid', 'method' => 'pending']);
-        $booking->guestDetail()->update([
-            'first_name' => 'Accountability',
-            'last_name' => 'Guest',
-        ]);
+        $booking->payment()->firstOrFail()->update(['status' => 'unpaid', 'method' => 'pending']);
+        $booking->customer()->associate(Customer::factory()->create([
+            'name' => 'Accountability Guest',
+        ]))->save();
 
         $response = $this->actingAs($staff, 'staff')->patch(route('staff.bookings.confirm', $booking));
 
@@ -123,31 +124,28 @@ class AdminStaffAccountabilityAndPayrollTest extends TestCase
             'customer_id' => null,
             'staff_id' => $staffA->id,
         ]);
-        $assignedOne->guestDetail()->update([
-            'first_name' => 'Assigned Guest',
-            'last_name' => 'One',
+        $assignedOne->customer()->associate(Customer::factory()->create([
+            'name' => 'Assigned Guest One',
             'email' => 'assigned.one@example.com',
-        ]);
+        ]))->save();
 
         $assignedTwo = Booking::factory()->create([
             'customer_id' => null,
             'staff_id' => $staffA->id,
         ]);
-        $assignedTwo->guestDetail()->update([
-            'first_name' => 'Assigned Guest',
-            'last_name' => 'Two',
+        $assignedTwo->customer()->associate(Customer::factory()->create([
+            'name' => 'Assigned Guest Two',
             'email' => 'assigned.two@example.com',
-        ]);
+        ]))->save();
 
         $otherStaff = Booking::factory()->create([
             'customer_id' => null,
             'staff_id' => $staffB->id,
         ]);
-        $otherStaff->guestDetail()->update([
-            'first_name' => 'Other Staff',
-            'last_name' => 'Guest',
+        $otherStaff->customer()->associate(Customer::factory()->create([
+            'name' => 'Other Staff Guest',
             'email' => 'other.staff@example.com',
-        ]);
+        ]))->save();
 
         $response = $this->actingAs($admin, 'admin')->get(route('admin.staff.show', $staffA));
 

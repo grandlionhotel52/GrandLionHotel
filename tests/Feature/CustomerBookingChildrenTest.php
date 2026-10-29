@@ -44,11 +44,11 @@ class CustomerBookingChildrenTest extends TestCase
             'discount_type' => 'none',
         ]);
 
-        $booking = Booking::query()->firstOrFail()->load(['guestDetail', 'payment']);
+        $booking = Booking::query()->firstOrFail()->load(['details', 'payment']);
 
         $response->assertRedirect(route('payments.checkout', $booking));
-        $this->assertSame(2, $booking->guestDetail->adults);
-        $this->assertSame(1, $booking->guestDetail->kids);
+        $this->assertSame(2, $booking->details->adults);
+        $this->assertSame(1, $booking->details->kids);
         $this->assertSame(3, $booking->guests);
         $this->assertSame(1, $booking->extra_bedding_count);
         $this->assertGreaterThan(4000, (float) $booking->payment->amount);
