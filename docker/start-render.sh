@@ -55,6 +55,16 @@ else
   php artisan storage:link
 fi
 
+chown -R www-data:www-data storage bootstrap/cache
+
+# Start Apache first so Render detects the open port right away.
+# Migrations on TiDB Cloud can take several minutes (DDL is slower than
+# MySQL), which would otherwise hit Render's port-scan timeout.
+echo "[startup] Starting Apache in the background..."
+apache2-foreground &
+APACHE_PID=$!
+trap 'kill -TERM "$APACHE_PID" 2>/dev/null' TERM INT
+
 echo "[startup] Clearing stale Laravel caches..."
 php artisan config:clear
 php artisan cache:clear || true
@@ -95,4 +105,5 @@ chown -R www-data:www-data storage bootstrap/cache
 echo "[startup] Starting Laravel scheduler..."
 php artisan schedule:work &
 
-exec apache2-foreground
+echo "[startup] Startup complete."
+wait "$APACHE_PID"
