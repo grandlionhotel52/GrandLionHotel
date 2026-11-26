@@ -28,8 +28,20 @@ services:
         value: stderr
       - key: DB_CONNECTION
         value: mysql
-      - key: DB_URL
+      # TiDB Cloud (Serverless / Starter) connection
+      - key: DB_HOST
         sync: false
+      - key: DB_PORT
+        value: "4000"
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # TiDB Cloud requires TLS; this is the system CA bundle in the Docker image
+      - key: MYSQL_ATTR_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
       - key: SESSION_DRIVER
         value: database
       - key: SESSION_LIFETIME
